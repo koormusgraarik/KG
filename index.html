@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tootmise jälgimine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<style>
+  :root {
+    --ink: #1c2521; --paper: #f6f5f1; --panel: #ecebe5; --line: #d3cfc2;
+    --accent: #2f5d4f; --accent-ink: #fff; --muted: #6b716c;
+    --done: #3f8a5c; --run: #2c6fb3; --pause: #c08a1e; --late: #b3412c; --lock: #a9aca5;
+    --sans: "IBM Plex Sans", -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --ink:#e7e6df; --paper:#131719; --panel:#1b2023; --line:#30383a; --accent:#6fae95; --accent-ink:#0b120e;
+    --muted:#98a09a; --done:#5fb07d; --run:#5c9ee0; --pause:#dcab45; --late:#e0735c; --lock:#4d5452; } }
+  :root[data-theme="dark"] {
+    --ink:#e7e6df; --paper:#131719; --panel:#1b2023; --line:#30383a; --accent:#6fae95; --accent-ink:#0b120e;
+    --muted:#98a09a; --done:#5fb07d; --run:#5c9ee0; --pause:#dcab45; --late:#e0735c; --lock:#4d5452; }
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  body { margin:0; background:var(--paper); color:var(--ink); font-family:var(--sans); font-size:15px; line-height:1.45; }
+  button, input, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .hidden { display:none !important; }
+  .mono { font-family: var(--mono); }
+  .muted { color: var(--muted); }
+
+  /* ---- auth ---- */
+  .auth { max-width: 380px; margin: 12vh auto 0; padding: 0 20px; }
+  .auth h1 { font-size: 1.5rem; margin: 0 0 20px; }
+  .field { margin-bottom: 12px; }
+  .field label { display:block; font-size:.82rem; color:var(--muted); margin-bottom:4px; }
+  input[type=text], input[type=email], input[type=password], input[type=search], input[type=number], select {
+    width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:6px; background:var(--paper); }
+  .btn { border:1px solid var(--line); background:var(--paper); border-radius:6px; padding:9px 14px; font-weight:500; }
+  .btn.primary { background:var(--accent); border-color:var(--accent); color:var(--accent-ink); font-weight:600; }
+  .btn:disabled { opacity:.4; cursor:not-allowed; }
+  .error { color: var(--late); font-size: .88rem; min-height: 1.3em; margin-top: 8px; }
+
+  /* ---- top bar ---- */
+  header.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--paper); border-bottom: 1px solid var(--line); }
+  .bar-in { max-width: 1180px; margin: 0 auto; padding: 10px 16px 0; }
+  .bar-top { display:flex; align-items:center; gap:12px; justify-content:space-between; }
+  .brand { font-weight: 700; letter-spacing: -.01em; }
+  .who { font-size:.85rem; color:var(--muted); display:flex; gap:10px; align-items:center; }
+  .who button { background:none; border:1px solid var(--line); border-radius:5px; padding:3px 9px; font-size:.8rem; }
+  nav.tabs { display:flex; gap:2px; overflow-x:auto; margin-top: 8px; }
+  nav.tabs button { background:none; border:none; padding:9px 14px; border-bottom:3px solid transparent; font-weight:500; white-space:nowrap; color:var(--muted); }
+  nav.tabs button.on { color:var(--ink); border-bottom-color:var(--accent); }
+  main { max-width: 1180px; margin: 0 auto; padding: 18px 16px 80px; }
+  .toolbar { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:14px; }
+  .toolbar > * { flex: 0 0 auto; }
+  .toolbar input[type=search], .toolbar select { width:auto; min-width: 180px; }
+  .chk { display:flex; gap:6px; align-items:center; font-size:.9rem; }
+
+  /* ---- station picker ---- */
+  .stations { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:16px; }
+  .stations button { font-family:var(--mono); font-weight:600; border:1px solid var(--line); background:var(--paper); border-radius:6px; padding:8px 12px; min-width:64px; }
+  .stations button.on { background:var(--ink); color:var(--paper); border-color:var(--ink); }
+  .stations button small { font-family:var(--sans); font-weight:500; opacity:.7; margin-left:4px; }
+
+  /* ---- stage card (worker) ---- */
+  .cards { display:grid; gap:10px; }
+  .card { border:1px solid var(--line); border-left:6px solid var(--accent); border-radius:6px; padding:12px 14px; background:var(--paper); display:grid; grid-template-columns: 1fr auto; gap:6px 16px; }
+  .card.s-käsil { border-left-color: var(--run); background: color-mix(in srgb, var(--run) 7%, var(--paper)); }
+  .card.s-paus  { border-left-color: var(--pause); }
+  .card.s-valmis { border-left-color: var(--done); opacity:.75; }
+  .card.s-lukus { border-left-color: var(--lock); opacity:.55; }
+  .card.s-lukus .acts { display:none; }
+  .card h3 { margin:0; font-size:1.02rem; font-weight:600; display:flex; gap:10px; flex-wrap:wrap; align-items:baseline; }
+  .card h3 .mono { font-size:.95rem; }
+  .meta { font-size:.88rem; color:var(--muted); display:flex; flex-wrap:wrap; gap:4px 14px; }
+  .meta b { color: var(--ink); font-weight:600; }
+  .acts { grid-row: 1 / span 3; grid-column: 2; display:flex; flex-direction:column; gap:6px; align-self:center; min-width:130px; }
+  .acts button { padding:12px 14px; border-radius:6px; border:1px solid var(--line); background:var(--paper); font-weight:600; }
+  .acts .go { background:var(--run); border-color:var(--run); color:#fff; }
+  .acts .ok { background:var(--done); border-color:var(--done); color:#fff; }
+  .acts .ps { background:var(--pause); border-color:var(--pause); color:#1c1606; }
+  .timer { font-family:var(--mono); font-size:1.05rem; font-weight:600; }
+  .waitnote { font-size:.86rem; font-weight:500; color: var(--ink); }
+  @media (max-width: 620px) {
+    .card { grid-template-columns: 1fr; }
+    .acts { grid-row:auto; grid-column:1; flex-direction:row; }
+    .acts button { flex:1; }
+  }
+
+  /* ---- route chips ---- */
+  .route { display:flex; flex-wrap:wrap; gap:3px; align-items:center; }
+  .chip { font-family:var(--mono); font-size:.76rem; font-weight:600; padding:2px 6px; border-radius:4px; border:1px solid var(--line); color: var(--muted); background: transparent; }
+  .chip.valmis { background:var(--done); border-color:var(--done); color:#fff; }
+  .chip.käsil { background:var(--run); border-color:var(--run); color:#fff; }
+  .chip.paus { background:var(--pause); border-color:var(--pause); color:#1c1606; }
+  .chip.avatud { border-color:var(--ink); color:var(--ink); }
+  .chip.here { outline: 2px solid var(--ink); outline-offset: 1px; }
+  .route .sep { width:6px; height:1px; background:var(--line); }
+
+  /* ---- tables ---- */
+  .tw { overflow-x:auto; border:1px solid var(--line); border-radius:6px; }
+  table { border-collapse:collapse; width:100%; font-size:.88rem; }
+  th, td { padding:7px 10px; text-align:left; border-bottom:1px solid var(--line); vertical-align:middle; white-space:nowrap; }
+  th { font-weight:600; background:var(--panel); position:sticky; top:0; font-size:.8rem; color: var(--muted); }
+  td.num, th.num { text-align:right; font-variant-numeric: tabular-nums; }
+  tr.jobrow { cursor:pointer; }
+  tr.jobrow:hover td { background: color-mix(in srgb, var(--ink) 4%, transparent); }
+  tr.detail td { background: var(--panel); white-space: normal; padding: 12px; }
+  td input { padding:6px 8px; border:1px solid var(--line); border-radius:5px; background:var(--paper); width: 90px; }
+  td input.wide { width: 160px; }
+  .late { color:var(--late); font-weight:600; }
+  .risk { color:var(--pause); font-weight:600; }
+  .ok-t { color:var(--done); }
+  .prio { color: var(--late); font-weight:700; }
+
+  /* ---- report ---- */
+  .kpis { display:flex; flex-wrap:wrap; gap:26px; margin: 4px 0 20px; }
+  .kpi b { display:block; font-size:1.7rem; line-height:1.1; font-variant-numeric: tabular-nums; }
+  .kpi span { font-size:.84rem; color:var(--muted); }
+  h2 { font-size:1.1rem; margin: 26px 0 10px; }
+  .loadbar { height:10px; background: color-mix(in srgb, var(--ink) 8%, transparent); border-radius:2px; width: 180px; position:relative; }
+  .loadbar i { position:absolute; inset:0 auto 0 0; background:var(--accent); border-radius:2px; }
+  .loadbar i.hot { background: var(--late); }
+  .note { font-size:.86rem; color:var(--muted); max-width: 72ch; }
+
+  /* ---- import ---- */
+  .drop { border:1.5px dashed var(--line); border-radius:8px; padding:30px; text-align:center; cursor:pointer; display:block; max-width: 620px; }
+  .drop.dragover { border-color:var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+  .drop input { display:none; }
+  .log { font-family:var(--mono); font-size:.82rem; white-space:pre-wrap; margin-top:14px; max-width: 620px; }
+
+  .toast { position:fixed; left:50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform:translateX(-50%); background:var(--ink); color:var(--paper); padding:10px 16px; border-radius:6px; font-size:.9rem; z-index:20; max-width: 90vw; }
+  .toast.err { background: var(--late); color:#fff; }
+  .empty { padding: 28px 0; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<div id="authView" class="auth hidden">
+  <h1>Tootmise jälgimine</h1>
+  <div class="field"><label for="email">E-post</label><input id="email" type="email" autocomplete="username"></div>
+  <div class="field"><label for="password">Parool</label><input id="password" type="password" autocomplete="current-password"></div>
+  <button class="btn primary" id="loginBtn" style="width:100%">Logi sisse</button>
+  <div class="error" id="authError"></div>
+</div>
+
+<div id="appView" class="hidden">
+  <header class="bar"><div class="bar-in">
+    <div class="bar-top">
+      <span class="brand">Tootmise jälgimine</span>
+      <span class="who"><span id="whoName"></span><button id="logoutBtn">Logi välja</button></span>
+    </div>
+    <nav class="tabs" id="tabs">
+      <button data-tab="pink">Pink</button>
+      <button data-tab="tood">Tööd</button>
+      <button data-tab="koormus">Koormus ja hilinemised</button>
+      <button data-tab="plan" data-planner>Ajanormid</button>
+      <button data-tab="seaded" data-planner>Pingid ja kasutajad</button>
+      <button data-tab="import" data-planner>Import</button>
+    </nav>
+  </div></header>
+
+  <main>
+    <!-- PINK -->
+    <section id="tab-pink" class="hidden">
+      <div class="stations" id="stationPicker"></div>
+      <div class="toolbar">
+        <label class="chk"><input type="checkbox" id="showLocked" checked> Näita ka tulevasi (lukus)</label>
+        <label class="chk"><input type="checkbox" id="showDone"> Näita valmis</label>
+      </div>
+      <div class="cards" id="pinkCards"></div>
+    </section>
+
+    <!-- TÖÖD -->
+    <section id="tab-tood" class="hidden">
+      <div class="toolbar">
+        <input type="search" id="jobSearch" placeholder="Otsi: klient, tellimus, joonis, wono…">
+        <label class="chk"><input type="checkbox" id="onlyLate"> Ainult hilinevad ja ohus</label>
+        <span class="muted" id="jobCount"></span>
+      </div>
+      <div class="tw"><table id="jobsTable"></table></div>
+    </section>
+
+    <!-- KOORMUS -->
+    <section id="tab-koormus" class="hidden">
+      <div class="toolbar"><button class="btn" id="copyReport">Kopeeri raport tekstina</button></div>
+      <div id="reportBody"></div>
+    </section>
+
+    <!-- AJANORMID -->
+    <section id="tab-plan" class="hidden">
+      <div class="toolbar">
+        <select id="planStation"></select>
+        <label class="chk"><input type="checkbox" id="planOnlyEmpty" checked> Ainult ilma ajata</label>
+        <span class="muted" id="planCount"></span>
+      </div>
+      <p class="note">Aeg on kogu partii kohta. Sisesta minutid (<span class="mono">90</span>), tunnid (<span class="mono">1.5h</span>) või minutid tüki kohta (<span class="mono">3/tk</span> korrutatakse kogusega). Salvestub Enteri või väljast lahkumisel.</p>
+      <div class="tw"><table id="planTable"></table></div>
+    </section>
+
+    <!-- SEADED -->
+    <section id="tab-seaded" class="hidden">
+      <h2 style="margin-top:0">Pingid</h2>
+      <p class="note">Maht = töötunde päevas. Allhanke puhul arvestatakse aega tarnepäevades ja mahtu ei piirata. „Ei ole etapp" jätab koodi järgmisel impordil marsruudist välja (nt märked nagu LK). Vaikenormi kasutatakse prognoosis, kui etapil endal aega pole.</p>
+      <div class="tw"><table id="stationTable"></table></div>
+      <h2>Kasutajad</h2>
+      <p class="note">Uued kontod: Supabase → Authentication → Users → Add user (Auto Confirm). Profiil tekib automaatselt, siin saad nime ja rolli muuta.</p>
+      <div class="tw"><table id="userTable"></table></div>
+    </section>
+
+    <!-- IMPORT -->
+    <section id="tab-import" class="hidden">
+      <label class="drop" id="drop">
+        <input type="file" id="file" accept=".xlsx,.xls">
+        <div id="dropText">Lohista ERP eksport (xlsx) siia või vali fail</div>
+      </label>
+      <div id="importPreview"></div>
+      <div class="log" id="importLog"></div>
+    </section>
+  </main>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script>
+// ============ SEADISTUS ============
+const SUPABASE_URL = "https://cmswtkfpqnhjqpjjiqcr.supabase.co";   // ilma /rest/v1/ lõputa!
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtc3d0a2ZwcW5oanFwamppcWNyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAxNDg4NzQsImV4cCI6MjEwNTcyNDg3NH0.C6F2kCsfFxgRUAhaOPiZA88Lcbpu_10Ge5lMVe1djz0";
+const RISK_DAYS = 2;   // tööpäeva varu, millest väiksem = "ohus"
+// ===================================
+
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const store = { get(k){ try { return localStorage.getItem(k); } catch { return null; } }, set(k,v){ try { localStorage.setItem(k,v); } catch {} } };
+
+let S = { session:null, profile:null, jobs:[], stages:[], stations:{}, profiles:[], loadedAt:0, sim:null };
+let currentTab = store.get("tab") || "pink";
+let currentStation = store.get("station") || null;
+
+function toast(msg, isErr) {
+  const t = $("toast"); t.textContent = msg; t.className = "toast" + (isErr ? " err" : "");
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.add("hidden"), isErr ? 5000 : 2200);
+}
+const isPlanner = () => S.profile?.role === "planeerija";
+
+// ============ AUTH ============
+$("loginBtn").onclick = async () => {
+  $("authError").textContent = ""; $("loginBtn").disabled = true;
+  const { error } = await sb.auth.signInWithPassword({ email: $("email").value.trim(), password: $("password").value });
+  $("loginBtn").disabled = false;
+  if (error) $("authError").textContent = "Sisselogimine ebaõnnestus: " + error.message;
+};
+$("password").addEventListener("keydown", e => { if (e.key === "Enter") $("loginBtn").click(); });
+$("logoutBtn").onclick = () => sb.auth.signOut();
+
+sb.auth.onAuthStateChange((_e, session) => onSession(session));
+let sessionUserId = undefined;
+async function onSession(session) {
+  const uid = session?.user?.id || null;
+  if (uid === sessionUserId) return;
+  sessionUserId = uid; S.session = session; S.profile = null; S.loadedAt = 0;
+  if (!session) { $("authView").classList.remove("hidden"); $("appView").classList.add("hidden"); return; }
+  $("authView").classList.add("hidden"); $("appView").classList.remove("hidden");
+  const { data } = await sb.from("profiles").select("*").eq("user_id", session.user.id).maybeSingle();
+  S.profile = data || { name: session.user.email, role: "tooline" };
+  $("whoName").textContent = S.profile.name + (isPlanner() ? " · planeerija" : "");
+  document.querySelectorAll("[data-planner]").forEach(b => b.classList.toggle("hidden", !isPlanner()));
+  if (!isPlanner() && ["plan","seaded","import"].includes(currentTab)) currentTab = "pink";
+  if (!currentStation && S.profile.default_station) currentStation = S.profile.default_station;
+  showTab(currentTab);
+  await loadAll();
+  subscribeRealtime();
+}
+
+// ============ DATA ============
+async function fetchAll(build) {
+  const out = []; const size = 1000;
+  for (let from = 0; ; from += size) {
+    const { data, error } = await build().range(from, from + size - 1);
+    if (error) throw error;
+    out.push(...data);
+    if (data.length < size) break;
+  }
+  return out;
+}
+
+async function loadAll() {
+  try {
+    const [jobs, stages, actual, stations, profiles] = await Promise.all([
+      fetchAll(() => sb.from("jobs").select("*").eq("active", true).order("wono")),
+      fetchAll(() => sb.from("job_stages").select("*, jobs!inner(active)").eq("jobs.active", true).order("id")),
+      fetchAll(() => sb.from("v_stage_actual").select("*").order("stage_id")),
+      fetchAll(() => sb.from("stations").select("*").order("code")),
+      isPlanner() ? fetchAll(() => sb.from("profiles").select("*").order("name")) : Promise.resolve([]),
+    ]);
+    S.loadedAt = Date.now();
+    const act = Object.fromEntries(actual.map(a => [a.stage_id, a]));
+    S.stations = Object.fromEntries(stations.map(s => [s.code, s]));
+    S.profiles = profiles;
+    const byJob = {};
+    S.jobs = jobs.map(j => (byJob[j.id] = { ...j, stages: [] }));
+    S.stages = [];
+    for (const st of stages) {
+      const job = byJob[st.job_id]; if (!job) continue;
+      const a = act[st.id];
+      const runSince = a?.running_since ? new Date(a.running_since).getTime() : null;
+      const actualMin = a?.actual_min || 0;
+      const s = { ...st, job, actualMin, runSince, workers: a?.workers || "",
+        closedMin: runSince ? actualMin - (S.loadedAt - runSince) / 60000 : actualMin };
+      job.stages.push(s); S.stages.push(s);
+    }
+    for (const j of S.jobs) {
+      j.stages.sort((a, b) => a.seq - b.seq);
+      let blocked = null;
+      for (const s of j.stages) {
+        if (s.status === "valmis") { s.state = "valmis"; continue; }
+        if (blocked) { s.state = "lukus"; s.blockedBy = blocked; continue; }
+        s.state = s.status === "ootel" ? "avatud" : s.status;
+        blocked = s;
+      }
+      j.current = j.stages.find(s => s.state !== "valmis") || null;
+    }
+    S.sim = simulate();
+    render();
+  } catch (e) { console.error(e); toast("Andmete laadimine ebaõnnestus: " + e.message, true); }
+}
+
+let rtChannel = null, reloadTimer = null;
+function subscribeRealtime() {
+  if (rtChannel) return;
+  const kick = () => { clearTimeout(reloadTimer); reloadTimer = setTimeout(loadAll, 700); };
+  rtChannel = sb.channel("tootmine")
+    .on("postgres_changes", { event: "*", schema: "public", table: "job_stages" }, kick)
+    .on("postgres_changes", { event: "*", schema: "public", table: "time_logs" }, kick)
+    .subscribe();
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden && S.session) loadAll(); });
+
+// ============ AEG / KALENDER ============
+function easter(y) {
+  const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),
+        h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),
+        mo=Math.floor((h+l-7*m+114)/31),da=((h+l-7*m+114)%31)+1;
+  return new Date(y, mo-1, da);
+}
+const holidayCache = {};
+function isHoliday(d) {
+  const y = d.getFullYear();
+  if (!holidayCache[y]) {
+    const set = new Set(["01-01","02-24","05-01","06-23","06-24","08-20","12-24","12-25","12-26"]);
+    const e = easter(y);
+    const add = n => { const x = new Date(e); x.setDate(x.getDate()+n); set.add(md(x)); };
+    add(-2); add(49); // suur reede, nelipühad
+    holidayCache[y] = set;
+  }
+  return holidayCache[y].has(md(d));
+}
+const md = d => String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+const isWorkday = d => d.getDay() !== 0 && d.getDay() !== 6 && !isHoliday(d);
+const today0 = () => { const d = new Date(); d.setHours(0,0,0,0); return d; };
+function addWorkdays(start, n) {
+  const d = new Date(start); while (!isWorkday(d)) d.setDate(d.getDate()+1);
+  let k = Math.floor(n);
+  while (k > 0) { d.setDate(d.getDate()+1); if (isWorkday(d)) k--; }
+  return d;
+}
+function workdaysBetween(a, b) { // b - a tööpäevades (märgiga)
+  const sign = b >= a ? 1 : -1; let [x, y] = sign > 0 ? [new Date(a), new Date(b)] : [new Date(b), new Date(a)];
+  let n = 0; while (x < y) { x.setDate(x.getDate()+1); if (isWorkday(x)) n++; } return n * sign;
+}
+const parseDate = s => { if (!s) return null; const [y,m,d] = s.split("-").map(Number); return new Date(y, m-1, d); };
+const fmtDate = d => d ? `${d.getDate()}.${d.getMonth()+1}.` : "–";
+function fmtMin(m) {
+  if (m == null || isNaN(m)) return "–";
+  m = Math.round(m); if (m < 60) return m + " min";
+  const h = Math.floor(m/60), r = m % 60; return r ? `${h} h ${r} min` : `${h} h`;
+}
+function fmtClock(ms) {
+  const s = Math.max(0, Math.floor(ms/1000)); const h = Math.floor(s/3600), m = Math.floor(s%3600/60), x = s%60;
+  return `${h}:${String(m).padStart(2,"0")}:${String(x).padStart(2,"0")}`;
+}
+const liveMin = s => s.runSince ? s.closedMin + (Date.now() - s.runSince)/60000 : s.actualMin;
+const plannedMin = s => s.planned_min ?? S.stations[s.stage_code]?.default_min ?? null;
+
+// ============ PROGNOOS (lihtne edasi-planeerimine) ============
+// Järjestus: prioriteet, siis tähtaeg (EDD). Iga etapp algab, kui eelmine on valmis JA pink on vaba.
+// Ajaühik = tööpäev. Pingi maht = capacity_h tundi päevas. Allhange = lead_days, mahtu ei piira.
+function simulate() {
+  const free = {}; const st = {};
+  const station = code => S.stations[code] || { capacity_h: 8, is_external: false, lead_days: 3 };
+  const stat = code => (st[code] ??= { code, queue: 0, hours: 0, wait: 0, lateJobs: new Set(), unplanned: 0, running: 0 });
+  const dur = s => {
+    const c = station(s.stage_code);
+    if (c.is_external) return { d: Number(c.lead_days) || 0, h: 0 };
+    const p = plannedMin(s);
+    if (p == null) return { d: 0, h: 0, unknown: true };
+    const remH = Math.max(p - liveMin(s), 0) / 60;
+    return { d: remH / (Number(c.capacity_h) || 8), h: remH };
+  };
+  // 1) pooleli olevad etapid võtavad pingi esimesena
+  for (const s of S.stages) {
+    if (s.state !== "käsil" && s.state !== "paus") continue;
+    const x = dur(s); const c = station(s.stage_code);
+    s.pStart = c.is_external ? 0 : (free[s.stage_code] || 0);
+    s.pEnd = s.pStart + x.d; s.wait = 0;
+    if (!c.is_external) free[s.stage_code] = s.pEnd;
+    const t = stat(s.stage_code); t.queue++; t.hours += x.h; t.running++; if (x.unknown) t.unplanned++;
+    s.pre = true;
+  }
+  // 2) ülejäänud tööd EDD järjekorras
+  const order = [...S.jobs].sort((a, b) =>
+    (b.prioriteet - a.prioriteet) || ((a.tahtaeg || "9999") < (b.tahtaeg || "9999") ? -1 : (a.tahtaeg || "9999") > (b.tahtaeg || "9999") ? 1 : 0) || a.wono.localeCompare(b.wono));
+  const t0 = today0();
+  for (const j of order) {
+    let t = 0; j.unplanned = 0; j.worstWait = null;
+    for (const s of j.stages) {
+      if (s.state === "valmis") continue;
+      if (s.pre) { t = Math.max(t, s.pEnd); continue; }
+      const x = dur(s); const c = station(s.stage_code);
+      const start = c.is_external ? t : Math.max(t, free[s.stage_code] || 0);
+      s.pStart = start; s.pEnd = start + x.d; s.wait = start - t;
+      if (!c.is_external) free[s.stage_code] = s.pEnd;
+      const tt = stat(s.stage_code); tt.queue++; tt.hours += x.h; tt.wait += s.wait;
+      if (x.unknown) { tt.unplanned++; j.unplanned++; }
+      if (!j.worstWait || s.wait > j.worstWait.wait) j.worstWait = s;
+      t = s.pEnd;
+    }
+    j.projDays = t;
+    j.projDate = j.current ? addWorkdays(t0, t) : null;
+    const due = parseDate(j.tahtaeg);
+    j.slack = due && j.projDate ? workdaysBetween(j.projDate, due) : null;
+    j.risk = j.slack == null ? "" : j.slack < 0 ? "late" : j.slack < RISK_DAYS ? "risk" : "ok";
+    if (j.risk === "late") for (const s of j.stages) if (s.state !== "valmis" && s.wait > 0) stat(s.stage_code).lateJobs.add(j.id);
+  }
+  for (const code in st) {
+    const c = station(code);
+    st[code].backlog = c.is_external ? null : st[code].hours / (Number(c.capacity_h) || 8);
+    st[code].freeAt = free[code] || 0;
+    st[code].external = c.is_external;
+  }
+  return { stations: st };
+}
+
+// ============ RENDER ============
+function showTab(tab) {
+  currentTab = tab; store.set("tab", tab);
+  document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === tab));
+  document.querySelectorAll("main > section").forEach(s => s.classList.toggle("hidden", s.id !== "tab-" + tab));
+  render();
+}
+$("tabs").onclick = e => { const b = e.target.closest("button[data-tab]"); if (b) showTab(b.dataset.tab); };
+
+function render() {
+  if (!S.session || !S.loadedAt) return;
+  ({ pink: renderPink, tood: renderJobs, koormus: renderReport, plan: renderPlan, seaded: renderSettings, import: () => {} })[currentTab]?.();
+}
+
+function routeHtml(job, hereId) {
+  return `<span class="route">` + job.stages.map((s, i) =>
+    (i ? `<span class="sep"></span>` : "") +
+    `<span class="chip ${s.state === "lukus" ? "" : s.state}${s.id === hereId ? " here" : ""}" title="${esc(s.stage_code)}: ${esc(s.state)}">${esc(s.stage_code)}</span>`
+  ).join("") + `</span>`;
+}
+
+function dueHtml(j) {
+  const d = parseDate(j.tahtaeg); if (!d) return `<span class="muted">tähtaeg puudub</span>`;
+  const cls = j.risk === "late" ? "late" : j.risk === "risk" ? "risk" : "";
+  return `<span class="${cls}">${fmtDate(d)}</span>`;
+}
+
+function actionButtons(s) {
+  const b = [];
+  if (s.state === "avatud") b.push(`<button class="go" data-act="start" data-id="${s.id}">Alusta</button>`, `<button data-act="finish" data-id="${s.id}">Märgi OK</button>`);
+  if (s.state === "käsil") b.push(`<button class="ps" data-act="pause" data-id="${s.id}">Paus</button>`, `<button class="ok" data-act="finish" data-id="${s.id}">Valmis</button>`);
+  if (s.state === "paus") b.push(`<button class="go" data-act="start" data-id="${s.id}">Jätka</button>`, `<button class="ok" data-act="finish" data-id="${s.id}">Valmis</button>`);
+  if (s.state === "valmis" && isPlanner()) b.push(`<button data-act="reopen" data-id="${s.id}">Võta tagasi</button>`);
+  return b.join("");
+}
+
+function stageCard(s) {
+  const j = s.job; const p = plannedMin(s);
+  const over = p != null && liveMin(s) > p;
+  const timer = s.runSince ? `<span class="timer" data-live="${s.id}">${fmtClock(liveMin(s)*60000)}</span>` : "";
+  const wait = s.state === "lukus"
+    ? `<div class="waitnote">Ootab: <span class="mono">${esc(s.blockedBy.stage_code)}</span> (${esc(s.blockedBy.state)})</div>` : "";
+  return `<div class="card s-${s.state}">
+    <h3>${j.prioriteet ? `<span class="prio">PRIO</span>` : ""}<span>${esc(j.klient_nimi || "")} ${esc(j.tellimus || "")}</span>
+      <span class="mono">${esc(j.toote_id || j.drawing || "")}</span> ${timer}</h3>
+    <div class="meta"><span>Kogus <b>${esc(j.kogus ?? "–")}</b></span><span>Tähtaeg <b>${dueHtml(j)}</b></span>
+      <span>${esc(j.nimetus || "")}</span>${j.drawing ? `<span>Joonis ${esc(j.drawing)}${j.revno ? " rev " + esc(j.revno) : ""}</span>` : ""}
+      ${j.pinnatootlus ? `<span>Pind <b>${esc(j.pinnatootlus)}</b></span>` : ""}
+      <span>Norm <b>${fmtMin(p)}</b></span><span>Tehtud <b class="${over ? "late" : ""}">${fmtMin(liveMin(s))}</b></span>
+      ${s.workers ? `<span>${esc(s.workers)}</span>` : ""}<span class="mono">WO ${esc(j.wono)}</span></div>
+    <div>${routeHtml(j, s.id)}</div>${wait}
+    <div class="acts">${actionButtons(s)}</div>
+  </div>`;
+}
+
+// ---------- PINK ----------
+function renderPink() {
+  const codes = Object.values(S.stations).filter(s => !s.ignore).sort((a,b) => (a.sort - b.sort) || a.code.localeCompare(b.code));
+  const openCount = {};
+  for (const s of S.stages) if (["avatud","käsil","paus"].includes(s.state)) openCount[s.stage_code] = (openCount[s.stage_code] || 0) + 1;
+  if (!currentStation && codes.length) currentStation = codes[0].code;
+  $("stationPicker").innerHTML = codes.map(c =>
+    `<button data-st="${esc(c.code)}" class="${c.code === currentStation ? "on" : ""}">${esc(c.code)}${openCount[c.code] ? `<small>${openCount[c.code]}</small>` : ""}</button>`).join("");
+
+  const rank = { "käsil":0, "paus":1, "avatud":2, "lukus":3, "valmis":4 };
+  const list = S.stages.filter(s => s.stage_code === currentStation)
+    .filter(s => s.state !== "lukus" || $("showLocked").checked)
+    .filter(s => s.state !== "valmis" || $("showDone").checked)
+    .sort((a, b) => (rank[a.state] - rank[b.state]) || (b.job.prioriteet - a.job.prioriteet) || ((a.job.tahtaeg||"9") < (b.job.tahtaeg||"9") ? -1 : 1));
+  $("pinkCards").innerHTML = list.length ? list.map(stageCard).join("") : `<div class="empty">Sellel pingil pole praegu töid.</div>`;
+}
+$("stationPicker").onclick = e => { const b = e.target.closest("button[data-st]"); if (!b) return; currentStation = b.dataset.st; store.set("station", currentStation); renderPink(); };
+$("showLocked").onchange = renderPink; $("showDone").onchange = renderPink;
+
+document.addEventListener("click", async e => {
+  const b = e.target.closest("button[data-act]"); if (!b) return;
+  e.stopPropagation(); b.disabled = true;
+  const { error } = await sb.rpc("stage_action", { p_stage: b.dataset.id, p_action: b.dataset.act });
+  if (error) { toast(error.message, true); b.disabled = false; return; }
+  toast({ start: "Alustatud", pause: "Pausil", finish: "Märgitud valmis", reopen: "Tagasi võetud" }[b.dataset.act]);
+  await loadAll();
+});
+
+setInterval(() => {
+  document.querySelectorAll("[data-live]").forEach(el => {
+    const s = S.stages.find(x => x.id === el.dataset.live); if (s) el.textContent = fmtClock(liveMin(s)*60000);
+  });
+}, 1000);
+
+// ---------- TÖÖD ----------
+let openJob = null;
+function renderJobs() {
+  const q = $("jobSearch").value.trim().toLowerCase();
+  const onlyLate = $("onlyLate").checked;
+  const list = S.jobs.filter(j => !q || [j.wono, j.tellimus, j.klient_nimi, j.toote_id, j.drawing, j.nimetus, j.tl_rida, j.route_raw].some(v => String(v ?? "").toLowerCase().includes(q)))
+    .filter(j => !onlyLate || j.risk === "late" || j.risk === "risk")
+    .sort((a, b) => (b.prioriteet - a.prioriteet) || ((a.tahtaeg||"9") < (b.tahtaeg||"9") ? -1 : (a.tahtaeg||"9") > (b.tahtaeg||"9") ? 1 : 0));
+  $("jobCount").textContent = `${list.length} tööd`;
+  const head = `<tr><th></th><th>WO</th><th>Klient</th><th>Tellimus</th><th>Rida</th><th>Toode</th><th>Nimetus</th><th class="num">Kogus</th><th>Pind</th><th>Tähtaeg</th><th>Prognoos</th><th>Marsruut</th><th>Kus on</th></tr>`;
+  const rows = list.map(j => {
+    const cur = j.current;
+    const prog = !cur ? `<span class="ok-t">valmis</span>` :
+      `<span class="${j.risk === "late" ? "late" : j.risk === "risk" ? "risk" : ""}">${fmtDate(j.projDate)}${j.slack != null && j.slack < 0 ? ` (+${-j.slack} p)` : ""}${j.unplanned ? " *" : ""}</span>`;
+    let html = `<tr class="jobrow" data-job="${j.id}"><td>${j.prioriteet ? `<span class="prio">P</span>` : ""}</td>
+      <td class="mono">${esc(j.wono)}</td><td>${esc(j.klient_nimi)}</td><td>${esc(j.tellimus)}</td><td>${esc(j.tl_rida)}</td>
+      <td class="mono">${esc(j.toote_id || j.drawing)}</td><td>${esc(j.nimetus)}</td><td class="num">${esc(j.kogus)}</td>
+      <td>${esc(j.pinnatootlus)}</td><td>${dueHtml(j)}</td><td>${prog}</td><td>${routeHtml(j)}</td>
+      <td>${cur ? `<span class="mono">${esc(cur.stage_code)}</span> ${esc(cur.state)}` : ""}</td></tr>`;
+    if (openJob === j.id) html += `<tr class="detail"><td colspan="13"><div class="cards">${j.stages.map(stageCard).join("")}</div>
+      <p class="note">ERP staatus: ${esc(j.erp_status || "–")} · Marsruut ERP-s: <span class="mono">${esc(j.route_raw)}</span></p></td></tr>`;
+    return html;
+  }).join("");
+  $("jobsTable").innerHTML = `<thead>${head}</thead><tbody>${rows || `<tr><td colspan="13" class="empty">Töid pole. Planeerija saab need importida.</td></tr>`}</tbody>`;
+}
+$("jobSearch").oninput = renderJobs; $("onlyLate").onchange = renderJobs;
+$("jobsTable").onclick = e => { const r = e.target.closest("tr.jobrow"); if (!r) return; openJob = openJob === r.dataset.job ? null : r.dataset.job; renderJobs(); };
+
+// ---------- KOORMUS ----------
+function buildReport() {
+  const st = Object.values(S.sim.stations);
+  const active = S.jobs.filter(j => j.current);
+  const late = active.filter(j => j.risk === "late").sort((a, b) => a.slack - b.slack);
+  const risk = active.filter(j => j.risk === "risk").sort((a, b) => a.slack - b.slack);
+  const unplanned = S.stages.filter(s => s.state !== "valmis" && plannedMin(s) == null && !S.stations[s.stage_code]?.is_external).length;
+  const internal = st.filter(x => !x.external).sort((a, b) => (b.wait - a.wait) || (b.backlog - a.backlog));
+  // normi täpsus: valmis etapid, kus on norm ja logitud aeg
+  const acc = {};
+  for (const s of S.stages) {
+    if (s.state !== "valmis" || !s.planned_min || !s.actualMin) continue;
+    (acc[s.stage_code] ??= { code: s.stage_code, n: 0, plan: 0, act: 0 });
+    acc[s.stage_code].n++; acc[s.stage_code].plan += +s.planned_min; acc[s.stage_code].act += s.actualMin;
+  }
+  return { st, active, late, risk, unplanned, internal, acc: Object.values(acc).sort((a,b) => b.act/b.plan - a.act/a.plan) };
+}
+
+function renderReport() {
+  const R = buildReport();
+  const maxBack = Math.max(1, ...R.internal.map(x => x.backlog || 0));
+  const bottleneck = R.internal[0];
+  let h = `<div class="kpis">
+    <div class="kpi"><b>${R.active.length}</b><span>pooleliolevat tööd</span></div>
+    <div class="kpi"><b class="${R.late.length ? "late" : ""}">${R.late.length}</b><span>prognoosi järgi hilineb</span></div>
+    <div class="kpi"><b class="${R.risk.length ? "risk" : ""}">${R.risk.length}</b><span>ohus (varu &lt; ${RISK_DAYS} p)</span></div>
+    <div class="kpi"><b>${bottleneck ? esc(bottleneck.code) : "–"}</b><span>suurim pudelikael</span></div>
+    <div class="kpi"><b class="${R.unplanned ? "risk" : ""}">${R.unplanned}</b><span>etappi ilma ajanormita</span></div>
+  </div>`;
+  if (R.unplanned) h += `<p class="note">* Etapid ilma ajanormita arvestatakse prognoosis nulliks, seega tegelik pilt on hullem. Lisa normid vahelehel „Ajanormid" või pingile vaikenorm.</p>`;
+
+  h += `<h2>Pinkide koormus</h2><p class="note">Järjestatud ootamise järgi: mida rohkem tunde teised etapid selle pingi taga ootavad, seda suurem pudelikael. Koormus = järelejäänud normitunnid / pingi päevane maht.</p>
+  <div class="tw"><table><thead><tr><th>Pink</th><th class="num">Etappe järjekorras</th><th class="num">Tunde</th><th class="num">Maht h/p</th><th>Koormus tööpäevades</th><th class="num">Ootamine kokku (p)</th><th class="num">Hilinevaid töid ootab siin</th><th class="num">Normita</th></tr></thead><tbody>`;
+  for (const x of R.internal) {
+    const hot = x.lateJobs.size > 0 && x === bottleneck;
+    h += `<tr><td class="mono">${esc(x.code)}</td><td class="num">${x.queue}</td><td class="num">${x.hours.toFixed(1)}</td>
+      <td class="num">${esc(S.stations[x.code]?.capacity_h ?? 8)}</td>
+      <td><div style="display:flex;gap:8px;align-items:center"><div class="loadbar"><i class="${hot ? "hot" : ""}" style="width:${Math.min(100, (x.backlog/maxBack)*100)}%"></i></div>${x.backlog.toFixed(1)}</div></td>
+      <td class="num">${x.wait.toFixed(1)}</td><td class="num ${x.lateJobs.size ? "late" : ""}">${x.lateJobs.size}</td><td class="num ${x.unplanned ? "risk" : ""}">${x.unplanned}</td></tr>`;
+  }
+  h += `</tbody></table></div>`;
+
+  const ext = R.st.filter(x => x.external);
+  if (ext.length) h += `<p class="note">Allhange (mahtu ei piira): ${ext.map(x => `<span class="mono">${esc(x.code)}</span> ${x.queue} etappi`).join(", ")}</p>`;
+
+  const jobRows = list => list.map(j => `<tr><td class="mono">${esc(j.wono)}</td><td>${esc(j.klient_nimi)}</td><td>${esc(j.tellimus)}</td><td class="mono">${esc(j.toote_id || j.drawing)}</td>
+    <td>${fmtDate(parseDate(j.tahtaeg))}</td><td>${fmtDate(j.projDate)}</td><td class="num ${j.slack < 0 ? "late" : "risk"}">${j.slack}</td>
+    <td class="mono">${esc(j.current.stage_code)}</td><td>${j.worstWait && j.worstWait.wait > 0.05 ? `<span class="mono">${esc(j.worstWait.stage_code)}</span> ootab ${j.worstWait.wait.toFixed(1)} p` : "–"}</td>
+    <td>${routeHtml(j)}</td></tr>`).join("");
+  const jh = `<thead><tr><th>WO</th><th>Klient</th><th>Tellimus</th><th>Toode</th><th>Tähtaeg</th><th>Prognoos</th><th class="num">Varu (tp)</th><th>Praegu</th><th>Kinni</th><th>Marsruut</th></tr></thead>`;
+  h += `<h2>Hilinevad tööd</h2>` + (R.late.length ? `<div class="tw"><table>${jh}<tbody>${jobRows(R.late)}</tbody></table></div>` : `<p class="note">Prognoosi järgi ei hiline ükski töö.</p>`);
+  if (R.risk.length) h += `<h2>Ohus</h2><div class="tw"><table>${jh}<tbody>${jobRows(R.risk)}</tbody></table></div>`;
+
+  if (R.acc.length) {
+    h += `<h2>Normide täpsus (valmis etapid)</h2><p class="note">Üle 100% = tegelikult kulub rohkem kui planeeritud. Kui pingi suhe on püsivalt kõrge, on prognoos liiga optimistlik.</p>
+    <div class="tw"><table><thead><tr><th>Pink</th><th class="num">Etappe</th><th class="num">Norm</th><th class="num">Tegelik</th><th class="num">Tegelik / norm</th></tr></thead><tbody>` +
+      R.acc.map(a => { const r = a.act / a.plan * 100; return `<tr><td class="mono">${esc(a.code)}</td><td class="num">${a.n}</td><td class="num">${fmtMin(a.plan)}</td><td class="num">${fmtMin(a.act)}</td><td class="num ${r > 120 ? "late" : r < 80 ? "ok-t" : ""}">${r.toFixed(0)}%</td></tr>`; }).join("") +
+      `</tbody></table></div>`;
+  }
+  h += `<p class="note" style="margin-top:22px">Prognoos on lihtsustatud: tööd järjestatakse prioriteedi ja tähtaja järgi, iga etapp algab, kui eelmine on valmis ja pink vaba. Arvestab nädalavahetusi ja riigipühi, aga mitte puhkusi ega masinarikkeid.</p>`;
+  $("reportBody").innerHTML = h;
+}
+
+$("copyReport").onclick = async () => {
+  const R = buildReport(); const d = new Date();
+  let t = `Tootmise raport ${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}\n\n`;
+  t += `Pooleli: ${R.active.length} | Hilineb: ${R.late.length} | Ohus: ${R.risk.length} | Normita etappe: ${R.unplanned}\n\n`;
+  t += `Pudelikaelad (ootamine päevades / koormus päevades):\n` + R.internal.slice(0, 5).map(x => `  ${x.code}: ${x.wait.toFixed(1)} / ${x.backlog.toFixed(1)}  (hilinevaid: ${x.lateJobs.size})`).join("\n");
+  t += `\n\nHilinevad:\n` + (R.late.map(j => `  WO ${j.wono} ${j.klient_nimi || ""} ${j.tellimus || ""} ${j.toote_id || ""} — tähtaeg ${fmtDate(parseDate(j.tahtaeg))}, prognoos ${fmtDate(j.projDate)} (${j.slack} tp), praegu ${j.current.stage_code}`).join("\n") || "  –");
+  try { await navigator.clipboard.writeText(t); toast("Raport kopeeritud"); } catch { toast("Kopeerimine ei õnnestunud", true); }
+};
+
+// ---------- AJANORMID ----------
+function parseMinutes(str, kogus) {
+  const s = String(str).trim().toLowerCase().replace(",", ".");
+  if (!s) return null;
+  let m;
+  if ((m = s.match(/^([\d.]+)\s*\/\s*tk$/))) return +m[1] * (Number(kogus) || 1);
+  if ((m = s.match(/^([\d.]+)\s*h$/))) return +m[1] * 60;
+  if ((m = s.match(/^([\d.]+)\s*(min)?$/))) return +m[1];
+  return NaN;
+}
+function renderPlan() {
+  const sel = $("planStation"); const prev = sel.value;
+  const codes = Object.keys(S.stations).filter(c => !S.stations[c].ignore).sort();
+  sel.innerHTML = `<option value="">Kõik pingid</option>` + codes.map(c => `<option ${c === prev ? "selected" : ""}>${esc(c)}</option>`).join("");
+  const only = $("planOnlyEmpty").checked;
+  const list = S.stages.filter(s => s.state !== "valmis" && (!sel.value || s.stage_code === sel.value) && (!only || s.planned_min == null))
+    .sort((a, b) => ((a.job.tahtaeg||"9") < (b.job.tahtaeg||"9") ? -1 : (a.job.tahtaeg||"9") > (b.job.tahtaeg||"9") ? 1 : 0) || a.job.wono.localeCompare(b.job.wono) || a.seq - b.seq);
+  $("planCount").textContent = `${list.length} etappi` + (list.length > 400 ? " (näitan 400)" : "");
+  $("planTable").innerHTML = `<thead><tr><th>WO</th><th>Klient</th><th>Toode</th><th>Nimetus</th><th class="num">Kogus</th><th>Tähtaeg</th><th>Etapp</th><th>Marsruut</th><th>Norm</th><th class="num">Tegelik</th></tr></thead><tbody>` +
+    list.slice(0, 400).map(s => `<tr><td class="mono">${esc(s.job.wono)}</td><td>${esc(s.job.klient_nimi)}</td><td class="mono">${esc(s.job.toote_id || s.job.drawing)}</td>
+      <td>${esc(s.job.nimetus)}</td><td class="num">${esc(s.job.kogus)}</td><td>${dueHtml(s.job)}</td>
+      <td class="mono">${s.seq}. ${esc(s.stage_code)}</td><td>${routeHtml(s.job, s.id)}</td>
+      <td><input data-norm="${s.id}" data-kogus="${esc(s.job.kogus)}" value="${s.planned_min ?? ""}" placeholder="${esc(S.stations[s.stage_code]?.default_min ?? "")}"></td>
+      <td class="num">${s.actualMin ? fmtMin(liveMin(s)) : ""}</td></tr>`).join("") + `</tbody>`;
+}
+$("planStation").onchange = renderPlan; $("planOnlyEmpty").onchange = renderPlan;
+$("planTable").addEventListener("keydown", e => { if (e.key === "Enter" && e.target.dataset.norm) { e.preventDefault(); e.target.blur(); } });
+$("planTable").addEventListener("change", async e => {
+  const inp = e.target; if (!inp.dataset.norm) return;
+  const v = parseMinutes(inp.value, inp.dataset.kogus);
+  if (Number.isNaN(v)) { toast("Arusaamatu väärtus: " + inp.value, true); return; }
+  const { error } = await sb.from("job_stages").update({ planned_min: v == null ? null : Math.round(v) }).eq("id", inp.dataset.norm);
+  if (error) return toast(error.message, true);
+  const s = S.stages.find(x => x.id === inp.dataset.norm); if (s) s.planned_min = v == null ? null : Math.round(v);
+  inp.value = s?.planned_min ?? ""; inp.style.borderColor = "var(--done)";
+  S.sim = simulate(); $("planCount").textContent = "Salvestatud";
+});
+
+// ---------- PINGID JA KASUTAJAD ----------
+function renderSettings() {
+  const list = Object.values(S.stations).sort((a,b) => a.code.localeCompare(b.code));
+  $("stationTable").innerHTML = `<thead><tr><th>Kood</th><th>Nimi</th><th>Maht h/p</th><th>Allhange</th><th>Tarne p</th><th>Vaikenorm min</th><th>Ei ole etapp</th><th>Järjekord</th></tr></thead><tbody>` +
+    list.map(s => `<tr data-code="${esc(s.code)}"><td class="mono">${esc(s.code)}</td>
+      <td><input class="wide" data-f="name" value="${esc(s.name ?? "")}"></td>
+      <td><input type="number" step="0.5" data-f="capacity_h" value="${esc(s.capacity_h)}"></td>
+      <td><input type="checkbox" data-f="is_external" ${s.is_external ? "checked" : ""}></td>
+      <td><input type="number" step="0.5" data-f="lead_days" value="${esc(s.lead_days)}"></td>
+      <td><input type="number" data-f="default_min" value="${esc(s.default_min ?? "")}"></td>
+      <td><input type="checkbox" data-f="ignore" ${s.ignore ? "checked" : ""}></td>
+      <td><input type="number" data-f="sort" value="${esc(s.sort ?? 100)}"></td></tr>`).join("") + `</tbody>`;
+  $("userTable").innerHTML = `<thead><tr><th>Nimi</th><th>Roll</th><th>Vaikimisi pink</th></tr></thead><tbody>` +
+    S.profiles.map(p => `<tr data-user="${p.user_id}"><td><input class="wide" data-f="name" value="${esc(p.name)}"></td>
+      <td><select data-f="role"><option ${p.role === "tooline" ? "selected" : ""}>tooline</option><option ${p.role === "planeerija" ? "selected" : ""}>planeerija</option></select></td>
+      <td><input data-f="default_station" value="${esc(p.default_station ?? "")}"></td></tr>`).join("") + `</tbody>`;
+}
+$("stationTable").addEventListener("change", async e => {
+  const f = e.target.dataset.f; const tr = e.target.closest("tr[data-code]"); if (!f || !tr) return;
+  let v = e.target.type === "checkbox" ? e.target.checked : e.target.value;
+  if (["capacity_h","lead_days","default_min","sort"].includes(f)) v = v === "" ? null : Number(v);
+  const { error } = await sb.from("stations").update({ [f]: v }).eq("code", tr.dataset.code);
+  if (error) return toast(error.message, true);
+  S.stations[tr.dataset.code][f] = v; S.sim = simulate(); toast("Salvestatud");
+});
+$("userTable").addEventListener("change", async e => {
+  const f = e.target.dataset.f; const tr = e.target.closest("tr[data-user]"); if (!f || !tr) return;
+  const v = e.target.value.trim() || null;
+  const { error } = await sb.from("profiles").update({ [f]: v }).eq("user_id", tr.dataset.user);
+  if (error) return toast(error.message, true); toast("Salvestatud");
+});
+
+// ---------- IMPORT ----------
+let pendingRows = null;
+function toISODate(v) {
+  if (v == null || v === "") return null;
+  let d;
+  if (v instanceof Date) d = v;
+  else if (typeof v === "number") { const u = new Date(Math.round((v - 25569) * 86400000)); d = new Date(u.getUTCFullYear(), u.getUTCMonth(), u.getUTCDate()); }
+  else { const s = String(v).trim(); const m = s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/); d = m ? new Date(+m[3], +m[2]-1, +m[1]) : new Date(s); }
+  if (isNaN(d)) return null;
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+const str = v => v == null || String(v).trim() === "" ? null : String(v).trim();
+const numv = v => v == null || v === "" || isNaN(Number(v)) ? null : Number(v);
+
+async function readExport(file) {
+  const wb = XLSX.read(await file.arrayBuffer(), { type: "array", cellDates: true });
+  const sheet = wb.Sheets[wb.SheetNames[0]];
+  const grid = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: null });
+  const hi = grid.findIndex(r => r.some(c => String(c ?? "").trim().toLowerCase() === "wono"));
+  if (hi < 0) throw new Error("Päiserida veeruga „wono” ei leitud");
+  const head = grid[hi].map(c => String(c ?? "").trim());
+  const rows = grid.slice(hi + 1).map(r => Object.fromEntries(head.map((h, i) => [h, r[i]])));
+  const out = []; let noRoute = 0;
+  for (const r of rows) {
+    if (r.wono == null || r.wono === "") continue;
+    const route = str(r.notes);
+    if (!route) { noRoute++; continue; }
+    out.push({
+      wono: String(Math.trunc(Number(r.wono)) || String(r.wono).trim()),
+      tl_rida: r.nr != null && r.tl_rida != null ? `${r.nr}/${r.tl_rida}` : str(r.toote_id2),
+      toote_id: str(r.toote_id), tellimus: str(r.tellimus), klient_nimi: str(r.klient_nimi), kontakt: str(r.kontakt),
+      drawing: str(r.Drawing), joonise_nr: str(r.Drawing), revno: str(r.revno), nimetus: str(r.nimetus),
+      kogus: numv(r.kogus), valmistamata: numv(r.valmistamata),
+      tahtaeg: toISODate(r["T_TLS.tahtaeg"]), start_date: toISODate(r.StartDate),
+      prioriteet: !!Number(r.Prioriteetne), route_raw: route,
+      erp_status: str(r.Text1585), pinnatootlus: str(r.Text1618), int_ext: str(r.Text1597),
+    });
+  }
+  return { rows: out, noRoute };
+}
+
+async function handleFile(file) {
+  $("importLog").textContent = ""; $("importPreview").innerHTML = "";
+  try {
+    const { rows, noRoute } = await readExport(file);
+    pendingRows = rows;
+    const codes = new Set(); rows.forEach(r => r.route_raw.split("-").map(s => s.trim()).filter(Boolean).forEach(c => codes.add(c)));
+    const fresh = [...codes].filter(c => !S.stations[c]).sort();
+    const ign = [...codes].filter(c => S.stations[c]?.ignore);
+    const known = new Set(S.jobs.map(j => j.wono));
+    const nNew = rows.filter(r => !known.has(r.wono)).length;
+    const gone = S.jobs.filter(j => !rows.some(r => r.wono === j.wono)).length;
+    $("importPreview").innerHTML = `<h2>${esc(file.name)}</h2>
+      <p>${rows.length} tööd marsruudiga (${nNew} uut, ${rows.length - nNew} olemas), ${noRoute} ilma marsruudita jäetakse vahele.
+      ${gone ? `<br><b>${gone}</b> praegu aktiivset tööd pole enam failis → märgitakse suletuks.` : ""}</p>
+      ${fresh.length ? `<p>Uued pingikoodid (luuakse automaatselt, vaata üle „Pingid” all): ${fresh.map(c => `<span class="chip">${esc(c)}</span>`).join(" ")}</p>` : ""}
+      ${ign.length ? `<p class="note">Välja jäetakse (märgitud „ei ole etapp”): ${ign.map(esc).join(", ")}</p>` : ""}
+      <div class="tw" style="max-width:720px"><table><thead><tr><th>WO</th><th>Klient</th><th>Toode</th><th>Tähtaeg</th><th>Marsruut → etapid</th></tr></thead><tbody>
+      ${rows.slice(0, 6).map(r => `<tr><td class="mono">${esc(r.wono)}</td><td>${esc(r.klient_nimi)}</td><td class="mono">${esc(r.toote_id)}</td><td>${esc(r.tahtaeg)}</td>
+        <td>${r.route_raw.split("-").map(s => s.trim()).filter(Boolean).map((c, i) => `<span class="chip">${i+1}. ${esc(c)}</span>`).join(" ")}</td></tr>`).join("")}
+      </tbody></table></div>
+      <p style="margin-top:14px"><button class="btn primary" id="doImport">Impordi ${rows.length} tööd</button></p>
+      <p class="note">Olemasolevate tööde staatused, ajalogid ja normid jäävad alles. Kui marsruut on ERP-s muutunud, säilivad samanimelised etapid.</p>`;
+    $("doImport").onclick = runImport;
+  } catch (e) { $("importLog").textContent = "Viga: " + e.message; }
+}
+
+async function runImport() {
+  $("doImport").disabled = true; $("importLog").textContent = "Impordin…";
+  const { data, error } = await sb.rpc("import_jobs", { p_rows: pendingRows });
+  if (error) { $("importLog").textContent = "Viga: " + error.message; $("doImport").disabled = false; return; }
+  $("importLog").textContent = `Valmis. Uusi: ${data.uued}, uuendatud: ${data.uuendatud}, marsruut muutus: ${data.marsruut_muutus}, suletud: ${data.suletud}, vahele jäetud: ${data.vahele_jaetud}.`;
+  pendingRows = null; await loadAll();
+}
+
+const drop = $("drop");
+["dragover","dragenter"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("dragover"); }));
+["dragleave","drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("dragover"); }));
+drop.addEventListener("drop", e => { if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); });
+$("file").onchange = e => { if (e.target.files[0]) handleFile(e.target.files[0]); e.target.value = ""; };
+
+// start
+sb.auth.getSession().then(({ data }) => onSession(data.session));
+</script>
+</body>
+</html>
