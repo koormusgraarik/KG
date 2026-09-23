@@ -260,7 +260,8 @@ $("loginBtn").onclick = async () => {
 $("password").addEventListener("keydown", e => { if (e.key === "Enter") $("loginBtn").click(); });
 $("logoutBtn").onclick = () => sb.auth.signOut();
 
-sb.auth.onAuthStateChange((_e, session) => onSession(session));
+// NB: supabase-js lukustub, kui selle callback'i sees tehakse await-päringuid -> lükkame edasi
+sb.auth.onAuthStateChange((_e, session) => { setTimeout(() => onSession(session), 0); });
 let sessionUserId = undefined;
 async function onSession(session) {
   const uid = session?.user?.id || null;
@@ -853,8 +854,17 @@ async function handleFile(file) {
 
 async function runImport() {
   $("doImport").disabled = true; $("importLog").textContent = "Impordin…";
-  const { data, error } = await sb.rpc("import_jobs", { p_rows: pendingRows });
-  if (error) { $("importLog").textContent = "Viga: " + error.message; $("doImport").disabled = false; return; }
+  const t0 = Date.now();
+  const tick = setInterval(() => { $("importLog").textContent = `Impordin… ${Math.round((Date.now() - t0) / 1000)} s`; }, 1000);
+  let data, error;
+  try {
+    ({ data, error } = await Promise.race([
+      sb.rpc("import_jobs", { p_rows: pendingRows }),
+      new Promise((_, rej) => setTimeout(() => rej(new Error("Server ei vastanud 60 sekundiga. Värskenda lehte (Ctrl+F5) ja kontrolli vahelehte „Tööd” — import võis siiski õnnestuda.")), 60000)),
+    ]));
+  } catch (e) { error = e; }
+  clearInterval(tick);
+  if (error) { $("importLog").textContent = "Viga: " + (error.message || error) + (error.hint ? "\n" + error.hint : "") + (error.details ? "\n" + error.details : ""); $("doImport").disabled = false; return; }
   $("importLog").textContent = `Valmis. Uusi: ${data.uued}, uuendatud: ${data.uuendatud}, marsruut muutus: ${data.marsruut_muutus}, suletud: ${data.suletud}, vahele jäetud: ${data.vahele_jaetud}.`;
   pendingRows = null; await loadAll();
 }
