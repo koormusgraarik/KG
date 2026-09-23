@@ -189,7 +189,7 @@
 
     <!-- KOORMUS -->
     <section id="tab-koormus" class="hidden">
-      <div class="toolbar"><button class="btn" id="copyReport">Kopeeri raport tekstina</button></div>
+      <div class="toolbar"><button class="btn primary" id="excelReport">Laadi alla Excel</button><button class="btn" id="copyReport">Kopeeri raport tekstina</button></div>
       <div id="reportBody"></div>
     </section>
 
@@ -634,7 +634,84 @@ $("copyReport").onclick = async () => {
   t += `Pooleli: ${R.active.length} | Hilineb: ${R.late.length} | Ohus: ${R.risk.length} | Normita etappe: ${R.unplanned}\n\n`;
   t += `Pudelikaelad (ootamine päevades / koormus päevades):\n` + R.internal.slice(0, 5).map(x => `  ${x.code}: ${x.wait.toFixed(1)} / ${x.backlog.toFixed(1)}  (hilinevaid: ${x.lateJobs.size})`).join("\n");
   t += `\n\nHilinevad:\n` + (R.late.map(j => `  WO ${j.wono} ${j.klient_nimi || ""} ${j.tellimus || ""} ${j.toote_id || ""} — tähtaeg ${fmtDate(parseDate(j.tahtaeg))}, prognoos ${fmtDate(j.projDate)} (${j.slack} tp), praegu ${j.current.stage_code}`).join("\n") || "  –");
-  try { await navigator.clipboard.writeText(t); toast("Raport kopeeritud"); } catch { toast("Kopeerimine ei õnnestunud", true); }
+  if (await copyText(t)) toast("Raport kopeeritud"); else toast("Kopeerimine ei õnnestunud — kasuta Exceli allalaadimist", true);
+};
+
+async function copyText(t) {
+  try { if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(t); return true; } } catch {}
+  // varulahendus vanematele brauseritele / kui lõikelaua luba puudub
+  const ta = document.createElement("textarea");
+  ta.value = t; ta.setAttribute("readonly", ""); ta.style.cssText = "position:fixed;top:0;left:0;opacity:0";
+  document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, t.length);
+  let ok = false; try { ok = document.execCommand("copy"); } catch {}
+  ta.remove(); return ok;
+}
+
+// ---------- EXCEL ----------
+$("excelReport").onclick = () => {
+  try {
+    const R = buildReport(); const now = new Date();
+    const d = s => parseDate(s);                     // ISO -> Date
+    const wb = XLSX.utils.book_new();
+    const add = (name, rows, widths) => {
+      const ws = XLSX.utils.aoa_to_sheet(rows, { cellDates: true, dateNF: "dd\\.mm\\.yyyy" });
+      ws["!cols"] = widths.map(w => ({ wch: w }));
+      if (rows.length > 1) ws["!autofilter"] = { ref: XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: rows.length - 1, c: rows[0].length - 1 } }) };
+      XLSX.utils.book_append_sheet(wb, ws, name);
+    };
+    const bottleneck = R.internal[0];
+
+    add("Kokkuvõte", [
+      ["Näitaja", "Väärtus"],
+      ["Raport koostatud", now],
+      ["Pooleliolevaid töid", R.active.length],
+      ["Prognoosi järgi hilineb", R.late.length],
+      [`Ohus (varu < ${RISK_DAYS} tp)`, R.risk.length],
+      ["Suurim pudelikael", bottleneck ? bottleneck.code : "–"],
+      ["Etappe ilma ajanormita", R.unplanned],
+    ], [28, 20]);
+
+    add("Pinkide koormus", [
+      ["Pink", "Etappe järjekorras", "Neist pooleli", "Tunde", "Maht h/p", "Koormus tp", "Ootamine kokku tp", "Hilinevaid töid ootab", "Normita etappe"],
+      ...R.internal.map(x => [x.code, x.queue, x.running, +x.hours.toFixed(1), Number(S.stations[x.code]?.capacity_h ?? 8),
+        +x.backlog.toFixed(2), +x.wait.toFixed(2), x.lateJobs.size, x.unplanned]),
+      ...R.st.filter(x => x.external).map(x => [x.code + " (allhange)", x.queue, x.running, null, null, null, null, x.lateJobs.size, null]),
+    ], [18, 18, 13, 9, 10, 11, 17, 20, 15]);
+
+    const jobHead = ["WO", "Klient", "Tellimus", "Rida", "Toode", "Nimetus", "Kogus", "Pind", "Prioriteet", "Tähtaeg", "Prognoos", "Varu tp", "Praegu", "Praegu staatus", "Kinni (ootab kauem)", "Ootab tp", "Normita etappe", "Marsruut", "Tehtud etappe", "ERP staatus"];
+    const jobRow = j => [j.wono, j.klient_nimi, j.tellimus, j.tl_rida, j.toote_id || j.drawing, j.nimetus, j.kogus, j.pinnatootlus,
+      j.prioriteet ? "jah" : "", d(j.tahtaeg), j.projDate, j.slack, j.current?.stage_code ?? "valmis", j.current?.state ?? "",
+      j.worstWait && j.worstWait.wait > 0.05 ? j.worstWait.stage_code : "", j.worstWait ? +j.worstWait.wait.toFixed(2) : null,
+      j.unplanned || 0, j.stages.map(s => s.stage_code).join("-"),
+      `${j.stages.filter(s => s.state === "valmis").length}/${j.stages.length}`, j.erp_status];
+    const w = [8, 16, 12, 9, 14, 16, 7, 12, 9, 11, 11, 8, 10, 13, 17, 9, 14, 26, 12, 22];
+    add("Hilinevad", [jobHead, ...R.late.map(jobRow)], w);
+    add("Ohus", [jobHead, ...R.risk.map(jobRow)], w);
+    const all = [...S.jobs].sort((a, b) => (a.slack ?? 999) - (b.slack ?? 999));
+    add("Kõik tööd", [jobHead, ...all.map(jobRow)], w);
+
+    add("Etapid", [
+      ["WO", "Klient", "Toode", "Kogus", "Tähtaeg", "Jrk", "Etapp", "Olek", "Norm min", "Tegelik min", "Tegelik/norm %", "Prognoositud algus", "Prognoositud lõpp", "Ootab tp", "Tegijad", "Valmis märkis", "Valmis aeg"],
+      ...S.jobs.flatMap(j => j.stages.map(s => {
+        const p = plannedMin(s); const a = liveMin(s);
+        return [j.wono, j.klient_nimi, j.toote_id || j.drawing, j.kogus, d(j.tahtaeg), s.seq, s.stage_code, s.state,
+          p, a ? Math.round(a) : null, p && a ? Math.round(a / p * 100) : null,
+          s.state === "valmis" ? null : addWorkdays(today0(), s.pStart ?? 0),
+          s.state === "valmis" ? null : addWorkdays(today0(), s.pEnd ?? 0),
+          s.wait != null && s.state !== "valmis" ? +s.wait.toFixed(2) : null,
+          s.workers || "", s.done_by || "", s.finished_at ? new Date(s.finished_at) : null];
+      })),
+    ], [8, 16, 14, 7, 11, 5, 9, 9, 9, 11, 13, 17, 16, 9, 18, 14, 17]);
+
+    if (R.acc.length) add("Normide täpsus", [
+      ["Pink", "Valmis etappe", "Norm min", "Tegelik min", "Tegelik/norm %"],
+      ...R.acc.map(a => [a.code, a.n, Math.round(a.plan), Math.round(a.act), Math.round(a.act / a.plan * 100)]),
+    ], [10, 14, 10, 12, 15]);
+
+    const stamp = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
+    XLSX.writeFile(wb, `koormus_${stamp}.xlsx`, { cellDates: true });
+    toast("Excel alla laaditud");
+  } catch (e) { console.error(e); toast("Exceli koostamine ebaõnnestus: " + e.message, true); }
 };
 
 // ---------- AJANORMID ----------
