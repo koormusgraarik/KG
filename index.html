@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.0/dist/umd/supabase.js"></script>
 <style>
   :root {
     --ink: #1c2521; --paper: #f6f5f1; --panel: #ecebe5; --line: #d3cfc2;
@@ -235,11 +235,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_ELnW_8d2wLlmD7wSCsfFIQ_XeD5rT-_";   //
 const RISK_DAYS = 2;   // tööpäeva varu, millest väiksem = "ohus"
 // ===================================
 
-// Brauseri lukk (navigator.locks) võib jääda kinni teise vahelehe taha -> kõik päringud ootavad.
-// Lihtne lukk ilma vahelehtede-ülese ootamiseta:
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: { lock: async (_name, _timeout, fn) => await fn() },
-});
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const store = { get(k){ try { return localStorage.getItem(k); } catch { return null; } }, set(k,v){ try { localStorage.setItem(k,v); } catch {} } };
