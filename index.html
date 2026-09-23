@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
   :root {
     --ink: #1c2521; --paper: #f6f5f1; --panel: #ecebe5; --line: #d3cfc2;
@@ -231,11 +231,15 @@
 <script>
 // ============ SEADISTUS ============
 const SUPABASE_URL = "https://irdthackmhyzshfnodhv.supabase.co";   // ilma /rest/v1/ lõputa!
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlyZHRoYWNrbWh5enNoZm5vZGh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAxNjUzNDksImV4cCI6MjEwNTc0MTM0OX0.cHE3cf4Ui8eA9OOQ3tP-TBy68nCZcIuMNZD_Y5r9jeE";
+const SUPABASE_ANON_KEY = "sb_publishable_ELnW_8d2wLlmD7wSCsfFIQ_XeD5rT-_";   // publishable (avalik) võti
 const RISK_DAYS = 2;   // tööpäeva varu, millest väiksem = "ohus"
 // ===================================
 
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Brauseri lukk (navigator.locks) võib jääda kinni teise vahelehe taha -> kõik päringud ootavad.
+// Lihtne lukk ilma vahelehtede-ülese ootamiseta:
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: { lock: async (_name, _timeout, fn) => await fn() },
+});
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const store = { get(k){ try { return localStorage.getItem(k); } catch { return null; } }, set(k,v){ try { localStorage.setItem(k,v); } catch {} } };
@@ -244,6 +248,11 @@ let S = { session:null, profile:null, jobs:[], stages:[], stations:{}, profiles:
 let currentTab = store.get("tab") || "pink";
 let currentStation = store.get("station") || null;
 
+function showFatal(msg) {
+  let el = $("fatal");
+  if (!el) { el = document.createElement("div"); el.id = "fatal"; el.style.cssText = "background:var(--late);color:#fff;padding:12px 16px;font-size:.92rem"; document.querySelector("main").prepend(el); }
+  el.textContent = msg + "  (Värskenda lehte Ctrl+F5 või saada see tekst edasi.)";
+}
 function toast(msg, isErr) {
   const t = $("toast"); t.textContent = msg; t.className = "toast" + (isErr ? " err" : "");
   clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.add("hidden"), isErr ? 5000 : 2200);
@@ -269,7 +278,9 @@ async function onSession(session) {
   sessionUserId = uid; S.session = session; S.profile = null; S.loadedAt = 0;
   if (!session) { $("authView").classList.remove("hidden"); $("appView").classList.add("hidden"); return; }
   $("authView").classList.add("hidden"); $("appView").classList.remove("hidden");
-  const { data } = await sb.from("profiles").select("*").eq("user_id", session.user.id).maybeSingle();
+  const { data, error } = await sb.from("profiles").select("*").eq("user_id", session.user.id).maybeSingle();
+  if (error) showFatal("Profiili lugemine ebaõnnestus: " + error.message);
+  else if (!data) showFatal("Sinu kasutajal pole profiili (tabel profiles). Käivita SQL Editoris planeerija rolli päring.");
   S.profile = data || { name: session.user.email, role: "tooline" };
   $("whoName").textContent = S.profile.name + (isPlanner() ? " · planeerija" : "");
   document.querySelectorAll("[data-planner]").forEach(b => b.classList.toggle("hidden", !isPlanner()));
@@ -330,7 +341,7 @@ async function loadAll() {
     }
     S.sim = simulate();
     render();
-  } catch (e) { console.error(e); toast("Andmete laadimine ebaõnnestus: " + e.message, true); }
+  } catch (e) { console.error(e); showFatal("Andmete laadimine ebaõnnestus: " + (e.message || e)); }
 }
 
 let rtChannel = null, reloadTimer = null;
@@ -630,6 +641,7 @@ function renderReport() {
 }
 
 $("copyReport").onclick = async () => {
+  if (!S.sim) return toast("Andmed pole veel laaditud — vaata lehe ülaosa veateadet või värskenda (Ctrl+F5)", true);
   const R = buildReport(); const d = new Date();
   let t = `Tootmise raport ${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}\n\n`;
   t += `Pooleli: ${R.active.length} | Hilineb: ${R.late.length} | Ohus: ${R.risk.length} | Normita etappe: ${R.unplanned}\n\n`;
@@ -650,6 +662,7 @@ async function copyText(t) {
 
 // ---------- EXCEL ----------
 $("excelReport").onclick = () => {
+  if (!S.sim) return toast("Andmed pole veel laaditud — vaata lehe ülaosa veateadet või värskenda (Ctrl+F5)", true);
   try {
     const R = buildReport(); const now = new Date();
     const d = s => parseDate(s);                     // ISO -> Date
