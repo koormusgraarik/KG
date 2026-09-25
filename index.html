@@ -231,6 +231,11 @@
   td.mv button { width: 34px; height: 34px; border: 1px solid var(--line); background: var(--paper); border-radius: 5px; margin-left: 3px; font-size: 15px; }
   td.mv button:hover { border-color: var(--accent); }
   #jrkPicker { margin-bottom: 10px; }
+  .grip { display: inline-block; cursor: grab; touch-action: none; user-select: none; font-size: 18px; line-height: 1; padding: 6px 8px; margin: -6px 4px -6px -6px; color: var(--muted); vertical-align: middle; }
+  .grip:hover { color: var(--ink); }
+  table.jrk tr.dragging { opacity: .85; outline: 2px solid var(--accent); outline-offset: -2px; }
+  table.jrk tr.dragging td { background: color-mix(in srgb, var(--accent) 10%, var(--paper)); }
+  body:has(tr.dragging) { cursor: grabbing; user-select: none; }
 
   .toast { position:fixed; left:50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform:translateX(-50%); background:var(--ink); color:var(--paper); padding:10px 16px; border-radius:6px; font-size:.9rem; z-index:20; max-width: 90vw; }
   .toast.err { background: var(--late); color:#fff; }
@@ -510,7 +515,7 @@ const plannedMin = s => s.planned_min ?? S.stations[s.stage_code]?.default_min ?
 // Etapp algab, kui eelmine etapp on valmis JA pink on vaba. Allhange = tarneaeg, mahtu ei piira.
 // Ajaühik = tööpäev; pingi maht = capacity_h tundi päevas.
 const cmpStr = (a, b) => a < b ? -1 : a > b ? 1 : 0;
-const isOwnCode = code => /^[TF]\d/i.test(code);
+const isOwnCode = code => /^[TF]\d/i.test(code) || ["KEEV", "LK"].includes(String(code).toUpperCase());
 function stationOf(code) {
   return S.stations[code] || { code, capacity_h: 8, is_external: !isOwnCode(code), lead_days: 5 };
 }
@@ -989,16 +994,16 @@ function renderJrk() {
   const list = S.stages.filter(s => s.stage_code === jrkStation && s.state !== "valmis").sort(queueSort);
   const manual = list.some(s => s.queue_pos != null);
   const x = S.sim.stations[jrkStation];
-  $("jrkTools").innerHTML = `<span class="muted">${list.length} etappi · ${fmtH1(x?.hours || 0)} h · vaba ${x?.queue ? fmtDate(x.freeDate) : "kohe"} · ${manual ? "<b>käsitsi järjekord</b>" : "järjestatud prioriteedi ja tähtaja järgi"}</span>` +
+  $("jrkTools").innerHTML = `<span class="muted">${isPlanner() ? "Lohista ⠿ või kasuta nooli · " : ""}${list.length} etappi · ${fmtH1(x?.hours || 0)} h · vaba ${x?.queue ? fmtDate(x.freeDate) : "kohe"} · ${manual ? "<b>käsitsi järjekord</b>" : "järjestatud prioriteedi ja tähtaja järgi"}</span>` +
     (isPlanner() && manual ? `<button class="btn" id="jrkReset">Järjesta tähtaja järgi</button>` : "") +
     `<button class="btn" data-kst-go="${esc(jrkStation)}">Vaata ajakava</button>`;
   const canMove = isPlanner();
-  $("jrkList").innerHTML = list.length ? `<div class="tw"><table class="jrk"><thead><tr><th class="num">#</th><th>Töö</th><th class="num">Norm</th><th>Tähtaeg</th><th>Prognoos</th><th>Olek</th>${canMove ? "<th></th>" : ""}</tr></thead><tbody>` +
+  $("jrkList").innerHTML = list.length ? `<div class="tw"><table class="jrk"><thead><tr><th class="num">#</th><th>Töö</th><th class="num">Norm</th><th>Tähtaeg</th><th>Prognoos</th><th>Olek</th>${canMove ? "<th></th>" : ""}</tr></thead><tbody id="jrkBody">` +
     list.map((s, i) => {
       const j = s.job; const pinned = isRunning(s);
       const prog = s.pStart != null ? `${fmtDate(addWorkdays(today0(), s.pStart))} – ${fmtDate(addWorkdays(today0(), s.pEnd))}` : "–";
       const stateTxt = s.state === "lukus" ? `ootab <span class="mono">${esc(s.blockedBy.stage_code)}</span>` : s.state === "avatud" ? "saab alustada" : s.state;
-      return `<tr class="r-${riskCls(j)}"><td class="num mono">${i + 1}</td>
+      return `<tr class="r-${riskCls(j)}${pinned ? " pinned" : ""}" data-sid="${s.id}"><td class="num mono">${canMove && !pinned ? `<span class="grip" title="Lohista">⠿</span>` : ""}${i + 1}</td>
         <td><b>${esc(jobLabel(j))}</b>${j.prioriteet ? ` <span class="prio">PRIO</span>` : ""}<br><span class="muted">WO ${esc(j.wono)} · ${esc(j.nimetus || "")} · ${esc(j.kogus ?? "")} tk</span></td>
         <td class="num">${s.unknown ? `<span class="risk">puudub</span>` : fmtH(plannedMin(s))}</td>
         <td class="${j.overdue ? "late" : ""}">${fmtDate(parseDate(j.tahtaeg))}</td>
@@ -1021,6 +1026,32 @@ $("jrkList").addEventListener("click", async e => {
   list.splice(to, 0, it);
   await saveQueue(jrkStation, list.map(s => s.id));
 });
+// lohistamine (hiir ja puutetundlik ekraan)
+let drag = null;
+$("jrkList").addEventListener("pointerdown", e => {
+  const g = e.target.closest(".grip"); if (!g || !isPlanner()) return;
+  const tr = g.closest("tr"); e.preventDefault();
+  drag = { tr, before: [...$("jrkBody").querySelectorAll("tr[data-sid]:not(.pinned)")].map(r => r.dataset.sid).join() };
+  tr.classList.add("dragging"); g.setPointerCapture(e.pointerId);
+});
+$("jrkList").addEventListener("pointermove", e => {
+  if (!drag) return;
+  const y = e.clientY;
+  if (y < 60) window.scrollBy(0, -12); else if (y > window.innerHeight - 60) window.scrollBy(0, 12);
+  const rows = [...$("jrkBody").querySelectorAll("tr[data-sid]:not(.pinned)")].filter(r => r !== drag.tr);
+  const after = rows.find(r => { const b = r.getBoundingClientRect(); return y < b.top + b.height / 2; });
+  if (after) { if (drag.tr.nextSibling !== after) $("jrkBody").insertBefore(drag.tr, after); }
+  else if (rows.length && rows[rows.length - 1].nextSibling !== drag.tr) rows[rows.length - 1].after(drag.tr);
+});
+const endDrag = async () => {
+  if (!drag) return;
+  const d = drag; drag = null; d.tr.classList.remove("dragging");
+  const ids = [...$("jrkBody").querySelectorAll("tr[data-sid]:not(.pinned)")].map(r => r.dataset.sid);
+  if (ids.join() !== d.before) await saveQueue(jrkStation, ids);
+};
+$("jrkList").addEventListener("pointerup", endDrag);
+$("jrkList").addEventListener("pointercancel", endDrag);
+
 async function saveQueue(code, ids) {
   const { error } = await sb.rpc("set_queue", { p_station: code, p_ids: ids });
   if (error) return toast(error.message, true);
