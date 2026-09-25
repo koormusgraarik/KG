@@ -114,6 +114,7 @@
   tr.detail td { background: var(--panel); white-space: normal; padding: 12px; }
   td input { padding:6px 8px; border:1px solid var(--line); border-radius:5px; background:var(--paper); width: 90px; }
   td input.wide { width: 160px; }
+  td input[type=number], td select { width: 100px; }
   .late { color:var(--late); font-weight:600; }
   .risk { color:var(--pause); font-weight:600; }
   .ok-t { color:var(--done); }
@@ -134,6 +135,102 @@
   .drop.dragover { border-color:var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
   .drop input { display:none; }
   .log { font-family:var(--mono); font-size:.82rem; white-space:pre-wrap; margin-top:14px; max-width: 620px; }
+
+  /* ---- koormus (TEL 2.0 stiilis) ---- */
+  #tab-koormus .toolbar select { min-width: 200px; }
+  #reportBody, #jrkList { display: flex; flex-direction: column; gap: 14px; }
+  .kks { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); }
+  @media (max-width: 900px) { .kks { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (max-width: 520px) { .kks { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .kk { background: var(--paper); padding: 9px 12px; display: flex; flex-direction: column; gap: 1px; border-top: 3px solid var(--line); min-width: 0; }
+  .kk.ok { border-top-color: var(--done); } .kk.warn { border-top-color: var(--pause); } .kk.bad { border-top-color: var(--late); }
+  .kk small { font-size: 12px; color: var(--muted); }
+  .kk b { font-family: var(--mono); font-size: 20px; font-weight: 600; white-space: nowrap; }
+  .kk span { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .kcard { border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+  .kcard h3 { margin: 0; font-size: 15px; }
+  .kcard h3 small { font-weight: 400; color: var(--muted); font-size: 12px; margin-left: 6px; }
+  .kcard h3 a { color: var(--accent); }
+  .knote { padding: 10px 14px; border: 1px solid var(--line); border-left: 4px solid var(--line); font-size: 14px; border-radius: 4px; }
+  .knote.ok { border-left-color: var(--done); }
+  .kbn { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 6px; }
+  .kbi { display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px; }
+  .kbi .dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; background: var(--muted); }
+  .kbi.bad .dot { background: var(--late); } .kbi.warn .dot { background: var(--pause); } .kbi.info .dot { background: var(--run); }
+  .kbi .t { font-size: 14px; display: block; }
+  .kbi small { display: block; font-size: 12px; color: var(--muted); margin-top: 1px; }
+  table.kov tr.clk { cursor: pointer; }
+  table.kov tr.clk:hover td { background: color-mix(in srgb, var(--ink) 4%, transparent); }
+  th.wk, td.wk { padding: 7px 3px; text-align: center; width: 34px; }
+  i.wc { display: inline-block; width: 24px; height: 14px; border-radius: 2px; vertical-align: middle; }
+  i.wc.ok { background: var(--done); } i.wc.high { background: var(--pause); } i.wc.over { background: var(--late); }
+  i.wc.e { background: transparent; border: 1px dashed var(--line); }
+  .kleg { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--muted); align-items: center; }
+  .kleg span { display: inline-flex; align-items: center; gap: 6px; }
+  .kleg i { display: inline-block; width: 14px; height: 10px; }
+  .kleg i.gb { position: static; height: 10px; }
+  .kleg i.off { background: color-mix(in srgb, var(--ink) 7%, transparent); }
+  .kleg em.dl { position: static; display: inline-block; height: 12px; }
+  .kleg i.kcap { background: color-mix(in srgb, var(--ink) 8%, transparent); border: 1px dashed var(--muted); }
+  .kleg i.kw.ok { background: var(--done); } .kleg i.kw.high { background: var(--pause); } .kleg i.kw.over { background: var(--late); }
+  .kleg i.kcl { height: 3px; background: var(--run); }
+  /* nädalad */
+  .kweeks svg { width: 100%; max-width: 900px; height: auto; display: block; }
+  .kweeks .kcap { fill: color-mix(in srgb, var(--ink) 8%, transparent); stroke: var(--muted); stroke-dasharray: 3 2; }
+  .kweeks .kw.ok { fill: var(--done); } .kweeks .kw.high { fill: var(--pause); } .kweeks .kw.over { fill: var(--late); }
+  .kweeks text { font-family: var(--mono); font-size: 11px; text-anchor: middle; fill: var(--ink); }
+  .kweeks text.kl { font-family: var(--sans); font-weight: 600; } .kweeks text.kd { fill: var(--muted); font-size: 10px; }
+  .kweeks text.ks.neg { fill: var(--late); font-weight: 600; } .kweeks text.ks.pos { fill: var(--done); }
+  .kweeks .kz { stroke: var(--muted); stroke-dasharray: 2 3; }
+  .kweeks .kcl { fill: none; stroke: var(--run); stroke-width: 2; }
+  .kweeks .kcd { fill: var(--run); } .kweeks .kcd.neg { fill: var(--late); }
+  /* gantt */
+  .gantt { font-size: 12px; overflow-x: auto; border: 1px solid var(--line); border-radius: 4px; }
+  .gantt .gh, .gantt .gr, .gantt .gbg { display: grid; grid-template-columns: 190px minmax(520px, 1fr); }
+  @media (max-width: 620px) { .gantt .gh, .gantt .gr, .gantt .gbg { grid-template-columns: 120px minmax(420px, 1fr); } }
+  .gantt .gh { position: sticky; top: 0; z-index: 4; background: var(--paper); border-bottom: 1px solid var(--line); }
+  .gantt .gt { position: relative; }
+  .gantt .ax { height: 30px; }
+  .gantt .ax span { position: absolute; top: 0; height: 30px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 9px; color: var(--muted); line-height: 1.1; overflow: hidden; }
+  .gantt .ax span b { font-family: var(--mono); font-size: 11px; color: var(--ink); font-weight: 500; }
+  .gantt .ax span.off b { color: var(--muted); }
+  .gantt .ax span.td { background: var(--accent); color: var(--accent-ink); } .gantt .ax span.td b { color: var(--accent-ink); }
+  .gantt .gbody { position: relative; }
+  .gantt .gbg { position: absolute; inset: 0; pointer-events: none; }
+  .gantt .gbg i { position: absolute; top: 0; bottom: 0; }
+  .gantt .gbg i.off { background: color-mix(in srgb, var(--ink) 6%, transparent); }
+  .gantt .gbg i.wk { border-left: 1px solid var(--line); }
+  .gantt .gbg i.now { width: 2px; background: var(--accent); }
+  .gantt .gr { position: relative; min-height: 34px; border-bottom: 1px solid var(--line); }
+  .gantt .gr[data-kst] { cursor: pointer; }
+  .gantt .gr:hover .gl { background: color-mix(in srgb, var(--ink) 4%, var(--paper)); }
+  .gantt .gl { padding: 4px 8px; min-width: 0; background: var(--paper); position: sticky; left: 0; z-index: 3; }
+  .gantt .gl b { display: block; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .gantt .gl small { display: block; color: var(--muted); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .gantt .gr.late .gl b { color: var(--late); }
+  .gb { position: absolute; top: 9px; height: 16px; border: 1px solid; min-width: 3px; border-radius: 2px; z-index: 2; }
+  .gb.s-käsil { background: var(--run); border-color: var(--run); }
+  .gb.s-paus { background: var(--pause); border-color: var(--pause); }
+  .gb.s-avatud { background: color-mix(in srgb, var(--accent) 55%, var(--paper)); border-color: var(--accent); }
+  .gb.s-lukus { background: repeating-linear-gradient(-45deg, color-mix(in srgb, var(--lock) 60%, var(--paper)) 0 3px, var(--paper) 3px 6px); border-color: var(--lock); }
+  .gantt .gr.late .gb, .gantt .gr.risk .gb { box-shadow: 0 0 0 2px var(--late); }
+  .gantt .gr.risk .gb { box-shadow: 0 0 0 2px var(--pause); }
+  .gb.c-ok { background: color-mix(in srgb, var(--done) 65%, var(--paper)); border-color: var(--done); }
+  .gb.c-risk { background: var(--pause); border-color: var(--pause); }
+  .gb.c-late { background: var(--late); border-color: var(--late); }
+  .gb.run { border-width: 2px; border-color: var(--run); }
+  .gx { position: absolute; top: 9px; font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--late); white-space: nowrap; }
+  .dl { position: absolute; top: 4px; bottom: 4px; width: 0; border-left: 2px solid var(--ink); z-index: 1; }
+  .dl::before { content: ''; position: absolute; top: -1px; left: -5px; border: 4px solid transparent; border-top: 5px solid var(--ink); }
+  .dl.past { border-left-color: var(--late); } .dl.past::before { border-top-color: var(--late); }
+  /* järjekord */
+  table.jrk td { white-space: normal; }
+  table.jrk tr.r-late td:first-child { box-shadow: inset 4px 0 var(--late); }
+  table.jrk tr.r-risk td:first-child { box-shadow: inset 4px 0 var(--pause); }
+  td.mv { white-space: nowrap; }
+  td.mv button { width: 34px; height: 34px; border: 1px solid var(--line); background: var(--paper); border-radius: 5px; margin-left: 3px; font-size: 15px; }
+  td.mv button:hover { border-color: var(--accent); }
+  #jrkPicker { margin-bottom: 10px; }
 
   .toast { position:fixed; left:50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform:translateX(-50%); background:var(--ink); color:var(--paper); padding:10px 16px; border-radius:6px; font-size:.9rem; z-index:20; max-width: 90vw; }
   .toast.err { background: var(--late); color:#fff; }
@@ -159,7 +256,8 @@
     <nav class="tabs" id="tabs">
       <button data-tab="pink">Pink</button>
       <button data-tab="tood">Tööd</button>
-      <button data-tab="koormus">Koormus ja hilinemised</button>
+      <button data-tab="koormus">Koormus</button>
+      <button data-tab="jrk">Järjekord</button>
       <button data-tab="plan" data-planner>Ajanormid</button>
       <button data-tab="seaded" data-planner>Pingid ja kasutajad</button>
       <button data-tab="import" data-planner>Import</button>
@@ -189,8 +287,15 @@
 
     <!-- KOORMUS -->
     <section id="tab-koormus" class="hidden">
-      <div class="toolbar"><button class="btn primary" id="excelReport">Laadi alla Excel</button><button class="btn" id="copyReport">Kopeeri raport tekstina</button></div>
+      <div class="toolbar"><select id="kStation"></select><button class="btn primary" id="excelReport">Laadi alla Excel</button><button class="btn" id="copyReport">Kopeeri raport tekstina</button></div>
       <div id="reportBody"></div>
+    </section>
+
+    <!-- JÄRJEKORD -->
+    <section id="tab-jrk" class="hidden">
+      <div class="stations" id="jrkPicker"></div>
+      <div class="toolbar" id="jrkTools"></div>
+      <div id="jrkList"></div>
     </section>
 
     <!-- AJANORMID -->
@@ -200,15 +305,18 @@
         <label class="chk"><input type="checkbox" id="planOnlyEmpty" checked> Ainult ilma ajata</label>
         <span class="muted" id="planCount"></span>
       </div>
-      <p class="note">Aeg on kogu partii kohta. Sisesta minutid (<span class="mono">90</span>), tunnid (<span class="mono">1.5h</span>) või minutid tüki kohta (<span class="mono">3/tk</span> korrutatakse kogusega). Salvestub Enteri või väljast lahkumisel.</p>
+      <p class="note">Aeg on kogu partii kohta <b>tundides</b>: <span class="mono">1,6</span> = 1,6 h. Tüki kohta: <span class="mono">0,2/tk</span> korrutatakse kogusega. Minutites: <span class="mono">45 min</span>. Salvestub Enteri või väljast lahkumisel.</p>
       <div class="tw"><table id="planTable"></table></div>
     </section>
 
     <!-- SEADED -->
     <section id="tab-seaded" class="hidden">
-      <h2 style="margin-top:0">Pingid</h2>
-      <p class="note">Maht = töötunde päevas. Allhanke puhul arvestatakse aega tarnepäevades ja mahtu ei piirata. „Ei ole etapp" jätab koodi järgmisel impordil marsruudist välja (nt märked nagu LK). Vaikenormi kasutatakse prognoosis, kui etapil endal aega pole.</p>
+      <h2 style="margin-top:0">Omad pingid</h2>
+      <p class="note">Maht = töötunde päevas (2 vahetust = 16). Vaikenormi kasutatakse prognoosis, kui etapil endal aega pole. „Ei ole etapp" jätab koodi järgmisel impordil marsruudist välja.</p>
       <div class="tw"><table id="stationTable"></table></div>
+      <h2>Allhanked</h2>
+      <p class="note">Tarneaeg tööpäevades — sellega arvestab prognoos. Tegelikku keskmist näed vahelehel Koormus.</p>
+      <div class="tw"><table id="extTable"></table></div>
       <h2>Kasutajad</h2>
       <p class="note">Uued kontod: Supabase → Authentication → Users → Add user (Auto Confirm). Profiil tekib automaatselt, siin saad nime ja rolli muuta.</p>
       <div class="tw"><table id="userTable"></table></div>
@@ -385,7 +493,7 @@ function workdaysBetween(a, b) { // b - a tööpäevades (märgiga)
 }
 const parseDate = s => { if (!s) return null; const [y,m,d] = s.split("-").map(Number); return new Date(y, m-1, d); };
 const fmtDate = d => d ? `${d.getDate()}.${d.getMonth()+1}.` : "–";
-function fmtMin(m) {
+function fmtMinOld(m) {
   if (m == null || isNaN(m)) return "–";
   m = Math.round(m); if (m < 60) return m + " min";
   const h = Math.floor(m/60), r = m % 60; return r ? `${h} h ${r} min` : `${h} h`;
@@ -397,63 +505,136 @@ function fmtClock(ms) {
 const liveMin = s => s.runSince ? s.closedMin + (Date.now() - s.runSince)/60000 : s.actualMin;
 const plannedMin = s => s.planned_min ?? S.stations[s.stage_code]?.default_min ?? null;
 
-// ============ PROGNOOS (lihtne edasi-planeerimine) ============
-// Järjestus: prioriteet, siis tähtaeg (EDD). Iga etapp algab, kui eelmine on valmis JA pink on vaba.
-// Ajaühik = tööpäev. Pingi maht = capacity_h tundi päevas. Allhange = lead_days, mahtu ei piira.
+// ============ PROGNOOS ============
+// Iga oma pink töötleb oma järjekorda (Järjekord-vaheleht; vaikimisi prioriteet + tähtaeg).
+// Etapp algab, kui eelmine etapp on valmis JA pink on vaba. Allhange = tarneaeg, mahtu ei piira.
+// Ajaühik = tööpäev; pingi maht = capacity_h tundi päevas.
+const cmpStr = (a, b) => a < b ? -1 : a > b ? 1 : 0;
+const isOwnCode = code => /^[TF]\d/i.test(code);
+function stationOf(code) {
+  return S.stations[code] || { code, capacity_h: 8, is_external: !isOwnCode(code), lead_days: 5 };
+}
+const capH = c => Number(c.capacity_h) || 8;
+const isRunning = s => s.state === "käsil" || s.state === "paus";
+const byDue = (a, b) => (b.job.prioriteet - a.job.prioriteet) || cmpStr(a.job.tahtaeg || "9999", b.job.tahtaeg || "9999") || a.job.wono.localeCompare(b.job.wono) || a.seq - b.seq;
+function queueSort(a, b) {
+  const ra = isRunning(a) ? 0 : 1, rb = isRunning(b) ? 0 : 1;
+  if (ra !== rb) return ra - rb;
+  const qa = a.queue_pos ?? Infinity, qb = b.queue_pos ?? Infinity;
+  if (qa !== qb) return qa < qb ? -1 : 1;
+  return byDue(a, b);
+}
+function stageDur(s) {
+  const c = stationOf(s.stage_code);
+  if (c.is_external) return { d: Number(c.lead_days) || 0, h: 0 };
+  const p = plannedMin(s);
+  if (p == null) return { d: 0, h: 0, unknown: true };
+  const remH = Math.max(p - liveMin(s), 0) / 60;
+  return { d: remH / capH(c), h: remH };
+}
+
 function simulate() {
-  const free = {}; const st = {};
-  const station = code => S.stations[code] || { capacity_h: 8, is_external: false, lead_days: 3 };
-  const stat = code => (st[code] ??= { code, queue: 0, hours: 0, wait: 0, lateJobs: new Set(), unplanned: 0, running: 0 });
-  const dur = s => {
-    const c = station(s.stage_code);
-    if (c.is_external) return { d: Number(c.lead_days) || 0, h: 0 };
-    const p = plannedMin(s);
-    if (p == null) return { d: 0, h: 0, unknown: true };
-    const remH = Math.max(p - liveMin(s), 0) / 60;
-    return { d: remH / (Number(c.capacity_h) || 8), h: remH };
-  };
-  // 1) pooleli olevad etapid võtavad pingi esimesena
-  for (const s of S.stages) {
-    if (s.state !== "käsil" && s.state !== "paus") continue;
-    const x = dur(s); const c = station(s.stage_code);
-    s.pStart = c.is_external ? 0 : (free[s.stage_code] || 0);
-    s.pEnd = s.pStart + x.d; s.wait = 0;
-    if (!c.is_external) free[s.stage_code] = s.pEnd;
-    const t = stat(s.stage_code); t.queue++; t.hours += x.h; t.running++; if (x.unknown) t.unplanned++;
-    s.pre = true;
+  const st = {}, free = {}, queues = {}, idx = {};
+  const stat = code => (st[code] ??= { code, queue: 0, hours: 0, wait: 0, lateJobs: new Set(), unplanned: 0, running: 0, order: [] });
+  const open = S.stages.filter(s => s.state !== "valmis");
+  const prevOf = new Map();
+  for (const j of S.jobs) { let p = null; for (const s of j.stages) { if (s.state === "valmis") continue; prevOf.set(s.id, p); p = s; } }
+  for (const s of open) {
+    s.pStart = s.pEnd = null; s.wait = 0; s.outOfOrder = false;
+    if (!stationOf(s.stage_code).is_external) (queues[s.stage_code] ??= []).push(s);
   }
-  // 2) ülejäänud tööd EDD järjekorras
-  const order = [...S.jobs].sort((a, b) =>
-    (b.prioriteet - a.prioriteet) || ((a.tahtaeg || "9999") < (b.tahtaeg || "9999") ? -1 : (a.tahtaeg || "9999") > (b.tahtaeg || "9999") ? 1 : 0) || a.wono.localeCompare(b.wono));
-  const t0 = today0();
-  for (const j of order) {
-    let t = 0; j.unplanned = 0; j.worstWait = null;
-    for (const s of j.stages) {
-      if (s.state === "valmis") continue;
-      if (s.pre) { t = Math.max(t, s.pEnd); continue; }
-      const x = dur(s); const c = station(s.stage_code);
-      const start = c.is_external ? t : Math.max(t, free[s.stage_code] || 0);
-      s.pStart = start; s.pEnd = start + x.d; s.wait = start - t;
-      if (!c.is_external) free[s.stage_code] = s.pEnd;
-      const tt = stat(s.stage_code); tt.queue++; tt.hours += x.h; tt.wait += s.wait;
-      if (x.unknown) { tt.unplanned++; j.unplanned++; }
-      if (!j.worstWait || s.wait > j.worstWait.wait) j.worstWait = s;
-      t = s.pEnd;
+  for (const code in queues) queues[code].sort(queueSort);
+  const done = new Set();
+  const ready = s => { const p = prevOf.get(s.id); return !p ? 0 : done.has(p.id) ? p.pEnd : null; };
+  const place = (s, start, r) => {
+    const x = stageDur(s);
+    s.pStart = start; s.pEnd = start + x.d; s.wait = Math.max(0, start - r); s.remH = x.h; s.unknown = !!x.unknown;
+    done.add(s.id);
+    const t = stat(s.stage_code); t.queue++; t.hours += x.h; t.wait += s.wait; t.order.push(s);
+    if (x.unknown) t.unplanned++; if (isRunning(s)) t.running++;
+    if (!stationOf(s.stage_code).is_external) free[s.stage_code] = s.pEnd;
+  };
+  // Pink võtab järjekorrast esimese töö, mida saab kohe alustada. Kui järjekorra eesotsas olev töö
+  // ootab veel eelmist etappi, tehakse vahepeal järgmine valmis töö (pink ei seisa tühjalt).
+  const pickFor = code => {
+    const q = queues[code], f = free[code] || 0; let first = null, soon = null;
+    for (let i = 0; i < q.length; i++) {
+      const r = ready(q[i]); if (r == null) continue;
+      if (r <= f + 1e-9) { first = { i, r }; break; }
+      if (!soon || r < soon.r - 1e-9) soon = { i, r };
     }
-    j.projDays = t;
-    j.projDate = j.current ? addWorkdays(t0, t) : null;
+    const c = first || soon; if (!c) return null;
+    return { code, i: c.i, s: q[c.i], r: c.r, start: Math.max(c.r, f) };
+  };
+  let remaining = open.length, guard = 0;
+  while (remaining > 0 && guard++ < 200000) {
+    let moved = false;
+    for (const s of open) {
+      if (done.has(s.id) || !stationOf(s.stage_code).is_external) continue;
+      const r = ready(s); if (r == null) continue;
+      place(s, r, r); remaining--; moved = true;
+    }
+    let best = null;
+    for (const code in queues) { const c = pickFor(code); if (c && (!best || c.start < best.start - 1e-9)) best = c; }
+    if (best) {
+      const q = queues[best.code];
+      if (best.i > 0) best.s.outOfOrder = q[0];   // tehakse enne järjekorras eespool olevat tööd
+      q.splice(best.i, 1); place(best.s, best.start, best.r); remaining--; continue;
+    }
+    if (!moved) break;
+  }
+
+  const t0 = today0();
+  for (const j of S.jobs) {
+    const os = j.stages.filter(s => s.state !== "valmis");
+    j.unplanned = os.filter(s => s.unknown).length;
+    j.projDays = os.length ? Math.max(...os.map(s => s.pEnd ?? 0)) : 0;
+    j.projDate = j.current ? addWorkdays(t0, j.projDays) : null;
+    j.worstWait = os.reduce((m, s) => !m || s.wait > m.wait ? s : m, null);
     const due = parseDate(j.tahtaeg);
+    j.overdue = !!(j.current && due && due < t0);
     j.slack = due && j.projDate ? workdaysBetween(j.projDate, due) : null;
     j.risk = j.slack == null ? "" : j.slack < 0 ? "late" : j.slack < RISK_DAYS ? "risk" : "ok";
-    if (j.risk === "late") for (const s of j.stages) if (s.state !== "valmis" && s.wait > 0) stat(s.stage_code).lateJobs.add(j.id);
+    if (j.risk === "late") for (const s of os) if (s.wait > 0) stat(s.stage_code).lateJobs.add(j.id);
   }
   for (const code in st) {
-    const c = station(code);
-    st[code].backlog = c.is_external ? null : st[code].hours / (Number(c.capacity_h) || 8);
+    const c = stationOf(code);
+    st[code].external = !!c.is_external;
+    st[code].backlog = c.is_external ? null : st[code].hours / capH(c);
     st[code].freeAt = free[code] || 0;
-    st[code].external = c.is_external;
+    st[code].freeDate = addWorkdays(t0, free[code] || 0);
   }
   return { stations: st };
+}
+
+// ---- kalender graafikute jaoks ----
+function calDays(n) {
+  const out = [], d = today0();
+  for (let i = 0; i < n; i++) { const x = new Date(d); x.setDate(d.getDate() + i); out.push({ date: x, wd: isWorkday(x) }); }
+  return out;
+}
+function calPos(t, days) {   // tööpäevaaeg -> kalendripäeva indeks (murdosaga)
+  const k = Math.floor(t); let seen = 0;
+  for (let i = 0; i < days.length; i++) if (days[i].wd) { if (seen === k) return i + (t - k); seen++; }
+  return days.length;
+}
+function weeksN(n) {
+  const d = today0(); const mon = new Date(d); mon.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  return Array.from({ length: n }, (_, i) => { const s = new Date(mon); s.setDate(mon.getDate() + 7 * i); const e = new Date(s); e.setDate(s.getDate() + 6); return { s, e }; });
+}
+function workdaysIn(s, e) { let n = 0; const x = new Date(Math.max(s, today0())); while (x <= e) { if (isWorkday(x)) n++; x.setDate(x.getDate() + 1); } return n; }
+function isoWeek(d) { const x = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); const day = x.getUTCDay() || 7; x.setUTCDate(x.getUTCDate() + 4 - day); const y0 = new Date(Date.UTC(x.getUTCFullYear(), 0, 1)); return Math.ceil(((x - y0) / 86400000 + 1) / 7); }
+function stationWeeks(code, weeks) {
+  const c = stationOf(code);
+  const cap = weeks.map(w => workdaysIn(w.s, w.e) * capH(c));
+  const due = weeks.map(() => 0);
+  for (const s of S.sim.stations[code]?.order || []) {
+    const dd = parseDate(s.job.tahtaeg); if (!dd || !s.remH) continue;
+    let i = dd < weeks[0].s ? 0 : weeks.findIndex(w => dd <= w.e);
+    if (i >= 0) due[i] += s.remH;
+  }
+  let acc = 0; const slack = cap.map((c1, i) => (acc += c1 - due[i]));
+  return { cap, due, slack };
 }
 
 // ============ RENDER ============
@@ -467,7 +648,7 @@ $("tabs").onclick = e => { const b = e.target.closest("button[data-tab]"); if (b
 
 function render() {
   if (!S.session || !S.loadedAt) return;
-  ({ pink: renderPink, tood: renderJobs, koormus: renderReport, plan: renderPlan, seaded: renderSettings, import: () => {} })[currentTab]?.();
+  ({ pink: renderPink, tood: renderJobs, koormus: renderReport, jrk: renderJrk, plan: renderPlan, seaded: renderSettings, import: () => {} })[currentTab]?.();
 }
 
 function routeHtml(job, hereId) {
@@ -504,7 +685,7 @@ function stageCard(s) {
     <div class="meta"><span>Kogus <b>${esc(j.kogus ?? "–")}</b></span><span>Tähtaeg <b>${dueHtml(j)}</b></span>
       <span>${esc(j.nimetus || "")}</span>${j.drawing ? `<span>Joonis ${esc(j.drawing)}${j.revno ? " rev " + esc(j.revno) : ""}</span>` : ""}
       ${j.pinnatootlus ? `<span>Pind <b>${esc(j.pinnatootlus)}</b></span>` : ""}
-      <span>Norm <b>${fmtMin(p)}</b></span><span>Tehtud <b class="${over ? "late" : ""}">${fmtMin(liveMin(s))}</b></span>
+      <span>Norm <b>${fmtH(p)}</b></span><span>Tehtud <b class="${over ? "late" : ""}">${fmtH(liveMin(s))}</b></span>
       ${s.workers ? `<span>${esc(s.workers)}</span>` : ""}<span class="mono">WO ${esc(j.wono)}</span></div>
     <div>${routeHtml(j, s.id)}</div>${wait}
     <div class="acts">${actionButtons(s)}</div>
@@ -524,7 +705,7 @@ function renderPink() {
   const list = S.stages.filter(s => s.stage_code === currentStation)
     .filter(s => s.state !== "lukus" || $("showLocked").checked)
     .filter(s => s.state !== "valmis" || $("showDone").checked)
-    .sort((a, b) => (rank[a.state] - rank[b.state]) || (b.job.prioriteet - a.job.prioriteet) || ((a.job.tahtaeg||"9") < (b.job.tahtaeg||"9") ? -1 : 1));
+    .sort((a, b) => (rank[a.state] - rank[b.state]) || queueSort(a, b));
   $("pinkCards").innerHTML = list.length ? list.map(stageCard).join("") : `<div class="empty">Sellel pingil pole praegu töid.</div>`;
 }
 $("stationPicker").onclick = e => { const b = e.target.closest("button[data-st]"); if (!b) return; currentStation = b.dataset.st; store.set("station", currentStation); renderPink(); };
@@ -574,66 +755,278 @@ $("jobSearch").oninput = renderJobs; $("onlyLate").onchange = renderJobs;
 $("jobsTable").onclick = e => { const r = e.target.closest("tr.jobrow"); if (!r) return; openJob = openJob === r.dataset.job ? null : r.dataset.job; renderJobs(); };
 
 // ---------- KOORMUS ----------
+const fmtH = min => min == null || isNaN(min) ? "–" : (Math.round(min / 6) / 10).toLocaleString("et-EE", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " h";
+const fmtH1 = h => (Math.round(h * 10) / 10).toLocaleString("et-EE", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const ownStations = () => Object.values(S.stations).filter(s => !s.ignore && !s.is_external).sort((a, b) => ((a.sort ?? 100) - (b.sort ?? 100)) || a.code.localeCompare(b.code));
+const extStations = () => Object.values(S.stations).filter(s => !s.ignore && s.is_external).sort((a, b) => a.code.localeCompare(b.code));
+const jobLabel = j => `${j.klient_nimi || ""} ${j.toote_id || j.drawing || ""}`.trim();
+const riskCls = j => j.overdue || j.risk === "late" ? "late" : j.risk === "risk" ? "risk" : "ok";
+
 function buildReport() {
   const st = Object.values(S.sim.stations);
   const active = S.jobs.filter(j => j.current);
   const late = active.filter(j => j.risk === "late").sort((a, b) => a.slack - b.slack);
   const risk = active.filter(j => j.risk === "risk").sort((a, b) => a.slack - b.slack);
-  const unplanned = S.stages.filter(s => s.state !== "valmis" && plannedMin(s) == null && !S.stations[s.stage_code]?.is_external).length;
+  const unplanned = S.stages.filter(s => s.state !== "valmis" && plannedMin(s) == null && !stationOf(s.stage_code).is_external).length;
   const internal = st.filter(x => !x.external).sort((a, b) => (b.wait - a.wait) || (b.backlog - a.backlog));
-  // normi täpsus: valmis etapid, kus on norm ja logitud aeg
   const acc = {};
   for (const s of S.stages) {
     if (s.state !== "valmis" || !s.planned_min || !s.actualMin) continue;
     (acc[s.stage_code] ??= { code: s.stage_code, n: 0, plan: 0, act: 0 });
     acc[s.stage_code].n++; acc[s.stage_code].plan += +s.planned_min; acc[s.stage_code].act += s.actualMin;
   }
-  return { st, active, late, risk, unplanned, internal, acc: Object.values(acc).sort((a,b) => b.act/b.plan - a.act/a.plan) };
+  return { st, active, late, risk, unplanned, internal, acc: Object.values(acc).sort((a, b) => b.act / b.plan - a.act / a.plan) };
 }
 
+let koormStation = store.get("koormSt");
 function renderReport() {
-  const R = buildReport();
-  const maxBack = Math.max(1, ...R.internal.map(x => x.backlog || 0));
+  if (koormStation == null) koormStation = isPlanner() ? "" : (S.profile?.default_station || "");
+  if (koormStation && !S.stations[koormStation]) koormStation = "";
+  const sel = $("kStation");
+  sel.innerHTML = `<option value="">Kõik pingid</option>` + ownStations().map(s => `<option value="${esc(s.code)}" ${s.code === koormStation ? "selected" : ""}>${esc(s.code)}${s.name ? " · " + esc(s.name) : ""}</option>`).join("");
+  $("reportBody").innerHTML = koormStation ? kStation(koormStation) : kOverview();
+}
+$("kStation").onchange = e => { koormStation = e.target.value; store.set("koormSt", koormStation); renderReport(); };
+$("reportBody").addEventListener("click", e => {
+  const p = e.target.closest("[data-kst]"); if (p) { koormStation = p.dataset.kst; store.set("koormSt", koormStation); renderReport(); window.scrollTo(0, 0); return; }
+  const q = e.target.closest("[data-gojrk]"); if (q) { jrkStation = q.dataset.gojrk; store.set("jrkSt", jrkStation); showTab("jrk"); }
+});
+
+const kpi = (lab, val, sub, cls) => `<div class="kk ${cls || ""}"><small>${lab}</small><b>${val}</b><span>${sub}</span></div>`;
+
+function kOverview() {
+  const R = buildReport(); const weeks = weeksN(8); const T = today0();
+  const own = ownStations();
+  const stagesAt = code => S.stages.filter(s => s.stage_code === code && s.state !== "valmis");
+  const hoursAll = own.reduce((a, s) => a + (S.sim.stations[s.code]?.hours || 0), 0);
+  const overdue = R.active.filter(j => j.overdue);
+  const cannot = R.active.filter(j => j.risk === "late" && !j.overdue);
   const bottleneck = R.internal[0];
-  let h = `<div class="kpis">
-    <div class="kpi"><b>${R.active.length}</b><span>pooleliolevat tööd</span></div>
-    <div class="kpi"><b class="${R.late.length ? "late" : ""}">${R.late.length}</b><span>prognoosi järgi hilineb</span></div>
-    <div class="kpi"><b class="${R.risk.length ? "risk" : ""}">${R.risk.length}</b><span>ohus (varu &lt; ${RISK_DAYS} p)</span></div>
-    <div class="kpi"><b>${bottleneck ? esc(bottleneck.code) : "–"}</b><span>suurim pudelikael</span></div>
-    <div class="kpi"><b class="${R.unplanned ? "risk" : ""}">${R.unplanned}</b><span>etappi ilma ajanormita</span></div>
-  </div>`;
-  if (R.unplanned) h += `<p class="note">* Etapid ilma ajanormita arvestatakse prognoosis nulliks, seega tegelik pilt on hullem. Lisa normid vahelehel „Ajanormid" või pingile vaikenorm.</p>`;
+  let h = `<div class="kks">` +
+    kpi("Pooleli", fmtH1(hoursAll) + " h", R.active.length + " tööd omadel pinkidel") +
+    kpi("Hilinenud", overdue.length, overdue.length ? "tähtaeg möödas" : "pole", overdue.length ? "bad" : "ok") +
+    kpi("Ei jõua tähtajaks", cannot.length, cannot.length ? "prognoosi järgi" : "kõik graafikus", cannot.length ? "bad" : "ok") +
+    kpi("Ohus", R.risk.length, `varu alla ${RISK_DAYS} tp`, R.risk.length ? "warn" : "ok") +
+    kpi("Pudelikael", bottleneck && bottleneck.wait > 0.05 ? esc(bottleneck.code) : "–", bottleneck && bottleneck.wait > 0.05 ? fmtH1(bottleneck.wait) + " p ootamist" : "ootamist pole", bottleneck && bottleneck.lateJobs.size ? "bad" : "") +
+    kpi("Normita etappe", R.unplanned, R.unplanned ? "prognoos liiga optimistlik" : "kõik planeeritud", R.unplanned ? "warn" : "ok") + `</div>`;
 
-  h += `<h2>Pinkide koormus</h2><p class="note">Järjestatud ootamise järgi: mida rohkem tunde teised etapid selle pingi taga ootavad, seda suurem pudelikael. Koormus = järelejäänud normitunnid / pingi päevane maht.</p>
-  <div class="tw"><table><thead><tr><th>Pink</th><th class="num">Etappe järjekorras</th><th class="num">Tunde</th><th class="num">Maht h/p</th><th>Koormus tööpäevades</th><th class="num">Ootamine kokku (p)</th><th class="num">Hilinevaid töid ootab siin</th><th class="num">Normita</th></tr></thead><tbody>`;
-  for (const x of R.internal) {
-    const hot = x.lateJobs.size > 0 && x === bottleneck;
-    h += `<tr><td class="mono">${esc(x.code)}</td><td class="num">${x.queue}</td><td class="num">${x.hours.toFixed(1)}</td>
-      <td class="num">${esc(S.stations[x.code]?.capacity_h ?? 8)}</td>
-      <td><div style="display:flex;gap:8px;align-items:center"><div class="loadbar"><i class="${hot ? "hot" : ""}" style="width:${Math.min(100, (x.backlog/maxBack)*100)}%"></i></div>${x.backlog.toFixed(1)}</div></td>
-      <td class="num">${x.wait.toFixed(1)}</td><td class="num ${x.lateJobs.size ? "late" : ""}">${x.lateJobs.size}</td><td class="num ${x.unplanned ? "risk" : ""}">${x.unplanned}</td></tr>`;
+  // pinkide tabel + nädalate koormusriba
+  h += `<section class="kcard"><h3>Pingid <small>vali pink, et näha tema ajakava · ruut = nädal, värv = tähtajaga tööd vs võimsus</small></h3><div class="tw"><table class="kov"><thead><tr>
+    <th>Pink</th><th class="num">Pooleli</th><th class="num">Maht</th><th>Vaba alates</th>
+    ${weeks.map((w, i) => `<th class="wk">${i === 0 ? "See" : "N" + isoWeek(w.s)}</th>`).join("")}
+    <th class="num">Hilinenud</th><th class="num">Ei jõua</th><th class="num">Normita</th></tr></thead><tbody>`;
+  for (const s of own) {
+    const x = S.sim.stations[s.code] || { hours: 0, queue: 0, unplanned: 0, freeDate: T };
+    const W = stationWeeks(s.code, weeks);
+    const at = stagesAt(s.code);
+    const od = new Set(at.filter(a => a.job.overdue).map(a => a.job.id)).size;
+    const cn = new Set(at.filter(a => a.job.risk === "late" && !a.job.overdue).map(a => a.job.id)).size;
+    const cells = weeks.map((w, i) => {
+      const p = W.cap[i] ? W.due[i] / W.cap[i] : (W.due[i] ? 9 : 0);
+      const cls = !W.due[i] ? "e" : p > 1.2 ? "over" : p > 1 ? "high" : "ok";
+      return `<td class="wk"><i class="wc ${cls}" title="${esc(s.code)} N${isoWeek(w.s)}: ${fmtH1(W.due[i])} h tähtajaga / ${fmtH1(W.cap[i])} h võimsus"></i></td>`;
+    }).join("");
+    h += `<tr class="clk" data-kst="${esc(s.code)}"><td><b class="mono">${esc(s.code)}</b>${s.name ? ` <span class="muted">${esc(s.name)}</span>` : ""}</td>
+      <td class="num">${fmtH1(x.hours)} h <span class="muted">(${x.queue})</span></td><td class="num">${fmtH1(capH(s))} h/p</td>
+      <td class="${x.freeAt > 10 ? "late" : ""}">${x.queue ? fmtDate(x.freeDate) + ` <span class="muted">${fmtH1(x.backlog || 0)} tp</span>` : "vaba"}</td>
+      ${cells}<td class="num ${od ? "late" : ""}">${od}</td><td class="num ${cn ? "late" : ""}">${cn}</td><td class="num ${x.unplanned ? "risk" : ""}">${x.unplanned}</td></tr>`;
   }
-  h += `</tbody></table></div>`;
+  h += `</tbody></table></div><div class="kleg"><span><i class="wc ok"></i>mahub</span><span><i class="wc high"></i>kuni 120%</span><span><i class="wc over"></i>üle 120%</span><span><i class="wc e"></i>tähtajaga töid pole</span></div></section>`;
 
-  const ext = R.st.filter(x => x.external);
-  if (ext.length) h += `<p class="note">Allhange (mahtu ei piira): ${ext.map(x => `<span class="mono">${esc(x.code)}</span> ${x.queue} etappi`).join(", ")}</p>`;
+  // üldine Gantt: rida = pink
+  const rows = own.map(s => {
+    const x = S.sim.stations[s.code];
+    const bars = (x?.order || []).filter(a => a.pEnd > a.pStart).map(a => ({ s: a.pStart, e: a.pEnd, cls: "c-" + riskCls(a.job) + (isRunning(a) ? " run" : ""),
+      title: `${s.code} · WO ${a.job.wono} · ${jobLabel(a.job)} · ${fmtH1(a.remH)} h · tähtaeg ${fmtDate(parseDate(a.job.tahtaeg))} · prognoos ${fmtDate(a.job.projDate)}` }));
+    return { key: s.code, label: s.code, sub: `${fmtH1(x?.hours || 0)} h · vaba ${x?.queue ? fmtDate(x.freeDate) : "kohe"}`, bars, attr: `data-kst="${esc(s.code)}"` };
+  });
+  h += `<section class="kcard"><h3>Üldine koormus <small>iga pink eraldi real, tulbad = etapid prognoositud ajal</small></h3>${gantt(rows)}
+    <div class="kleg"><span><i class="gb c-ok"></i>graafikus</span><span><i class="gb c-risk"></i>ohus</span><span><i class="gb c-late"></i>hilineb</span><span><i class="gb c-ok run"></i>töös</span><span><i class="off"></i>vaba päev</span></div></section>`;
 
+  // allhanked
+  const ext = extStations();
+  if (ext.length) {
+    h += `<section class="kcard"><h3>Allhanked <small>tarneaeg on prognoosi alus · tegelik = alustamisest valmis märkimiseni</small></h3><div class="tw"><table><thead><tr>
+      <th>Kood</th><th>Nimi</th><th class="num">Tarneaeg</th><th class="num">Hetkel seal</th><th class="num">Tulemas</th><th class="num">Tegelik keskm.</th><th>Järgmine tagasi</th></tr></thead><tbody>` +
+      ext.map(s => {
+        const at = S.stages.filter(a => a.stage_code === s.code);
+        const now = at.filter(isRunning), coming = at.filter(a => a.state === "avatud" || a.state === "lukus");
+        const fin = at.filter(a => a.state === "valmis" && a.started_at && a.finished_at);
+        const avg = fin.length ? fin.reduce((m, a) => m + workdaysBetween(new Date(a.started_at), new Date(a.finished_at)), 0) / fin.length : null;
+        const next = now.map(a => a.pEnd).sort((a, b) => a - b)[0];
+        return `<tr><td class="mono"><b>${esc(s.code)}</b></td><td>${esc(s.name || "")}</td><td class="num">${fmtH1(Number(s.lead_days) || 0)} tp</td>
+          <td class="num">${now.length}</td><td class="num">${coming.length}</td>
+          <td class="num ${avg != null && avg > (Number(s.lead_days) || 0) * 1.2 ? "late" : ""}">${avg == null ? "–" : fmtH1(avg) + " tp"}</td>
+          <td>${next != null ? fmtDate(addWorkdays(today0(), next)) : "–"}</td></tr>`;
+      }).join("") + `</tbody></table></div></section>`;
+  }
+
+  // hilinevad tööd
   const jobRows = list => list.map(j => `<tr><td class="mono">${esc(j.wono)}</td><td>${esc(j.klient_nimi)}</td><td>${esc(j.tellimus)}</td><td class="mono">${esc(j.toote_id || j.drawing)}</td>
-    <td>${fmtDate(parseDate(j.tahtaeg))}</td><td>${fmtDate(j.projDate)}</td><td class="num ${j.slack < 0 ? "late" : "risk"}">${j.slack}</td>
-    <td class="mono">${esc(j.current.stage_code)}</td><td>${j.worstWait && j.worstWait.wait > 0.05 ? `<span class="mono">${esc(j.worstWait.stage_code)}</span> ootab ${j.worstWait.wait.toFixed(1)} p` : "–"}</td>
+    <td class="${j.overdue ? "late" : ""}">${fmtDate(parseDate(j.tahtaeg))}</td><td>${fmtDate(j.projDate)}</td><td class="num ${j.slack < 0 ? "late" : "risk"}">${j.slack}</td>
+    <td class="mono">${esc(j.current.stage_code)}</td><td>${j.worstWait && j.worstWait.wait > 0.05 ? `<span class="mono">${esc(j.worstWait.stage_code)}</span> ootab ${fmtH1(j.worstWait.wait)} p` : "–"}</td>
     <td>${routeHtml(j)}</td></tr>`).join("");
-  const jh = `<thead><tr><th>WO</th><th>Klient</th><th>Tellimus</th><th>Toode</th><th>Tähtaeg</th><th>Prognoos</th><th class="num">Varu (tp)</th><th>Praegu</th><th>Kinni</th><th>Marsruut</th></tr></thead>`;
-  h += `<h2>Hilinevad tööd</h2>` + (R.late.length ? `<div class="tw"><table>${jh}<tbody>${jobRows(R.late)}</tbody></table></div>` : `<p class="note">Prognoosi järgi ei hiline ükski töö.</p>`);
-  if (R.risk.length) h += `<h2>Ohus</h2><div class="tw"><table>${jh}<tbody>${jobRows(R.risk)}</tbody></table></div>`;
+  const jh = `<thead><tr><th>WO</th><th>Klient</th><th>Tellimus</th><th>Toode</th><th>Tähtaeg</th><th>Prognoos</th><th class="num">Varu tp</th><th>Praegu</th><th>Kinni</th><th>Marsruut</th></tr></thead>`;
+  h += `<section class="kcard"><h3>Hilinevad ja ei jõua <small>${R.late.length} tööd</small></h3>` + (R.late.length ? `<div class="tw"><table>${jh}<tbody>${jobRows(R.late)}</tbody></table></div>` : `<div class="knote ok">Prognoosi järgi ei hiline ükski töö.</div>`) + `</section>`;
+  if (R.risk.length) h += `<section class="kcard"><h3>Ohus <small>${R.risk.length} tööd</small></h3><div class="tw"><table>${jh}<tbody>${jobRows(R.risk)}</tbody></table></div></section>`;
 
-  if (R.acc.length) {
-    h += `<h2>Normide täpsus (valmis etapid)</h2><p class="note">Üle 100% = tegelikult kulub rohkem kui planeeritud. Kui pingi suhe on püsivalt kõrge, on prognoos liiga optimistlik.</p>
+  if (R.acc.length) h += `<section class="kcard"><h3>Normide täpsus <small>valmis etapid · üle 100% = kulub rohkem kui planeeritud</small></h3>
     <div class="tw"><table><thead><tr><th>Pink</th><th class="num">Etappe</th><th class="num">Norm</th><th class="num">Tegelik</th><th class="num">Tegelik / norm</th></tr></thead><tbody>` +
-      R.acc.map(a => { const r = a.act / a.plan * 100; return `<tr><td class="mono">${esc(a.code)}</td><td class="num">${a.n}</td><td class="num">${fmtMin(a.plan)}</td><td class="num">${fmtMin(a.act)}</td><td class="num ${r > 120 ? "late" : r < 80 ? "ok-t" : ""}">${r.toFixed(0)}%</td></tr>`; }).join("") +
-      `</tbody></table></div>`;
+    R.acc.map(a => { const r = a.act / a.plan * 100; return `<tr><td class="mono">${esc(a.code)}</td><td class="num">${a.n}</td><td class="num">${fmtH(a.plan)}</td><td class="num">${fmtH(a.act)}</td><td class="num ${r > 120 ? "late" : r < 80 ? "ok-t" : ""}">${r.toFixed(0)}%</td></tr>`; }).join("") +
+    `</tbody></table></div></section>`;
+  h += `<p class="note">Prognoos: iga pink teeb oma järjekorra (vt Järjekord) järjest, etapp algab alles siis, kui eelmine etapp on valmis. Arvestab nädalavahetusi ja riigipühi, aga mitte puhkusi ega seisakuid.</p>`;
+  return h;
+}
+
+function kStation(code) {
+  const c = stationOf(code); const x = S.sim.stations[code] || { hours: 0, queue: 0, unplanned: 0, order: [], freeAt: 0, freeDate: today0(), running: 0 };
+  const weeks = weeksN(window.matchMedia("(max-width: 700px)").matches ? 5 : 8);
+  const W = stationWeeks(code, weeks);
+  const order = x.order || [];
+  const jobsHere = [...new Map(order.map(s => [s.job.id, s.job])).values()];
+  const od = jobsHere.filter(j => j.overdue), cn = jobsHere.filter(j => j.risk === "late" && !j.overdue);
+  let h = `<div class="kks">` +
+    kpi("Pooleli", fmtH1(x.hours) + " h", x.queue + " etappi" + (x.running ? `, ${x.running} töös` : "")) +
+    kpi("Maht", fmtH1(capH(c)) + " h/p", fmtH1(capH(c) * 5) + " h nädalas") +
+    kpi("Vaba alates", x.queue ? fmtDate(x.freeDate) : "kohe", x.queue ? "u " + Math.ceil(x.freeAt) + " tööpäeva" : "järjekord tühi", cn.length || od.length ? "bad" : "ok") +
+    kpi("Hilinenud", od.length, od.length ? "tähtaeg möödas" : "pole", od.length ? "bad" : "ok") +
+    kpi("Ei jõua tähtajaks", cn.length, cn.length ? "prognoosi järgi" : "kõik graafikus", cn.length ? "bad" : "ok") +
+    kpi("Normita", x.unplanned, x.unplanned ? "etappi ilma ajata" : "kõik planeeritud", x.unplanned ? "warn" : "ok") + `</div>`;
+
+  // hoiatused
+  const items = [];
+  for (const s of order) {
+    const j = s.job;
+    if (j.overdue) items.push({ c: "bad", t: `<b>${esc(jobLabel(j))}</b> on hilinenud`, s: `WO ${esc(j.wono)} · tähtaeg ${fmtDate(parseDate(j.tahtaeg))} · valmib u ${fmtDate(j.projDate)} · siin ${fmtH1(s.remH)} h` });
+    else if (j.risk === "late") items.push({ c: "bad", t: `<b>${esc(jobLabel(j))}</b> ei jõua tähtajaks`, s: `WO ${esc(j.wono)} · tähtaeg ${fmtDate(parseDate(j.tahtaeg))}, prognoos ${fmtDate(j.projDate)} (${j.slack} tp)` + (j.worstWait && j.worstWait.wait > 0.05 ? ` · kinni ${esc(j.worstWait.stage_code)} (${fmtH1(j.worstWait.wait)} p)` : "") });
+    else if (j.risk === "risk") items.push({ c: "warn", t: `<b>${esc(jobLabel(j))}</b> on ohus`, s: `WO ${esc(j.wono)} · varu ${j.slack} tp · tähtaeg ${fmtDate(parseDate(j.tahtaeg))}` });
+    if (s.state === "lukus" && s.pStart > 0.05) items.push({ c: "info", t: `<b>${esc(jobLabel(j))}</b> ootab eelmist etappi`, s: `${esc(s.blockedBy.stage_code)} (${esc(s.blockedBy.state)}) · jõuab siia u ${fmtDate(addWorkdays(today0(), s.pStart))}` });
+    if (s.outOfOrder) items.push({ c: "info", t: `<b>${esc(jobLabel(j))}</b> tehakse vahele`, s: `enne ${esc(jobLabel(s.outOfOrder.job))} (WO ${esc(s.outOfOrder.job.wono)}), mis ootab veel eelmist etappi — pink ei seisa tühjalt` });
   }
-  h += `<p class="note" style="margin-top:22px">Prognoos on lihtsustatud: tööd järjestatakse prioriteedi ja tähtaja järgi, iga etapp algab, kui eelmine on valmis ja pink vaba. Arvestab nädalavahetusi ja riigipühi, aga mitte puhkusi ega masinarikkeid.</p>`;
-  $("reportBody").innerHTML = h;
+  const firstNeg = W.slack.findIndex(v => v < -0.05);
+  if (firstNeg >= 0) items.push({ c: "warn", t: `Ülekoormus alates ${firstNeg === 0 ? "sellest nädalast" : "nädalast " + isoWeek(weeks[firstNeg].s)}`, s: `tähtajaga töid on ${fmtH1(-W.slack[firstNeg])} h rohkem kui mahub` });
+  if (x.unplanned) items.push({ c: "warn", t: `${x.unplanned} etapil pole normi`, s: "neid arvestatakse nulliks — lisa aeg vahelehel Ajanormid" });
+  const idle = order.length && order[0].pStart > 0.2 ? order[0].pStart : 0;
+  if (idle) items.push({ c: "info", t: "Pink seisab tühjalt", s: `esimene töö jõuab siia alles u ${fmtDate(addWorkdays(today0(), idle))} — eelmised etapid on teistel pinkidel` });
+  const rank = { bad: 0, warn: 1, info: 2 }; items.sort((a, b) => rank[a.c] - rank[b.c]);
+  h += `<section class="kcard"><h3>Tähelepanu <small>${items.length ? items.length + " asja" : "kõik korras"}</small></h3>` +
+    (items.length ? `<div class="kbn">${items.slice(0, 40).map(i => `<div class="kbi ${i.c}"><span class="dot"></span><div><span class="t">${i.t}</span><small>${i.s}</small></div></div>`).join("")}</div>` : `<div class="knote ok">Ei midagi murettekitavat. 👍</div>`) + `</section>`;
+
+  h += `<section class="kcard"><h3>Nädalad <small>tähtajaga töö tunnid vs võimsus · joon = kumulatiivne vaba (+) / puudu (−)</small></h3>${weeksSvg(W, weeks)}</section>`;
+
+  const rows = order.map(s => ({
+    key: s.id, label: jobLabel(s.job) || "WO " + s.job.wono,
+    sub: `WO ${s.job.wono} · ${fmtH1(s.remH)} h · ${s.job.tahtaeg ? fmtDate(parseDate(s.job.tahtaeg)) : "tähtajata"}`,
+    cls: riskCls(s.job), due: s.job.tahtaeg,
+    bars: [{ s: s.pStart, e: Math.max(s.pEnd, s.pStart + 0.03), cls: "s-" + s.state, title: `${jobLabel(s.job)} · WO ${s.job.wono} · ${fmtH1(s.remH)} h · tähtaeg ${fmtDate(parseDate(s.job.tahtaeg))} · prognoos ${fmtDate(s.job.projDate)}` }],
+    after: s.job.slack != null && s.job.slack < 0 ? `+${-s.job.slack} p` : "",
+  }));
+  h += `<section class="kcard"><h3>Ajakava <small>järjekorra järgi · ${fmtH1(capH(c))} h päevas · <a href="#" data-gojrk="${esc(code)}">muuda järjekorda →</a></small></h3>` +
+    (rows.length ? gantt(rows) : `<div class="knote ok">Pooleli töid pole. 👍</div>`) +
+    `<div class="kleg"><span><i class="gb s-käsil"></i>töös</span><span><i class="gb s-paus"></i>paus</span><span><i class="gb s-avatud"></i>saab alustada</span><span><i class="gb s-lukus"></i>ootab eelmist etappi</span><span><em class="dl"></em>tähtaeg</span><span><i class="off"></i>vaba päev</span><span class="late">+N p = hilineb</span></div></section>`;
+  return h;
+}
+
+// rows: [{label, sub, cls, due, bars:[{s,e,cls,title}], after, attr}]
+function gantt(rows) {
+  const cal = calDays(160);
+  const maxEnd = Math.max(0, ...rows.flatMap(r => r.bars.map(b => calPos(b.e, cal))));
+  const N = Math.min(Math.max(Math.ceil(maxEnd) + 2, 14), 70);
+  const days = cal.slice(0, N);
+  const pct = v => (Math.max(0, Math.min(N, v)) / N * 100).toFixed(3) + "%";
+  const wd = ["P", "E", "T", "K", "N", "R", "L"];
+  const axis = days.map((d, i) => `<span style="left:${pct(i)};width:${pct(1)}" class="${!d.wd ? "off" : ""}${i === 0 ? " td" : ""}"><b>${d.date.getDate()}</b>${wd[d.date.getDay()]}</span>`).join("");
+  const bg = days.map((d, i) => `<i class="${!d.wd ? "off" : ""}${d.date.getDay() === 1 ? " wk" : ""}" style="left:${pct(i)};width:${pct(1)}"></i>`).join("");
+  const T = today0();
+  const body = rows.map(r => {
+    let mark = "";
+    if (r.due) { const dd = parseDate(r.due); const di = Math.round((dd - T) / 86400000) + 1; mark = di <= 0 ? `<em class="dl past" style="left:0"></em>` : di <= N ? `<em class="dl" style="left:${pct(di)}"></em>` : ""; }
+    let lastE = 0;
+    const bars = r.bars.map(b => { const s = calPos(b.s, cal), e = calPos(b.e, cal); lastE = Math.max(lastE, e);
+      return `<span class="gb ${b.cls}" style="left:${pct(s)};width:calc(${pct(e - s)} + 1px)" title="${esc(b.title)}"></span>`; }).join("");
+    const after = r.after ? `<span class="gx" style="left:calc(${pct(Math.min(lastE, N))} + 4px)">${lastE > N ? "→ " : ""}${r.after}</span>` : "";
+    return `<div class="gr ${r.cls || ""}" ${r.attr || ""}><div class="gl"><b>${esc(r.label)}</b><small>${esc(r.sub)}</small></div><div class="gt">${mark}${bars}${after}</div></div>`;
+  }).join("");
+  return `<div class="gantt"><div class="gh"><div class="gl"></div><div class="gt ax">${axis}</div></div>
+    <div class="gbody"><div class="gbg"><div class="gl"></div><div class="gt">${bg}<i class="now" style="left:0"></i></div></div>${body}</div></div>`;
+}
+
+function weeksSvg(W, weeks) {
+  const n = weeks.length, cw = 100, H = 150, top = 22, base = top + H;
+  const max = Math.max(1, ...W.due, ...W.cap) * 1.1;
+  const y = v => base - v / max * H;
+  let g = "";
+  weeks.forEach((w, i) => {
+    const cx = i * cw + 20, n1 = W.due[i], c1 = W.cap[i], p = c1 ? n1 / c1 : (n1 ? 9 : 0);
+    const cls = p > 1.2 ? "over" : p > 1 ? "high" : "ok";
+    if (c1) g += `<rect class="kcap" x="${cx}" y="${y(c1)}" width="60" height="${base - y(c1)}"/>`;
+    if (n1) g += `<rect class="kw ${cls}" x="${cx + 12}" y="${y(n1)}" width="36" height="${base - y(n1)}"/>`;
+    g += `<text class="kv" x="${cx + 30}" y="${Math.min(y(n1), c1 ? y(c1) : base) - 6}">${Math.round(n1)}/${Math.round(c1)}</text>`;
+    g += `<text class="kl" x="${cx + 30}" y="${base + 16}">${i === 0 ? "See näd." : "N" + isoWeek(w.s)}</text>`;
+    g += `<text class="kd" x="${cx + 30}" y="${base + 30}">${fmtDate(w.s)}</text>`;
+    g += `<text class="ks ${W.slack[i] < -0.05 ? "neg" : "pos"}" x="${cx + 30}" y="${base + 50}">${W.slack[i] >= 0 ? "+" : "−"}${Math.round(Math.abs(W.slack[i]))}</text>`;
+  });
+  let cl = "";
+  if (n > 1) {
+    const sm = Math.max(1, ...W.slack.map(v => Math.abs(v)));
+    const z = top + H * 0.5, ys = v => z - v / sm * H * 0.42;
+    const pts = W.slack.map((v, i) => [i * cw + 50, ys(v)]);
+    cl = `<line class="kz" x1="10" x2="${n * cw + 10}" y1="${z}" y2="${z}"/><polyline class="kcl" points="${pts.map(p => p[0] + "," + p[1].toFixed(1)).join(" ")}"/>` +
+      pts.map((p, i) => `<circle class="kcd ${W.slack[i] < -0.05 ? "neg" : ""}" cx="${p[0]}" cy="${p[1].toFixed(1)}" r="3.5"/>`).join("");
+  }
+  return `<div class="kweeks"><svg viewBox="0 0 ${n * cw + 20} ${base + 58}" preserveAspectRatio="xMinYMin meet">${g}${cl}</svg></div>
+    <div class="kleg"><span><i class="kcap"></i>võimsus</span><span><i class="kw ok"></i>mahub</span><span><i class="kw high"></i>kuni 120%</span><span><i class="kw over"></i>üle</span><span><i class="kcl"></i>kumulatiivne vaba</span><span>all: +vaba / −puudu h</span></div>`;
+}
+
+// ---------- JÄRJEKORD ----------
+let jrkStation = store.get("jrkSt") || null;
+function renderJrk() {
+  const own = ownStations();
+  if (!jrkStation || !S.stations[jrkStation]) jrkStation = S.profile?.default_station || own[0]?.code || null;
+  $("jrkPicker").innerHTML = own.map(s => { const n = S.sim.stations[s.code]?.queue || 0;
+    return `<button data-jst="${esc(s.code)}" class="${s.code === jrkStation ? "on" : ""}">${esc(s.code)}${n ? `<small>${n}</small>` : ""}</button>`; }).join("");
+  if (!jrkStation) { $("jrkList").innerHTML = `<div class="empty">Pinke pole.</div>`; return; }
+  const list = S.stages.filter(s => s.stage_code === jrkStation && s.state !== "valmis").sort(queueSort);
+  const manual = list.some(s => s.queue_pos != null);
+  const x = S.sim.stations[jrkStation];
+  $("jrkTools").innerHTML = `<span class="muted">${list.length} etappi · ${fmtH1(x?.hours || 0)} h · vaba ${x?.queue ? fmtDate(x.freeDate) : "kohe"} · ${manual ? "<b>käsitsi järjekord</b>" : "järjestatud prioriteedi ja tähtaja järgi"}</span>` +
+    (isPlanner() && manual ? `<button class="btn" id="jrkReset">Järjesta tähtaja järgi</button>` : "") +
+    `<button class="btn" data-kst-go="${esc(jrkStation)}">Vaata ajakava</button>`;
+  const canMove = isPlanner();
+  $("jrkList").innerHTML = list.length ? `<div class="tw"><table class="jrk"><thead><tr><th class="num">#</th><th>Töö</th><th class="num">Norm</th><th>Tähtaeg</th><th>Prognoos</th><th>Olek</th>${canMove ? "<th></th>" : ""}</tr></thead><tbody>` +
+    list.map((s, i) => {
+      const j = s.job; const pinned = isRunning(s);
+      const prog = s.pStart != null ? `${fmtDate(addWorkdays(today0(), s.pStart))} – ${fmtDate(addWorkdays(today0(), s.pEnd))}` : "–";
+      const stateTxt = s.state === "lukus" ? `ootab <span class="mono">${esc(s.blockedBy.stage_code)}</span>` : s.state === "avatud" ? "saab alustada" : s.state;
+      return `<tr class="r-${riskCls(j)}"><td class="num mono">${i + 1}</td>
+        <td><b>${esc(jobLabel(j))}</b>${j.prioriteet ? ` <span class="prio">PRIO</span>` : ""}<br><span class="muted">WO ${esc(j.wono)} · ${esc(j.nimetus || "")} · ${esc(j.kogus ?? "")} tk</span></td>
+        <td class="num">${s.unknown ? `<span class="risk">puudub</span>` : fmtH(plannedMin(s))}</td>
+        <td class="${j.overdue ? "late" : ""}">${fmtDate(parseDate(j.tahtaeg))}</td>
+        <td class="${riskCls(j) === "ok" ? "" : riskCls(j)}">${prog}${j.slack != null && j.slack < 0 ? ` (+${-j.slack} p)` : ""}</td>
+        <td>${stateTxt}${s.outOfOrder ? ` <span class="muted">· tehakse vahele</span>` : ""}</td>
+        ${canMove ? `<td class="mv">${pinned ? `<span class="muted">töös</span>` : `<button data-jmv="top" data-id="${s.id}" title="Esimeseks">⤒</button><button data-jmv="up" data-id="${s.id}" title="Üles">↑</button><button data-jmv="down" data-id="${s.id}" title="Alla">↓</button>`}</td>` : ""}</tr>`;
+    }).join("") + `</tbody></table></div>` : `<div class="empty">Sellel pingil pole pooleli töid.</div>`;
+}
+$("jrkPicker").onclick = e => { const b = e.target.closest("button[data-jst]"); if (!b) return; jrkStation = b.dataset.jst; store.set("jrkSt", jrkStation); renderJrk(); };
+$("jrkTools").addEventListener("click", async e => {
+  const g = e.target.closest("[data-kst-go]"); if (g) { koormStation = g.dataset.kstGo; store.set("koormSt", koormStation); showTab("koormus"); return; }
+  if (e.target.id === "jrkReset") { await saveQueue(jrkStation, []); }
+});
+$("jrkList").addEventListener("click", async e => {
+  const b = e.target.closest("button[data-jmv]"); if (!b) return;
+  const list = S.stages.filter(s => s.stage_code === jrkStation && s.state !== "valmis").sort(queueSort).filter(s => !isRunning(s));
+  const i = list.findIndex(s => s.id === b.dataset.id); if (i < 0) return;
+  const [it] = list.splice(i, 1);
+  const to = b.dataset.jmv === "top" ? 0 : b.dataset.jmv === "up" ? Math.max(0, i - 1) : Math.min(list.length, i + 1);
+  list.splice(to, 0, it);
+  await saveQueue(jrkStation, list.map(s => s.id));
+});
+async function saveQueue(code, ids) {
+  const { error } = await sb.rpc("set_queue", { p_station: code, p_ids: ids });
+  if (error) return toast(error.message, true);
+  S.stages.forEach(s => { if (s.stage_code === code) s.queue_pos = null; });
+  ids.forEach((id, k) => { const s = S.stages.find(x => x.id === id); if (s) s.queue_pos = k + 1; });
+  S.sim = simulate(); renderJrk(); toast(ids.length ? "Järjekord salvestatud" : "Järjestatud tähtaja järgi");
 }
 
 $("copyReport").onclick = async () => {
@@ -701,11 +1094,11 @@ $("excelReport").onclick = () => {
     add("Kõik tööd", [jobHead, ...all.map(jobRow)], w);
 
     add("Etapid", [
-      ["WO", "Klient", "Toode", "Kogus", "Tähtaeg", "Jrk", "Etapp", "Olek", "Norm min", "Tegelik min", "Tegelik/norm %", "Prognoositud algus", "Prognoositud lõpp", "Ootab tp", "Tegijad", "Valmis märkis", "Valmis aeg"],
+      ["WO", "Klient", "Toode", "Kogus", "Tähtaeg", "Jrk", "Etapp", "Olek", "Norm h", "Tegelik h", "Tegelik/norm %", "Prognoositud algus", "Prognoositud lõpp", "Ootab tp", "Tegijad", "Valmis märkis", "Valmis aeg"],
       ...S.jobs.flatMap(j => j.stages.map(s => {
         const p = plannedMin(s); const a = liveMin(s);
         return [j.wono, j.klient_nimi, j.toote_id || j.drawing, j.kogus, d(j.tahtaeg), s.seq, s.stage_code, s.state,
-          p, a ? Math.round(a) : null, p && a ? Math.round(a / p * 100) : null,
+          p == null ? null : Math.round(p / 6) / 10, a ? Math.round(a / 6) / 10 : null, p && a ? Math.round(a / p * 100) : null,
           s.state === "valmis" ? null : addWorkdays(today0(), s.pStart ?? 0),
           s.state === "valmis" ? null : addWorkdays(today0(), s.pEnd ?? 0),
           s.wait != null && s.state !== "valmis" ? +s.wait.toFixed(2) : null,
@@ -714,8 +1107,8 @@ $("excelReport").onclick = () => {
     ], [8, 16, 14, 7, 11, 5, 9, 9, 9, 11, 13, 17, 16, 9, 18, 14, 17]);
 
     if (R.acc.length) add("Normide täpsus", [
-      ["Pink", "Valmis etappe", "Norm min", "Tegelik min", "Tegelik/norm %"],
-      ...R.acc.map(a => [a.code, a.n, Math.round(a.plan), Math.round(a.act), Math.round(a.act / a.plan * 100)]),
+      ["Pink", "Valmis etappe", "Norm h", "Tegelik h", "Tegelik/norm %"],
+      ...R.acc.map(a => [a.code, a.n, Math.round(a.plan / 6) / 10, Math.round(a.act / 6) / 10, Math.round(a.act / a.plan * 100)]),
     ], [10, 14, 10, 12, 15]);
 
     const stamp = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
@@ -725,15 +1118,17 @@ $("excelReport").onclick = () => {
 };
 
 // ---------- AJANORMID ----------
+// sisend tundides -> minutid andmebaasi. "1,6" = 1,6 h · "90 min" = 90 min · "0,2/tk" = 0,2 h × kogus
 function parseMinutes(str, kogus) {
   const s = String(str).trim().toLowerCase().replace(",", ".");
   if (!s) return null;
   let m;
-  if ((m = s.match(/^([\d.]+)\s*\/\s*tk$/))) return +m[1] * (Number(kogus) || 1);
-  if ((m = s.match(/^([\d.]+)\s*h$/))) return +m[1] * 60;
-  if ((m = s.match(/^([\d.]+)\s*(min)?$/))) return +m[1];
+  if ((m = s.match(/^([\d.]+)\s*h?\s*\/\s*tk$/))) return +m[1] * 60 * (Number(kogus) || 1);
+  if ((m = s.match(/^([\d.]+)\s*min$/))) return +m[1];
+  if ((m = s.match(/^([\d.]+)\s*h?$/))) return +m[1] * 60;
   return NaN;
 }
+const minToH = m => m == null ? "" : String(Math.round(m / 6) / 10).replace(".", ",");
 function renderPlan() {
   const sel = $("planStation"); const prev = sel.value;
   const codes = Object.keys(S.stations).filter(c => !S.stations[c].ignore).sort();
@@ -742,12 +1137,12 @@ function renderPlan() {
   const list = S.stages.filter(s => s.state !== "valmis" && (!sel.value || s.stage_code === sel.value) && (!only || s.planned_min == null))
     .sort((a, b) => ((a.job.tahtaeg||"9") < (b.job.tahtaeg||"9") ? -1 : (a.job.tahtaeg||"9") > (b.job.tahtaeg||"9") ? 1 : 0) || a.job.wono.localeCompare(b.job.wono) || a.seq - b.seq);
   $("planCount").textContent = `${list.length} etappi` + (list.length > 400 ? " (näitan 400)" : "");
-  $("planTable").innerHTML = `<thead><tr><th>WO</th><th>Klient</th><th>Toode</th><th>Nimetus</th><th class="num">Kogus</th><th>Tähtaeg</th><th>Etapp</th><th>Marsruut</th><th>Norm</th><th class="num">Tegelik</th></tr></thead><tbody>` +
+  $("planTable").innerHTML = `<thead><tr><th>WO</th><th>Klient</th><th>Toode</th><th>Nimetus</th><th class="num">Kogus</th><th>Tähtaeg</th><th>Etapp</th><th>Marsruut</th><th>Norm h</th><th class="num">Tegelik</th></tr></thead><tbody>` +
     list.slice(0, 400).map(s => `<tr><td class="mono">${esc(s.job.wono)}</td><td>${esc(s.job.klient_nimi)}</td><td class="mono">${esc(s.job.toote_id || s.job.drawing)}</td>
       <td>${esc(s.job.nimetus)}</td><td class="num">${esc(s.job.kogus)}</td><td>${dueHtml(s.job)}</td>
       <td class="mono">${s.seq}. ${esc(s.stage_code)}</td><td>${routeHtml(s.job, s.id)}</td>
-      <td><input data-norm="${s.id}" data-kogus="${esc(s.job.kogus)}" value="${s.planned_min ?? ""}" placeholder="${esc(S.stations[s.stage_code]?.default_min ?? "")}"></td>
-      <td class="num">${s.actualMin ? fmtMin(liveMin(s)) : ""}</td></tr>`).join("") + `</tbody>`;
+      <td><input data-norm="${s.id}" data-kogus="${esc(s.job.kogus)}" value="${minToH(s.planned_min)}" placeholder="${esc(minToH(S.stations[s.stage_code]?.default_min))}"></td>
+      <td class="num">${s.actualMin ? fmtH(liveMin(s)) : ""}</td></tr>`).join("") + `</tbody>`;
 }
 $("planStation").onchange = renderPlan; $("planOnlyEmpty").onchange = renderPlan;
 $("planTable").addEventListener("keydown", e => { if (e.key === "Enter" && e.target.dataset.norm) { e.preventDefault(); e.target.blur(); } });
@@ -758,35 +1153,44 @@ $("planTable").addEventListener("change", async e => {
   const { error } = await sb.from("job_stages").update({ planned_min: v == null ? null : Math.round(v) }).eq("id", inp.dataset.norm);
   if (error) return toast(error.message, true);
   const s = S.stages.find(x => x.id === inp.dataset.norm); if (s) s.planned_min = v == null ? null : Math.round(v);
-  inp.value = s?.planned_min ?? ""; inp.style.borderColor = "var(--done)";
+  inp.value = minToH(s?.planned_min); inp.style.borderColor = "var(--done)";
   S.sim = simulate(); $("planCount").textContent = "Salvestatud";
 });
 
 // ---------- PINGID JA KASUTAJAD ----------
 function renderSettings() {
-  const list = Object.values(S.stations).sort((a,b) => a.code.localeCompare(b.code));
-  $("stationTable").innerHTML = `<thead><tr><th>Kood</th><th>Nimi</th><th>Maht h/p</th><th>Allhange</th><th>Tarne p</th><th>Vaikenorm min</th><th>Ei ole etapp</th><th>Järjekord</th></tr></thead><tbody>` +
-    list.map(s => `<tr data-code="${esc(s.code)}"><td class="mono">${esc(s.code)}</td>
-      <td><input class="wide" data-f="name" value="${esc(s.name ?? "")}"></td>
-      <td><input type="number" step="0.5" data-f="capacity_h" value="${esc(s.capacity_h)}"></td>
+  const all = Object.values(S.stations);
+  const row = (s, ext) => `<tr data-code="${esc(s.code)}"><td class="mono"><b>${esc(s.code)}</b></td>
+      <td><input class="wide" data-f="name" value="${esc(s.name ?? "")}" placeholder="${ext ? "firma nimi" : "pingi nimi"}"></td>
+      ${ext ? `<td><input type="number" step="0.5" data-f="lead_days" value="${esc(s.lead_days)}"></td>`
+            : `<td><input type="number" step="0.5" data-f="capacity_h" value="${esc(s.capacity_h)}"></td>
+               <td><input data-f="default_min" data-hours value="${esc(minToH(s.default_min))}"></td>
+               <td><input type="number" data-f="sort" value="${esc(s.sort ?? 100)}"></td>`}
       <td><input type="checkbox" data-f="is_external" ${s.is_external ? "checked" : ""}></td>
-      <td><input type="number" step="0.5" data-f="lead_days" value="${esc(s.lead_days)}"></td>
-      <td><input type="number" data-f="default_min" value="${esc(s.default_min ?? "")}"></td>
-      <td><input type="checkbox" data-f="ignore" ${s.ignore ? "checked" : ""}></td>
-      <td><input type="number" data-f="sort" value="${esc(s.sort ?? 100)}"></td></tr>`).join("") + `</tbody>`;
-  $("userTable").innerHTML = `<thead><tr><th>Nimi</th><th>Roll</th><th>Vaikimisi pink</th></tr></thead><tbody>` +
+      <td><input type="checkbox" data-f="ignore" ${s.ignore ? "checked" : ""}></td></tr>`;
+  const own = all.filter(s => !s.is_external).sort((a, b) => a.code.localeCompare(b.code));
+  const ext = all.filter(s => s.is_external).sort((a, b) => a.code.localeCompare(b.code));
+  $("stationTable").innerHTML = `<thead><tr><th>Kood</th><th>Nimi</th><th>Maht h/päevas</th><th>Vaikenorm h</th><th>Järjestus</th><th>Allhange</th><th>Ei ole etapp</th></tr></thead><tbody>` +
+    own.map(s => row(s, false)).join("") + `</tbody>`;
+  $("extTable").innerHTML = `<thead><tr><th>Kood</th><th>Nimi</th><th>Tarneaeg tööpäevi</th><th>Allhange</th><th>Ei ole etapp</th></tr></thead><tbody>` +
+    ext.map(s => row(s, true)).join("") + `</tbody>`;
+  $("userTable").innerHTML = `<thead><tr><th>Nimi</th><th>Roll</th><th>Oma pink</th></tr></thead><tbody>` +
     S.profiles.map(p => `<tr data-user="${p.user_id}"><td><input class="wide" data-f="name" value="${esc(p.name)}"></td>
       <td><select data-f="role"><option ${p.role === "tooline" ? "selected" : ""}>tooline</option><option ${p.role === "planeerija" ? "selected" : ""}>planeerija</option></select></td>
-      <td><input data-f="default_station" value="${esc(p.default_station ?? "")}"></td></tr>`).join("") + `</tbody>`;
+      <td><select data-f="default_station"><option value="">–</option>${own.map(s => `<option ${p.default_station === s.code ? "selected" : ""}>${esc(s.code)}</option>`).join("")}</select></td></tr>`).join("") + `</tbody>`;
 }
-$("stationTable").addEventListener("change", async e => {
+async function saveStation(e) {
   const f = e.target.dataset.f; const tr = e.target.closest("tr[data-code]"); if (!f || !tr) return;
   let v = e.target.type === "checkbox" ? e.target.checked : e.target.value;
-  if (["capacity_h","lead_days","default_min","sort"].includes(f)) v = v === "" ? null : Number(v);
+  if (e.target.dataset.hours !== undefined) { v = parseMinutes(v); if (Number.isNaN(v)) return toast("Arusaamatu väärtus", true); }
+  else if (["capacity_h","lead_days","sort"].includes(f)) v = v === "" ? null : Number(String(v).replace(",", "."));
   const { error } = await sb.from("stations").update({ [f]: v }).eq("code", tr.dataset.code);
   if (error) return toast(error.message, true);
   S.stations[tr.dataset.code][f] = v; S.sim = simulate(); toast("Salvestatud");
-});
+  if (f === "is_external") renderSettings();
+}
+$("extTable").addEventListener("change", saveStation);
+$("stationTable").addEventListener("change", saveStation);
 $("userTable").addEventListener("change", async e => {
   const f = e.target.dataset.f; const tr = e.target.closest("tr[data-user]"); if (!f || !tr) return;
   const v = e.target.value.trim() || null;
