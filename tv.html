@@ -10,7 +10,7 @@
 <style>
   :root {
     --bg:#0e1214; --panel:#161c1f; --panel2:#1d2427; --line:#2a3337; --ink:#e9e8e1; --muted:#8d968f; --dim:#5d6661;
-    --run:#4f9be6; --done:#55b07a; --pause:#e0a83a; --late:#e4664d; --down:#e4664d;
+    --run:#3f9a62; --done:#55b07a; --pause:#e0a83a; --late:#e4664d; --down:#d2553d; --ok:#55b07a; --warn:#e0a83a; --over:#e4664d;
     --sans:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
   }
   * { box-sizing: border-box; }
@@ -45,25 +45,33 @@
 
   #floor { overflow: hidden; position: relative; }
   #floorIn { display: flex; flex-wrap: wrap; align-content: flex-start; gap: calc(var(--u) * 14px) calc(var(--u) * 18px); --u: 1; }
-  .grp { display: flex; flex-direction: column; gap: calc(var(--u) * 8px); }
+  .grp { display: flex; flex-direction: column; gap: calc(var(--u) * 8px); max-width: max-content; }
   .grp h2 { margin: 0; font-size: calc(var(--u) * 17px); font-weight: 600; color: var(--muted); letter-spacing: .02em; display: flex; justify-content: space-between; gap: 12px; }
   .grp h2 b { font-family: var(--mono); color: var(--ink); font-weight: 600; }
   .tiles { display: flex; flex-wrap: wrap; gap: calc(var(--u) * 8px); }
-  .tile { width: calc(var(--u) * 196px); height: calc(var(--u) * 128px); background: var(--panel); border-radius: 10px; border: 1px solid var(--line);
-          border-top: calc(var(--u) * 6px) solid var(--dim); padding: calc(var(--u) * 8px) calc(var(--u) * 11px); display: flex; flex-direction: column; overflow: hidden; }
+  .grp .gl { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: calc(var(--u) * 16px); font-weight: 600; color: var(--muted); margin-top: calc(var(--u) * -3px); }
+  .grp .gl .lbar { height: calc(var(--u) * 12px); border-radius: 6px; }
+  .grp h2 span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lbar { position: relative; height: calc(var(--u) * 8px); background: #2a3337; border-radius: 4px; overflow: hidden; flex: 1; }
+  .lbar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; }
+  .lbar i.ok { background: var(--ok); } .lbar i.warn { background: var(--warn); } .lbar i.over { background: var(--over); }
+  .pc.warn { color: var(--warn); } .pc.over { color: var(--over); font-weight: 700; }
+  .tile { width: calc(var(--u) * 196px); height: calc(var(--u) * 138px); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; background: #262e31; color: var(--ink); }
+  .tile .body { flex: 1; padding: calc(var(--u) * 8px) calc(var(--u) * 11px) calc(var(--u) * 4px); display: flex; flex-direction: column; min-height: 0; }
   .tile .h { display: flex; justify-content: space-between; align-items: baseline; }
-  .tile .c { font-family: var(--mono); font-weight: 700; font-size: calc(var(--u) * 24px); }
-  .tile .s { font-size: calc(var(--u) * 13px); font-weight: 700; letter-spacing: .08em; color: var(--dim); }
-  .tile .w { font-size: calc(var(--u) * 17px); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: calc(var(--u) * 2px); }
-  .tile .j { font-size: calc(var(--u) * 14px); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .tile .t { margin-top: auto; display: flex; justify-content: space-between; align-items: center; font-family: var(--mono); font-size: calc(var(--u) * 17px); }
-  .tile .pb { height: calc(var(--u) * 5px); background: var(--panel2); border-radius: 3px; overflow: hidden; margin-top: calc(var(--u) * 4px); }
-  .tile .pb i { display: block; height: 100%; background: var(--run); }
-  .tile .pb i.over { background: var(--late); }
-  .tile.run { border-top-color: var(--run); } .tile.run .s { color: var(--run); }
-  .tile.pause { border-top-color: var(--pause); } .tile.pause .s { color: var(--pause); }
-  .tile.down { border-top-color: var(--down); background: color-mix(in srgb, var(--down) 14%, var(--panel)); } .tile.down .s { color: var(--down); }
-  .tile.idle { opacity: .72; }
+  .tile .c { font-family: var(--mono); font-weight: 700; font-size: calc(var(--u) * 25px); line-height: 1.1; }
+  .tile .s { font-size: calc(var(--u) * 13px); font-weight: 700; letter-spacing: .08em; opacity: .85; }
+  .tile .w { font-size: calc(var(--u) * 17px); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: calc(var(--u) * 2px); }
+  .tile .j { font-size: calc(var(--u) * 13.5px); opacity: .85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tile .t { margin-top: auto; display: flex; justify-content: space-between; align-items: center; font-family: var(--mono); font-size: calc(var(--u) * 17px); font-weight: 600; }
+  .tile .pb { height: calc(var(--u) * 4px); background: rgba(0,0,0,.25); border-radius: 2px; overflow: hidden; margin-top: calc(var(--u) * 3px); }
+  .tile .pb i { display: block; height: 100%; background: rgba(255,255,255,.85); }
+  .tile .ft { background: #12171a; padding: calc(var(--u) * 5px) calc(var(--u) * 10px); display: flex; align-items: center; gap: calc(var(--u) * 8px); font-family: var(--mono); font-size: calc(var(--u) * 13px); color: var(--muted); }
+  .tile .ft .pc { min-width: calc(var(--u) * 42px); text-align: right; }
+  .tile.run { background: var(--run); color: #fff; }
+  .tile.pause { background: var(--pause); color: #1c1606; }
+  .tile.down { background: var(--down); color: #fff; }
+  .tile.idle .s, .tile.idle .j { color: var(--muted); opacity: 1; }
   .tile.idle .w { color: var(--muted); font-weight: 500; }
 
   aside { display: flex; flex-direction: column; gap: 18px; min-height: 0; }
@@ -114,7 +122,7 @@
   </header>
   <div id="floor"><div id="floorIn"></div></div>
   <aside>
-    <div class="legend"><span><i style="background:var(--run)"></i>Töös</span><span><i style="background:var(--pause)"></i>Paus</span><span><i style="background:var(--down)"></i>Seisab</span><span><i style="background:var(--dim)"></i>Vaba</span></div>
+    <div class="legend"><span><i style="background:var(--run)"></i>Töös</span><span><i style="background:var(--pause)"></i>Paus</span><span><i style="background:var(--down)"></i>Seisab</span><span><i style="background:#262e31;outline:1px solid var(--line)"></i>Vaba</span><span style="margin-left:auto">riba = nädala koormus</span></div>
     <div class="box" id="lateBox"><h3>Hilineb <b id="lateN"></b></h3><div class="rows" id="late"></div></div>
     <div class="box" id="msgBox"><h3>Töökoja teated (viimased 24 h)</h3><div class="rows" id="msgs"></div></div>
   </aside>
@@ -239,7 +247,7 @@ function render() {
   const downN = own.filter(s => s.down_since).length;
 
   $("kpis").innerHTML = `
-    <div class="kpi wide"><div class="l">Nädala plaan</div><div class="v">${pct}% <small>${f1(doneH)} / ${f1(totH)} h</small></div>
+    <div class="kpi wide"><div class="l">Nädala plaan tehtud</div><div class="v">${pct}% <small>${f1(doneH)} / ${f1(totH)} h</small></div>
       <div class="bar"><i style="width:${Math.min(100, pct)}%;background:var(--done)"></i></div></div>
     <div class="kpi"><div class="l">Pinke töös</div><div class="v">${runN}<small> / ${own.length}</small></div></div>
     <div class="kpi"><div class="l">Täna valmis</div><div class="v">${doneToday}<small> etappi</small></div></div>
@@ -255,30 +263,44 @@ function render() {
   const logsBy = {};
   for (const l of D.logs) { const s = D.stages.find(x => x.id === l.stage_id); if (s) (logsBy[s.stage_code] ??= []).push({ l, s }); }
 
+  // nädala koormus: selle nädala (ja varasemate) tööde tunnid / pingi nädala maht (capacity_h × 5)
+  const loadOf = code => {
+    let h = 0;
+    for (const s of D.stages) if (s.stage_code === code && inWk(s)) {
+      if (s.state === "valmis") { if (s.finished_at && new Date(s.finished_at) >= wk) h += planned(s) / 60; }
+      else h += planned(s) / 60;
+    }
+    return { h, cap: (+D.st[code]?.capacity_h || 0) * 5 };
+  };
+  const lcls = r => r > 1 ? "over" : r > 0.85 ? "warn" : "ok";
+  const lbar = (h, cap) => { if (!cap) return `<span class="lbar"></span><span class="pc">${h ? f1(h) + "h" : "–"}</span>`;
+    const r = h / cap; return `<span class="lbar"><i class="${lcls(r)}" style="width:${Math.min(100, r * 100)}%"></i></span><span class="pc ${r > 0.85 ? lcls(r) : ""}">${Math.round(r * 100)}%</span>`; };
   const tile = st => {
     const runs = logsBy[st.code] || [], q = byStation[st.code] || [];
     const queueH = q.filter(inWk).reduce((a, s) => a + Math.max(0, planned(s) - s.actualMin) / 60, 0);
-    if (st.down_since) return `<div class="tile down"><div class="h"><span class="c">${esc(st.code)}</span><span class="s">SEISAB</span></div>
+    const L = loadOf(st.code), ft = `<div class="ft">${lbar(L.h, L.cap)}</div>`;
+    if (st.down_since) return `<div class="tile down"><div class="body"><div class="h"><span class="c">${esc(st.code)}</span><span class="s">SEISAB</span></div>
       <div class="w">${esc(st.down_note || "rike / hooldus")}</div><div class="j">alates ${new Date(st.down_since).toLocaleString("et-EE", { weekday: "short", hour: "2-digit", minute: "2-digit" })}</div>
-      <div class="t"><span>${fmtClock(now - new Date(st.down_since))}</span><span style="color:var(--muted)">${f1(queueH)} h ootel</span></div></div>`;
+      <div class="t"><span>${fmtClock(now - new Date(st.down_since))}</span><span>${f1(queueH)} h ootel</span></div></div>${ft}</div>`;
     if (runs.length) {
       const { l, s } = runs[0], p = planned(s), r = p ? s.actualMin / p : 0;
-      return `<div class="tile run"><div class="h"><span class="c">${esc(st.code)}</span><span class="s">TÖÖS</span></div>
+      return `<div class="tile run"><div class="body"><div class="h"><span class="c">${esc(st.code)}</span><span class="s">TÖÖS</span></div>
         <div class="w">${esc(runs.map(x => x.l.worker_name).join(", "))}</div><div class="j">${s.job.kiire ? "KIIRE · " : ""}${esc(label(s.job))} · ${esc(s.job.klient_nimi || "")}</div>
-        <div class="t"><span class="timer" data-since="${l.started_at}">${fmtClock(now - new Date(l.started_at))}</span><span style="color:var(--muted)">${p ? Math.round(r * 100) + "%" : ""}</span></div>
-        <div class="pb"><i class="${r > 1 ? "over" : ""}" style="width:${Math.min(100, r * 100)}%"></i></div></div>`;
+        <div class="t"><span class="timer" data-since="${l.started_at}">${fmtClock(now - new Date(l.started_at))}</span><span>${p ? Math.round(r * 100) + "%" : ""}</span></div>
+        <div class="pb"><i style="width:${Math.min(100, r * 100)}%"></i></div></div>${ft}</div>`;
     }
     const paused = q.filter(s => s.state === "paus" && s.wait_reason)[0];
-    if (paused) return `<div class="tile pause"><div class="h"><span class="c">${esc(st.code)}</span><span class="s">PAUS</span></div>
+    if (paused) return `<div class="tile pause"><div class="body"><div class="h"><span class="c">${esc(st.code)}</span><span class="s">PAUS</span></div>
       <div class="w">${esc(paused.wait_reason)}</div><div class="j">${esc(label(paused.job))}</div>
-      <div class="t"><span></span><span style="color:var(--muted)">${f1(queueH)} h ootel</span></div></div>`;
-    return `<div class="tile idle"><div class="h"><span class="c">${esc(st.code)}</span><span class="s">VABA</span></div>
+      <div class="t"><span></span><span>${f1(queueH)} h ootel</span></div></div>${ft}</div>`;
+    return `<div class="tile idle"><div class="body"><div class="h"><span class="c">${esc(st.code)}</span><span class="s">VABA</span></div>
       <div class="w">${q.length ? `${q.length} ${q.length === 1 ? "töö" : "tööd"} ootel` : "töid pole"}</div><div class="j">${st.name ? esc(st.name) : ""}</div>
-      <div class="t"><span></span><span style="color:var(--muted)">${queueH ? f1(queueH) + " h" : ""}</span></div></div>`;
+      <div class="t"><span></span><span style="color:var(--muted)">${queueH ? f1(queueH) + " h" : ""}</span></div></div>${ft}</div>`;
   };
   $("floorIn").innerHTML = gl.map(g => {
     const run = g.list.filter(s => logsBy[s.code]?.length).length;
-    return `<section class="grp"><h2><span>${esc(g.name)}</span><b>${run}/${g.list.length}</b></h2><div class="tiles">${g.list.map(tile).join("")}</div></section>`;
+    const gh = g.list.reduce((a, s) => { const L = loadOf(s.code); a.h += L.h; a.cap += L.cap; return a; }, { h: 0, cap: 0 });
+    return `<section class="grp"><h2><span>${esc(g.name)}</span><b>${run}/${g.list.length}</b></h2><div class="gl">${lbar(gh.h, gh.cap)}</div><div class="tiles">${g.list.map(tile).join("")}</div></section>`;
   }).join("");
   fitFloor();
 
