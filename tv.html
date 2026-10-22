@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="et">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KG tehase ekraan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.0/dist/umd/supabase.js"></script>
+<style>
+  :root {
+    --bg:#0e1214; --panel:#161c1f; --panel2:#1d2427; --line:#2a3337; --ink:#e9e8e1; --muted:#8d968f; --dim:#5d6661;
+    --run:#4f9be6; --done:#55b07a; --pause:#e0a83a; --late:#e4664d; --down:#e4664d;
+    --sans:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font-family: var(--sans); overflow: hidden; }
+  .hidden { display: none !important; }
+  .mono { font-family: var(--mono); }
+
+  /* login */
+  #login { position: fixed; inset: 0; display: grid; place-items: center; }
+  #login form { width: 340px; background: var(--panel); padding: 28px; border-radius: 14px; border: 1px solid var(--line); }
+  #login h1 { margin: 0 0 4px; font-size: 22px; } #login p { margin: 0 0 18px; color: var(--muted); font-size: 14px; }
+  #login input { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font: inherit; }
+  #login button { width: 100%; padding: 12px; border: 0; border-radius: 8px; background: var(--run); color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+  #err { color: var(--late); font-size: 14px; min-height: 18px; }
+
+  /* ekraan: kujundatud 1920×1080, skaleeritakse ekraanile */
+  #screen { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; display: grid;
+            grid-template-columns: 1fr 560px; grid-template-rows: 92px 1fr; gap: 18px; padding: 22px 26px; }
+  header { grid-column: 1 / -1; display: flex; align-items: center; gap: 28px; }
+  header .clock { font-family: var(--mono); font-size: 64px; font-weight: 600; letter-spacing: -1px; line-height: 1; }
+  header .date { font-size: 22px; color: var(--muted); line-height: 1.25; }
+  header .date b { color: var(--ink); font-size: 26px; display: block; }
+  .kpis { margin-left: auto; display: flex; gap: 14px; }
+  .kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px 18px; min-width: 170px; }
+  .kpi .l { font-size: 15px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .kpi .v { font-family: var(--mono); font-size: 40px; font-weight: 700; line-height: 1.1; }
+  .kpi .v small { font-size: 20px; color: var(--muted); font-weight: 500; }
+  .kpi.wide { min-width: 330px; }
+  .kpi .bar { height: 8px; background: var(--panel2); border-radius: 4px; overflow: hidden; margin-top: 6px; display: flex; }
+  .kpi .bar i { display: block; height: 100%; }
+  .kpi.bad .v { color: var(--late); }
+
+  #floor { overflow: hidden; position: relative; }
+  #floorIn { display: flex; flex-wrap: wrap; align-content: flex-start; gap: calc(var(--u) * 14px) calc(var(--u) * 18px); --u: 1; }
+  .grp { display: flex; flex-direction: column; gap: calc(var(--u) * 8px); }
+  .grp h2 { margin: 0; font-size: calc(var(--u) * 17px); font-weight: 600; color: var(--muted); letter-spacing: .02em; display: flex; justify-content: space-between; gap: 12px; }
+  .grp h2 b { font-family: var(--mono); color: var(--ink); font-weight: 600; }
+  .tiles { display: flex; flex-wrap: wrap; gap: calc(var(--u) * 8px); }
+  .tile { width: calc(var(--u) * 196px); height: calc(var(--u) * 128px); background: var(--panel); border-radius: 10px; border: 1px solid var(--line);
+          border-top: calc(var(--u) * 6px) solid var(--dim); padding: calc(var(--u) * 8px) calc(var(--u) * 11px); display: flex; flex-direction: column; overflow: hidden; }
+  .tile .h { display: flex; justify-content: space-between; align-items: baseline; }
+  .tile .c { font-family: var(--mono); font-weight: 700; font-size: calc(var(--u) * 24px); }
+  .tile .s { font-size: calc(var(--u) * 13px); font-weight: 700; letter-spacing: .08em; color: var(--dim); }
+  .tile .w { font-size: calc(var(--u) * 17px); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: calc(var(--u) * 2px); }
+  .tile .j { font-size: calc(var(--u) * 14px); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tile .t { margin-top: auto; display: flex; justify-content: space-between; align-items: center; font-family: var(--mono); font-size: calc(var(--u) * 17px); }
+  .tile .pb { height: calc(var(--u) * 5px); background: var(--panel2); border-radius: 3px; overflow: hidden; margin-top: calc(var(--u) * 4px); }
+  .tile .pb i { display: block; height: 100%; background: var(--run); }
+  .tile .pb i.over { background: var(--late); }
+  .tile.run { border-top-color: var(--run); } .tile.run .s { color: var(--run); }
+  .tile.pause { border-top-color: var(--pause); } .tile.pause .s { color: var(--pause); }
+  .tile.down { border-top-color: var(--down); background: color-mix(in srgb, var(--down) 14%, var(--panel)); } .tile.down .s { color: var(--down); }
+  .tile.idle { opacity: .72; }
+  .tile.idle .w { color: var(--muted); font-weight: 500; }
+
+  aside { display: flex; flex-direction: column; gap: 18px; min-height: 0; }
+  .box { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; display: flex; flex-direction: column; min-height: 0; }
+  .box h3 { margin: 0 0 8px; font-size: 16px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); display: flex; justify-content: space-between; }
+  .box h3 b { color: var(--late); font-family: var(--mono); }
+  #lateBox { flex: 1.35; } #msgBox { flex: 1; }
+  .rows { overflow: hidden; display: flex; flex-direction: column; }
+  .row { display: grid; grid-template-columns: 62px 1fr auto; gap: 12px; padding: 8px 0; border-top: 1px solid var(--line); align-items: center; }
+  .row:first-child { border-top: 0; }
+  .row .d { font-family: var(--mono); font-weight: 700; font-size: 24px; color: var(--late); text-align: right; }
+  .row .d.warn { color: var(--pause); }
+  .row .n { font-size: 18px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .m { font-size: 14px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .st { font-family: var(--mono); font-size: 18px; font-weight: 600; background: var(--panel2); padding: 3px 9px; border-radius: 6px; }
+  .msg { padding: 8px 0; border-top: 1px solid var(--line); font-size: 16px; }
+  .msg:first-child { border-top: 0; }
+  .msg b { font-family: var(--mono); } .msg .r { color: var(--pause); font-weight: 600; }
+  .msg small { color: var(--dim); font-size: 13px; display: block; }
+  .empty { color: var(--dim); font-size: 16px; padding: 10px 0; }
+  .legend { display: flex; gap: 18px; font-size: 14px; color: var(--muted); }
+  .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+
+  #tools { position: fixed; right: 12px; bottom: 10px; display: flex; gap: 8px; opacity: 0; transition: opacity .3s; }
+  body.active #tools { opacity: 1; }
+  body:not(.active) { cursor: none; }
+  #tools button { background: var(--panel2); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; font: inherit; font-size: 14px; cursor: pointer; }
+  #stale { position: fixed; left: 50%; top: 8px; transform: translateX(-50%); background: var(--late); color: #fff; padding: 6px 14px; border-radius: 8px; font-weight: 600; }
+</style>
+</head>
+<body>
+<div id="login" class="hidden">
+  <form id="loginForm">
+    <h1>Tehase ekraan</h1>
+    <p>Logi sisse ükskõik millise kasutajaga (nt tsentraalpunkti konto). Teler jätab sisselogimise meelde.</p>
+    <input id="u" placeholder="Kasutajanimi" autocomplete="username">
+    <input id="p" type="password" placeholder="Parool" autocomplete="current-password">
+    <div id="err"></div>
+    <button type="submit">Ava ekraan</button>
+  </form>
+</div>
+
+<div id="screen" class="hidden">
+  <header>
+    <div class="clock" id="clock">--:--</div>
+    <div class="date" id="date"></div>
+    <div class="kpis" id="kpis"></div>
+  </header>
+  <div id="floor"><div id="floorIn"></div></div>
+  <aside>
+    <div class="legend"><span><i style="background:var(--run)"></i>Töös</span><span><i style="background:var(--pause)"></i>Paus</span><span><i style="background:var(--down)"></i>Seisab</span><span><i style="background:var(--dim)"></i>Vaba</span></div>
+    <div class="box" id="lateBox"><h3>Hilineb <b id="lateN"></b></h3><div class="rows" id="late"></div></div>
+    <div class="box" id="msgBox"><h3>Töökoja teated (viimased 24 h)</h3><div class="rows" id="msgs"></div></div>
+  </aside>
+</div>
+<div id="stale" class="hidden">Ühendus katkes — andmed võivad olla vananenud</div>
+<div id="tools"><button id="fsBtn">Täisekraan</button><button id="outBtn">Logi välja</button></div>
+
+<script>
+// ============ SEADISTUS (sama mis index.html / too.html) ============
+const SUPABASE_URL = "https://irdthackmhyzshfnodhv.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_ELnW_8d2wLlmD7wSCsfFIQ_XeD5rT-_";
+const LOGIN_DOMAIN = "kg.local";
+const REFRESH_SEC = 60;
+// ====================================================================
+
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad = n => String(n).padStart(2, "0");
+const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const parseD = v => { if (!v) return null; const [y, m, d] = String(v).slice(0, 10).split("-").map(Number); return new Date(y, m - 1, d); };
+const mondayOf = d => { const x = new Date(d); x.setHours(0, 0, 0, 0); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; };
+function isoWeek(d) { const x = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); const day = x.getUTCDay() || 7; x.setUTCDate(x.getUTCDate() + 4 - day); const y0 = new Date(Date.UTC(x.getUTCFullYear(), 0, 1)); return Math.ceil(((x - y0) / 86400000 + 1) / 7); }
+const jobWeek = j => j.plan_week ? mondayOf(parseD(j.plan_week)) : j.tahtaeg ? mondayOf(parseD(j.tahtaeg)) : null;
+const fmtClock = ms => { const s = Math.max(0, Math.floor(ms / 1000)); return `${Math.floor(s / 3600)}:${pad(Math.floor(s % 3600 / 60))}`; };
+const f1 = v => (Math.round(v * 10) / 10).toLocaleString("et-EE");
+const NOGROUP = "Muud pingid";
+
+let D = null;
+
+// ---------- sisselogimine ----------
+$("loginForm").onsubmit = async e => {
+  e.preventDefault(); $("err").textContent = "";
+  const u = $("u").value.trim().toLowerCase();
+  const { error } = await sb.auth.signInWithPassword({ email: u.includes("@") ? u : `${u}@${LOGIN_DOMAIN}`, password: $("p").value });
+  if (error) $("err").textContent = /invalid/i.test(error.message) ? "Vale nimi või parool" : error.message;
+};
+let sessUid;
+sb.auth.onAuthStateChange((_e, s) => setTimeout(() => onSession(s), 0));
+function onSession(s) {
+  const uid = s?.user?.id || null; if (uid === sessUid) return; sessUid = uid;
+  $("login").classList.toggle("hidden", !!uid); $("screen").classList.toggle("hidden", !uid);
+  if (uid) { fit(); load(); subscribe(); }
+}
+$("outBtn").onclick = () => sb.auth.signOut();
+$("fsBtn").onclick = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.();
+
+// ---------- andmed ----------
+async function fetchAll(build) {
+  const out = [];
+  for (let from = 0; ; from += 1000) { const { data, error } = await build().range(from, from + 999); if (error) throw error; out.push(...data); if (data.length < 1000) break; }
+  return out;
+}
+async function load() {
+  try {
+    const since = new Date(Date.now() - 864e5).toISOString();
+    const [jobs, stages, actual, stations, logs, reports] = await Promise.all([
+      fetchAll(() => sb.from("jobs").select("id,wono,toote_id,drawing,nimetus,klient_nimi,kogus,tahtaeg,plan_week,material_date,kiire,prioriteet").eq("active", true).order("wono")),
+      fetchAll(() => sb.from("job_stages").select("id,job_id,seq,stage_code,status,planned_min,finished_at,wait_reason, jobs!inner(active)").eq("jobs.active", true).order("id")),
+      fetchAll(() => sb.from("v_stage_actual").select("*").order("stage_id")),
+      fetchAll(() => sb.from("stations").select("*").order("code")),
+      fetchAll(() => sb.from("time_logs").select("id,stage_id,worker_name,started_at").is("ended_at", null).order("id")),
+      sb.from("stage_reports").select("stage_code,worker_name,qty,note,reason,created_at,job_id").gte("created_at", since).order("created_at", { ascending: false }).limit(40)
+        .then(r => { if (r.error) throw r.error; return r.data; })
+    ]);
+    const act = Object.fromEntries(actual.map(a => [a.stage_id, a.actual_min || 0]));
+    const st = Object.fromEntries(stations.map(s => [s.code, s]));
+    const byJob = Object.fromEntries(jobs.map(j => [j.id, { ...j, stages: [] }]));
+    const all = [];
+    for (const s of stages) { const j = byJob[s.job_id]; if (!j) continue; const x = { ...s, job: j, actualMin: act[s.id] || 0 }; j.stages.push(x); all.push(x); }
+    for (const j of Object.values(byJob)) {
+      j.stages.sort((a, b) => a.seq - b.seq);
+      let blocked = null;
+      for (const s of j.stages) {
+        if (s.status === "valmis") { s.state = "valmis"; continue; }
+        if (blocked) { s.state = "lukus"; continue; }
+        s.state = s.status === "ootel" ? "avatud" : s.status; blocked = s; j.cur = s;
+      }
+    }
+    D = { jobs: Object.values(byJob), stages: all, st, logs, reports, at: Date.now() };
+    $("stale").classList.add("hidden");
+    render();
+  } catch (e) { console.error(e); $("stale").classList.remove("hidden"); }
+}
+let rt, rtT;
+function subscribe() {
+  if (rt) return;
+  const kick = () => { clearTimeout(rtT); rtT = setTimeout(load, 1500); };
+  rt = sb.channel("tv");
+  for (const t of ["job_stages", "time_logs", "stage_reports", "stations"]) rt.on("postgres_changes", { event: "*", schema: "public", table: t }, kick);
+  rt.subscribe();
+  setInterval(load, REFRESH_SEC * 1000);
+}
+
+// ---------- joonistamine ----------
+const planned = s => s.planned_min ?? D.st[s.stage_code]?.default_min ?? 0;
+const label = j => j.toote_id || j.drawing || j.nimetus || "WO " + j.wono;
+
+function render() {
+  if (!D) return;
+  const now = new Date(), todayS = ymd(now), wk = mondayOf(now);
+  const own = Object.values(D.st).filter(s => !s.ignore && !s.is_external).sort((a, b) => ((a.sort ?? 100) - (b.sort ?? 100)) || a.code.localeCompare(b.code));
+  const ownSet = new Set(own.map(s => s.code));
+
+  // --- KPI: nädala plaan (sisemised etapid, mille töö nädal on see või varasem)
+  const inWk = s => { const w = jobWeek(s.job); return !w || w <= wk; };
+  let doneH = 0, totH = 0;
+  for (const s of D.stages) {
+    if (!ownSet.has(s.stage_code) || !inWk(s)) continue;
+    const h = planned(s) / 60;
+    if (s.state === "valmis") { if (s.finished_at && new Date(s.finished_at) >= wk) { doneH += h; totH += h; } }
+    else { totH += h; doneH += Math.min(h, s.actualMin / 60); }
+  }
+  const pct = totH ? Math.round(doneH / totH * 100) : 0;
+  const dayStart = new Date(now); dayStart.setHours(0, 0, 0, 0);
+  const doneToday = D.stages.filter(s => s.state === "valmis" && s.finished_at && new Date(s.finished_at) >= dayStart).length;
+  const late = D.jobs.filter(j => j.cur && j.tahtaeg && j.tahtaeg < todayS)
+    .map(j => ({ j, days: Math.round((dayStart - parseD(j.tahtaeg)) / 864e5) })).sort((a, b) => b.days - a.days);
+  const soon = D.jobs.filter(j => j.cur && j.tahtaeg && j.tahtaeg >= todayS && (parseD(j.tahtaeg) - dayStart) / 864e5 <= 2);
+  const ext = D.jobs.filter(j => j.cur && D.st[j.cur.stage_code]?.is_external).length;
+  const runN = new Set(D.logs.map(l => D.stages.find(s => s.id === l.stage_id)?.stage_code).filter(Boolean)).size;
+  const downN = own.filter(s => s.down_since).length;
+
+  $("kpis").innerHTML = `
+    <div class="kpi wide"><div class="l">Nädala plaan</div><div class="v">${pct}% <small>${f1(doneH)} / ${f1(totH)} h</small></div>
+      <div class="bar"><i style="width:${Math.min(100, pct)}%;background:var(--done)"></i></div></div>
+    <div class="kpi"><div class="l">Pinke töös</div><div class="v">${runN}<small> / ${own.length}</small></div></div>
+    <div class="kpi"><div class="l">Täna valmis</div><div class="v">${doneToday}<small> etappi</small></div></div>
+    <div class="kpi"><div class="l">Allhankes</div><div class="v">${ext}<small> tööd</small></div></div>
+    <div class="kpi ${late.length ? "bad" : ""}"><div class="l">Hilineb</div><div class="v">${late.length}<small>${downN ? ` · ${downN} pink seisab` : ""}</small></div></div>`;
+
+  // --- pingid gruppide kaupa
+  const groups = {};
+  for (const s of own) { const n = s.grupp || NOGROUP; (groups[n] ??= { name: n, list: [], sort: 1e9 }).list.push(s); groups[n].sort = Math.min(groups[n].sort, s.sort ?? 100); }
+  const gl = Object.values(groups).sort((a, b) => ((a.name === NOGROUP) - (b.name === NOGROUP)) || (a.sort - b.sort) || a.name.localeCompare(b.name));
+  const byStation = {};
+  for (const s of D.stages) if (s.state !== "valmis" && s.state !== "lukus") (byStation[s.stage_code] ??= []).push(s);
+  const logsBy = {};
+  for (const l of D.logs) { const s = D.stages.find(x => x.id === l.stage_id); if (s) (logsBy[s.stage_code] ??= []).push({ l, s }); }
+
+  const tile = st => {
+    const runs = logsBy[st.code] || [], q = byStation[st.code] || [];
+    const queueH = q.filter(inWk).reduce((a, s) => a + Math.max(0, planned(s) - s.actualMin) / 60, 0);
+    if (st.down_since) return `<div class="tile down"><div class="h"><span class="c">${esc(st.code)}</span><span class="s">SEISAB</span></div>
+      <div class="w">${esc(st.down_note || "rike / hooldus")}</div><div class="j">alates ${new Date(st.down_since).toLocaleString("et-EE", { weekday: "short", hour: "2-digit", minute: "2-digit" })}</div>
+      <div class="t"><span>${fmtClock(now - new Date(st.down_since))}</span><span style="color:var(--muted)">${f1(queueH)} h ootel</span></div></div>`;
+    if (runs.length) {
+      const { l, s } = runs[0], p = planned(s), r = p ? s.actualMin / p : 0;
+      return `<div class="tile run"><div class="h"><span class="c">${esc(st.code)}</span><span class="s">TÖÖS</span></div>
+        <div class="w">${esc(runs.map(x => x.l.worker_name).join(", "))}</div><div class="j">${s.job.kiire ? "KIIRE · " : ""}${esc(label(s.job))} · ${esc(s.job.klient_nimi || "")}</div>
+        <div class="t"><span class="timer" data-since="${l.started_at}">${fmtClock(now - new Date(l.started_at))}</span><span style="color:var(--muted)">${p ? Math.round(r * 100) + "%" : ""}</span></div>
+        <div class="pb"><i class="${r > 1 ? "over" : ""}" style="width:${Math.min(100, r * 100)}%"></i></div></div>`;
+    }
+    const paused = q.filter(s => s.state === "paus" && s.wait_reason)[0];
+    if (paused) return `<div class="tile pause"><div class="h"><span class="c">${esc(st.code)}</span><span class="s">PAUS</span></div>
+      <div class="w">${esc(paused.wait_reason)}</div><div class="j">${esc(label(paused.job))}</div>
+      <div class="t"><span></span><span style="color:var(--muted)">${f1(queueH)} h ootel</span></div></div>`;
+    return `<div class="tile idle"><div class="h"><span class="c">${esc(st.code)}</span><span class="s">VABA</span></div>
+      <div class="w">${q.length ? `${q.length} ${q.length === 1 ? "töö" : "tööd"} ootel` : "töid pole"}</div><div class="j">${st.name ? esc(st.name) : ""}</div>
+      <div class="t"><span></span><span style="color:var(--muted)">${queueH ? f1(queueH) + " h" : ""}</span></div></div>`;
+  };
+  $("floorIn").innerHTML = gl.map(g => {
+    const run = g.list.filter(s => logsBy[s.code]?.length).length;
+    return `<section class="grp"><h2><span>${esc(g.name)}</span><b>${run}/${g.list.length}</b></h2><div class="tiles">${g.list.map(tile).join("")}</div></section>`;
+  }).join("");
+  fitFloor();
+
+  // --- hilinejad
+  $("lateN").textContent = late.length ? late.length : "";
+  const lateRows = late.map(({ j, days }) => `<div class="row"><div class="d">+${days}p</div>
+      <div><div class="n">${j.kiire ? "KIIRE · " : ""}${esc(label(j))}</div><div class="m">${esc(j.klient_nimi || "")} · WO ${esc(j.wono)}${j.cur.wait_reason ? " · " + esc(j.cur.wait_reason) : ""}</div></div>
+      <div class="st">${esc(j.cur.stage_code)}</div></div>`)
+    .concat(soon.length && late.length < 9 ? soon.slice(0, 9 - late.length).map(j => `<div class="row"><div class="d warn">${Math.round((parseD(j.tahtaeg) - dayStart) / 864e5) || "täna"}${Math.round((parseD(j.tahtaeg) - dayStart) / 864e5) ? "p" : ""}</div>
+      <div><div class="n">${esc(label(j))}</div><div class="m">${esc(j.klient_nimi || "")} · tähtaeg lähenemas</div></div><div class="st">${esc(j.cur.stage_code)}</div></div>`) : []);
+  $("late").innerHTML = lateRows.length ? lateRows.join("") : `<div class="empty">Hilinevaid töid pole 👍</div>`;
+  clipRows("late");
+
+  // --- teated
+  const jl = Object.fromEntries(D.jobs.map(j => [j.id, j]));
+  const msgs = D.reports.filter(r => r.reason || r.note);
+  $("msgs").innerHTML = msgs.length ? msgs.map(r => `<div class="msg"><b>${esc(r.stage_code)}</b> ${r.reason ? `<span class="r">${esc(r.reason)}</span>` : ""}${r.note ? ` — ${esc(r.note)}` : ""}
+      <small>${esc(r.worker_name || "")} · ${esc(jl[r.job_id] ? label(jl[r.job_id]) : "")} · ${new Date(r.created_at).toLocaleString("et-EE", { weekday: "short", hour: "2-digit", minute: "2-digit" })}</small></div>`).join("")
+    : `<div class="empty">Teateid pole.</div>`;
+  clipRows("msgs");
+}
+
+// read, mis kasti ei mahu, peidetakse (teler ei keri)
+function clipRows(id) {
+  const box = $(id), max = box.clientHeight || box.parentElement.clientHeight - 40;
+  for (const el of box.children) el.style.display = "";
+  for (const el of box.children) if (el.offsetTop - box.offsetTop + el.offsetHeight > max) el.style.display = "none";
+}
+// pingid kahandatakse, kuni kõik mahuvad
+function fitFloor() {
+  const f = $("floor"), inn = $("floorIn");
+  let u = 1.25; inn.style.setProperty("--u", u);
+  while (u > 0.55 && inn.scrollHeight > f.clientHeight) { u -= 0.05; inn.style.setProperty("--u", u.toFixed(2)); }
+}
+function fit() {
+  const k = Math.min(innerWidth / 1920, innerHeight / 1080), sc = $("screen");
+  sc.style.transform = `scale(${k})`; sc.style.left = (innerWidth - 1920 * k) / 2 + "px"; sc.style.top = (innerHeight - 1080 * k) / 2 + "px";
+}
+addEventListener("resize", () => { fit(); if (D) render(); });
+
+function tick() {
+  const n = new Date();
+  $("clock").textContent = `${pad(n.getHours())}:${pad(n.getMinutes())}`;
+  $("date").innerHTML = `<b>Nädal ${isoWeek(n)}</b>${n.toLocaleDateString("et-EE", { weekday: "long", day: "numeric", month: "long" })}`;
+  document.querySelectorAll(".timer[data-since]").forEach(t => t.textContent = fmtClock(n - new Date(t.dataset.since)));
+  if (D && Date.now() - D.at > REFRESH_SEC * 3000) $("stale").classList.remove("hidden");
+}
+setInterval(tick, 1000); tick();
+let idleT;
+addEventListener("mousemove", () => { document.body.classList.add("active"); clearTimeout(idleT); idleT = setTimeout(() => document.body.classList.remove("active"), 3000); });
+</script>
+</body>
+</html>

@@ -109,6 +109,24 @@
   .bar i { display:block; height: 100%; background: var(--done); }
   .empty { padding: 26px 0; color: var(--muted); text-align: center; }
 
+  /* minu nädal */
+  .wkhead { background: var(--panel); border-radius: 10px; padding: 12px 14px; margin: 6px 0 4px; }
+  .wkhead .t { display:flex; justify-content:space-between; font-size:.9rem; }
+  .wkhead .t b { font-family: var(--mono); }
+  .wkbar { display:flex; height:8px; background: color-mix(in srgb, var(--ink) 10%, transparent); border-radius:4px; overflow:hidden; margin-top:6px; }
+  .wkbar i { display:block; height:100%; } .wkbar .d { background: var(--done); } .wkbar .r { background: var(--run); }
+  h3.sec.ok { color: var(--done); } h3.sec.wait { color: var(--muted); }
+  .card.waiting { background: color-mix(in srgb, var(--ink) 4%, var(--paper)); border-style: dashed; border-left-style: solid; }
+  .why { display:inline-block; font-size:.82rem; font-weight:600; margin-top:6px; padding:2px 8px; border-radius:9px; background: color-mix(in srgb, #e9c46a 30%, var(--paper)); }
+  .why.stop { background: color-mix(in srgb, var(--late) 15%, var(--paper)); color: var(--late); }
+  .wk { font-size:.75rem; font-weight:700; padding:1px 7px; border-radius:9px; background: var(--panel); color: var(--ink); }
+  .wk.now { background: color-mix(in srgb, var(--run) 18%, var(--paper)); }
+  .flag { font-size:.7rem; font-weight:700; padding:1px 5px; border-radius:3px; color:#fff; background: var(--late); margin-right:4px; }
+  /* pausi põhjus */
+  .rgrid { display:grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+  .rgrid button { min-height: 58px; border-radius: 10px; border: 1px solid var(--line); background: var(--paper); font-weight: 600; text-align: left; padding: 8px 12px; line-height: 1.25; }
+  .rgrid button small { display:block; font-weight:400; color: var(--muted); font-size:.78rem; }
+  .rgrid button.on { border: 2px solid var(--pause); background: color-mix(in srgb, var(--pause) 18%, var(--paper)); }
   /* sheet */
   .sheet-bg { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 20; display:flex; align-items: flex-end; justify-content: center; }
   .sheet { background: var(--paper); width: 100%; max-width: 560px; border-radius: 16px 16px 0 0; padding: 18px 16px calc(18px + env(safe-area-inset-bottom,0)); max-height: 90vh; overflow-y: auto; }
@@ -193,10 +211,11 @@
     </div>
     <div id="camBox" class="hidden"><video id="cam" playsinline muted></video></div>
     <div id="mine"></div>
-    <h3 class="sec">Pink</h3>
     <div class="stations" id="stations"></div>
+    <div id="week"></div>
     <div class="cards" id="queue"></div>
-    <p style="margin-top:14px"><label class="muted" style="font-size:.9rem"><input type="checkbox" id="showLocked"> Näita ka tulevasi (ootavad eelmist etappi)</label></p>
+    <p style="margin-top:14px"><button class="btn" id="showAll" style="width:100%">Näita kõiki selle pingi töid</button></p>
+    <input type="checkbox" id="showLocked" hidden>
   </section>
 
   <!-- TÖÖLISED (planeerija) -->
@@ -405,8 +424,46 @@ const isMine = s => !!myLog(s) || myPaused(s);
 const othersOn = s => S.openLogs.filter(l => l.stage_id === s.id && l.worker_id !== S.worker?.id).map(l => l.worker_name);
 function queueSort(a, b) {
   const r = s => (s.state === "käsil" || s.state === "paus") ? 0 : s.state === "avatud" ? 1 : 2;
-  return (r(a) - r(b)) || ((a.queue_pos ?? 1e9) - (b.queue_pos ?? 1e9)) || (b.job.prioriteet - a.job.prioriteet) ||
+  return (r(a) - r(b)) || ((a.queue_pos ?? 1e9) - (b.queue_pos ?? 1e9)) || (+!!b.job.kiire - +!!a.job.kiire) || (+!!b.job.prioriteet - +!!a.job.prioriteet) ||
     cmpStr(a.job.tahtaeg || "9999", b.job.tahtaeg || "9999") || a.job.wono.localeCompare(b.job.wono);
+}
+
+// ---- minu nädal ----
+const parseD = v => { if (!v) return null; const [y, m, d] = String(v).slice(0, 10).split("-").map(Number); return new Date(y, m - 1, d); };
+const mondayOf = d => { const x = new Date(d); x.setHours(0, 0, 0, 0); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; };
+function isoWeek(d) { const x = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); const day = x.getUTCDay() || 7; x.setUTCDate(x.getUTCDate() + 4 - day); const y0 = new Date(Date.UTC(x.getUTCFullYear(), 0, 1)); return Math.ceil(((x - y0) / 86400000 + 1) / 7); }
+const jobWeek = j => j.plan_week ? mondayOf(parseD(j.plan_week)) : j.tahtaeg ? mondayOf(parseD(j.tahtaeg)) : null;
+const fmtD = d => d ? `${d.getDate()}.${d.getMonth() + 1}.` : "";
+const matWait = s => { const md = parseD(s.job.material_date); return s.seq === s.job.stages.find(x => x.state !== "valmis")?.seq && md && md > new Date() && s.state === "avatud" ? md : null; };
+const canDo = s => (s.state === "avatud" || (s.state === "paus" && !isMine(s))) && !matWait(s);
+function whyWait(s) {
+  const m = matWait(s); if (m) return { t: "materjal saabub " + fmtD(m), cls: "" };
+  if (s.state === "lukus") {
+    const b = s.blockedBy, who = S.openLogs.filter(l => l.stage_id === b.id).map(l => l.worker_name);
+    return { t: `ootab ${b.stage_code}` + (who.length ? ` — ${who.join(", ")} töötab` : b.wait_reason ? ` — ${b.wait_reason}` : b.state === "avatud" ? " — pole alustatud" : ""), cls: b.wait_reason ? "stop" : "" };
+  }
+  if (s.wait_reason) return { t: s.wait_reason, cls: "stop" };
+  return null;
+}
+let showAllQueue = false;
+function renderWeek() {
+  const cur = mondayOf(new Date());
+  const at = S.stages.filter(s => s.stage_code === station);
+  const inWeek = s => { const w = jobWeek(s.job); return !w || w <= cur; };
+  const open = at.filter(s => s.state !== "valmis" && !isMine(s)).sort(queueSort);
+  const now = open.filter(inWeek), ready = now.filter(canDo), waiting = now.filter(s => !canDo(s));
+  const later = open.filter(s => !inWeek(s) && canDo(s));
+  const doneWk = at.filter(s => s.state === "valmis" && s.finished_at && new Date(s.finished_at) >= cur);
+  const h = s => (plannedMin(s) || 0) / 60;
+  const doneH = doneWk.reduce((a, s) => a + h(s), 0);
+  const runH = at.filter(s => isMine(s) || s.state === "käsil").reduce((a, s) => a + Math.min(h(s), (s.actualMin || 0) / 60), 0);
+  const remH = now.concat(at.filter(isMine)).reduce((a, s) => a + Math.max(h(s) - (s.actualMin || 0) / 60, 0), 0);
+  const tot = doneH + runH + remH, pct = v => tot ? Math.min(100, v / tot * 100) : 0, f1 = v => (Math.round(v * 10) / 10).toLocaleString("et-EE");
+  $("week").innerHTML = `<div class="wkhead"><div class="t"><span>Nädal ${isoWeek(cur)} · <b>${esc(station || "")}</b> plaan</span><b>${f1(doneH + runH)} / ${f1(tot)} h</b></div>
+      <div class="wkbar"><i class="d" style="width:${pct(doneH)}%"></i><i class="r" style="width:${pct(runH)}%"></i></div></div>` +
+    `<h3 class="sec ok">Saab kohe teha (${ready.length})</h3><div class="cards">${ready.length ? ready.map(s => card(s)).join("") : `<div class="empty">Sel nädalal pole praegu midagi valmis tegemiseks.</div>`}</div>` +
+    (waiting.length ? `<h3 class="sec wait">Ootab (${waiting.length})</h3><div class="cards">${waiting.map(s => card(s, whyWait(s))).join("")}</div>` : "") +
+    (later.length ? `<h3 class="sec">Saab teha ka — hilisemad nädalad (${later.length})</h3><div class="cards">${later.slice(0, 8).map(s => card(s)).join("")}</div>` : "");
 }
 
 function render() {
@@ -415,8 +472,8 @@ function render() {
   if (!S.worker || $("vWork").classList.contains("hidden")) return;
   // minu käimasolevad
   const run = S.stages.filter(s => myLog(s)), pau = S.stages.filter(myPaused);
-  $("mine").innerHTML = (run.length ? `<h3 class="sec">Minu töös (${run.length})</h3><div class="cards">${run.map(card).join("")}</div>` : "") +
-    (pau.length ? `<h3 class="sec">Minu pausil (${pau.length})</h3><div class="cards">${pau.map(card).join("")}</div>` : "");
+  $("mine").innerHTML = (run.length ? `<h3 class="sec">Minu töös (${run.length})</h3><div class="cards">${run.map(s => card(s)).join("")}</div>` : "") +
+    (pau.length ? `<h3 class="sec">Minu pausil (${pau.length})</h3><div class="cards">${pau.map(s => card(s)).join("")}</div>` : "");
   // pingid
   const own = Object.values(S.stations).filter(s => !s.is_external && !s.ignore).sort((a, b) => ((a.sort ?? 100) - (b.sort ?? 100)) || a.code.localeCompare(b.code));
   const cnt = {}; S.stages.forEach(s => { if (["avatud","käsil","paus"].includes(s.state)) cnt[s.stage_code] = (cnt[s.stage_code] || 0) + 1; });
@@ -427,34 +484,38 @@ function render() {
   let list;
   if (focusJob) {
     list = focusJob.stages;
-    $("queue").innerHTML = `<div class="ct" style="margin-bottom:4px"><b>WO ${esc(focusJob.wono)} — kõik etapid</b><button class="btn" id="clearFocus">Sulge</button></div>` + list.map(card).join("");
+    $("week").innerHTML = "";
+    $("queue").innerHTML = `<div class="ct" style="margin-bottom:4px"><b>WO ${esc(focusJob.wono)} — kõik etapid</b><button class="btn" id="clearFocus">Sulge</button></div>` + list.map(s => card(s)).join("");
     $("clearFocus").onclick = () => { focusJob = null; $("scanIn").value = ""; render(); };
     return;
   }
-  list = S.stages.filter(s => s.stage_code === station && s.state !== "valmis" && (s.state !== "lukus" || $("showLocked").checked) && !isMine(s)).sort(queueSort);
-  $("queue").innerHTML = list.length ? list.map(card).join("") : `<div class="empty">Sellel pingil pole praegu töid.</div>`;
+  renderWeek();
+  $("showAll").textContent = showAllQueue ? "Peida pingi kõik tööd" : "Näita kõiki selle pingi töid";
+  list = showAllQueue ? S.stages.filter(s => s.stage_code === station && s.state !== "valmis" && !isMine(s)).sort(queueSort) : [];
+  $("queue").innerHTML = showAllQueue ? `<h3 class="sec">Kõik pingi tööd (${list.length})</h3>` + (list.length ? list.map(s => card(s, whyWait(s))).join("") : `<div class="empty">Sellel pingil pole praegu töid.</div>`) : "";
 }
 
-function card(s) {
+function card(s, why) {
   const j = s.job; const p = plannedMin(s); const mine = myLog(s); const oth = othersOn(s);
+  const wk = jobWeek(j), wkNow = wk && wk <= mondayOf(new Date());
   const done = S.qty[s.id]?.done_qty || 0;
   const late = j.tahtaeg && j.tahtaeg < today();
   const timer = mine ? `<span class="timer" data-since="${mine.started_at}">${fmtClock(Date.now() - new Date(mine.started_at))}</span>` : "";
   const stTxt = s.state === "lukus" ? "" : s.state === "avatud" ? "saab alustada" : s.state === "paus" && myPaused(s) ? "sinu paus — vajuta, et jätkata" : s.state;
-  return `<button class="card st-${s.state}${mine ? " mine" : ""}" data-sid="${s.id}" ${s.state === "lukus" ? "disabled" : ""}>
-    <div class="ct"><b>${j.prioriteet ? `<span class="prio">PRIO </span>` : ""}${esc(j.toote_id || j.drawing || "")} <span class="mono" style="font-size:.9rem">${esc(s.stage_code)}</span></b>${timer}</div>
+  return `<button class="card st-${s.state}${why && s.state !== "lukus" ? " waiting" : ""}${mine ? " mine" : ""}" data-sid="${s.id}" ${s.state === "lukus" ? "disabled" : ""}>
+    <div class="ct"><b>${j.kiire ? `<span class="flag">KIIRE</span>` : ""}${j.prioriteet ? `<span class="prio">PRIO </span>` : ""}${esc(j.toote_id || j.drawing || "")} <span class="mono" style="font-size:.9rem">${esc(s.stage_code)}</span></b>${timer}</div>
     <div class="cm"><span>${esc(j.klient_nimi || "")}</span><span>${esc(j.nimetus || "")}</span><span>Kogus <b>${esc(j.kogus ?? "–")}</b></span>
       <span>Tähtaeg <b class="${late ? "late" : ""}">${fmtDate(j.tahtaeg)}</b></span>${p != null ? `<span>Norm <b>${fmtH(p)}</b></span>` : ""}
-      <span class="mono">WO ${esc(j.wono)}</span>${stTxt ? `<span>${stTxt}</span>` : ""}${oth.length ? `<span>töös: <b>${esc(oth.join(", "))}</b></span>` : ""}
+      <span class="mono">WO ${esc(j.wono)}</span>${wk ? `<span class="wk${wkNow ? " now" : ""}">N${isoWeek(wk)}</span>` : ""}${stTxt ? `<span>${stTxt}</span>` : ""}${oth.length ? `<span>töös: <b>${esc(oth.join(", "))}</b></span>` : ""}
       ${S.qty[s.id]?.notes ? `<span>💬 ${S.qty[s.id].notes}</span>` : ""}</div>
     ${j.kogus && done ? `<div class="bar"><i style="width:${Math.min(100, done / j.kogus * 100)}%"></i></div>` : ""}
     <div class="route">${j.stages.map(x => `<span class="chip ${x.state === "lukus" ? "" : x.state}${x.id === s.id ? " here" : ""}">${esc(x.stage_code)}</span>`).join("")}</div>
-    ${s.state === "lukus" ? `<div class="wait">Ootab: <span class="mono">${esc(s.blockedBy.stage_code)}</span> (${esc(s.blockedBy.state)})</div>` : ""}
+    ${why ? `<div class="why ${why.cls}">${esc(why.t)}</div>` : s.state === "lukus" ? `<div class="wait">Ootab: <span class="mono">${esc(s.blockedBy.stage_code)}</span> (${esc(s.blockedBy.state)})</div>` : s.wait_reason ? `<div class="why stop">${esc(s.wait_reason)}</div>` : ""}
   </button>`;
 }
 
 $("stations").onclick = e => { const b = e.target.closest("button[data-st]"); if (!b) return; station = b.dataset.st; focusJob = null; if (!isKiosk()) store.set("st", station); render(); };
-$("showLocked").onchange = render;
+$("showAll").onclick = () => { showAllQueue = !showAllQueue; render(); };
 document.addEventListener("click", e => { const c = e.target.closest("button.card[data-sid]"); if (c && !c.disabled) openSheet(c.dataset.sid); });
 setInterval(() => document.querySelectorAll("[data-since]").forEach(el => el.textContent = fmtClock(Date.now() - new Date(el.dataset.since))), 1000);
 
@@ -519,6 +580,9 @@ async function openSheet(sid) {
       ${j.drawing ? `<dt>Joonis</dt><dd>${esc(j.drawing)}${j.revno ? " rev " + esc(j.revno) : ""}</dd>` : ""}
       ${j.pinnatootlus ? `<dt>Pind</dt><dd>${esc(j.pinnatootlus)}</dd>` : ""}
       ${oth.length ? `<dt>Töös</dt><dd>${esc(oth.join(", "))}</dd>` : ""}
+      ${j.material_date ? `<dt>Materjal</dt><dd class="${matWait(s) ? "late" : ""}">${matWait(s) ? "saabub " : "saabus "}${fmtDate(j.material_date)}</dd>` : ""}
+      ${s.wait_reason ? `<dt>Seisab</dt><dd class="late">${esc(s.wait_reason)}</dd>` : ""}
+      ${j.kiire ? `<dt>Märge</dt><dd><span class="flag">KIIRE</span></dd>` : ""}
     </dl>
     <div class="route">${j.stages.map(x => `<span class="chip ${x.state === "lukus" ? "" : x.state}${x.id === s.id ? " here" : ""}">${esc(x.stage_code)}</span>`).join("")}</div>
     <div class="acts">${btns}</div>
@@ -528,9 +592,29 @@ async function openSheet(sid) {
     if (a === "close") return closeSheet();
     if (a === "drawing") return openDrawing(j);
     if (a === "finish" || a === "report") return qtyForm(s, a);
+    if (a === "pause") return reasonForm(s);
     act(s, a);
   };
   $("sheet").classList.remove("hidden");
+}
+
+const REASONS = [["Materjal puudu", "või vale materjal"], ["Ootab eelmist etappi", ""], ["Pink rikkis / hooldus", "pink märgitakse seisvaks"],
+  ["Tööriist / rakis puudu", ""], ["Joonis / küsimus", "vajab vastust"], ["Kvaliteedi probleem", "praak, mõõt"], ["Teine töö ette", "kiire töö vahele"], ["Vahetuse lõpp", "jätkan homme"]];
+function reasonForm(s) {
+  const j = s.job, mine = myLog(s); let pick = null;
+  $("sheetBody").innerHTML = `
+    <h2>Miks paus?</h2>
+    <div class="sub">${esc(j.toote_id || "")} · <span class="mono">${esc(s.stage_code)}</span> · WO ${esc(j.wono)}${mine ? ` · seekord ${fmtClock(Date.now() - new Date(mine.started_at))}` : ""}</div>
+    <div class="rgrid">${REASONS.map(([t, d], i) => `<button data-r="${i}">${esc(t)}${d ? `<small>${esc(d)}</small>` : ""}</button>`).join("")}</div>
+    <div class="field"><label>Märkus (soovi korral)</label><textarea id="pNote" rows="2" placeholder="nt 2 toorikut puudu"></textarea></div>
+    <div class="acts"><button class="cancel" data-a="back">Tagasi</button><button class="ps" data-a="go" disabled>Pane pausile</button></div>`;
+  $("sheetBody").onclick = e => {
+    const r = e.target.closest("button[data-r]");
+    if (r) { pick = REASONS[+r.dataset.r][0]; $("sheetBody").querySelectorAll("[data-r]").forEach(b => b.classList.toggle("on", b === r)); $("sheetBody").querySelector('[data-a="go"]').disabled = false; return; }
+    const b = e.target.closest("button[data-a]"); if (!b) return;
+    if (b.dataset.a === "back") return openSheet(s.id);
+    if (b.dataset.a === "go" && pick) act(s, "pause", null, $("pNote").value.trim(), pick);
+  };
 }
 
 function qtyForm(s, a) {
@@ -554,13 +638,13 @@ function qtyForm(s, a) {
   };
 }
 
-async function act(s, a, qty = null, note = null) {
+async function act(s, a, qty = null, note = null, reason = null) {
   document.querySelectorAll("#sheetBody button").forEach(b => b.disabled = true);
   const { error } = await sb.rpc("worker_action", { p_stage: s.id, p_action: a, p_worker: isKiosk() ? S.worker.id : null,
-    p_pin: isKiosk() ? S.pin : null, p_qty: qty, p_note: note || null });
+    p_pin: isKiosk() ? S.pin : null, p_qty: qty, p_note: note || null, p_reason: reason });
   if (error) { toast(error.message, true); document.querySelectorAll("#sheetBody button").forEach(b => b.disabled = false); return; }
   closeSheet();
-  toast({ start: "Alustatud", pause: "Pausil", finish: "Valmis 👍", report: "Salvestatud" }[a]);
+  toast({ start: "Alustatud", pause: "Pausil — põhjus edastatud", finish: "Valmis 👍", report: "Salvestatud" }[a]);
   await loadAll();
 }
 

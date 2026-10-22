@@ -238,6 +238,18 @@
   table.jrk tr.dragging td { background: color-mix(in srgb, var(--accent) 10%, var(--paper)); }
   body:has(tr.dragging) { cursor: grabbing; user-select: none; }
 
+  /* ---- põhjused ja märgised ---- */
+  .why { display:inline-block; font-size:.74rem; padding:1px 7px; border-radius:9px; border:1px solid var(--line); margin:1px 0; white-space:nowrap; }
+  .why.w-mat { border-color:#b7791f; color: var(--ink); background: color-mix(in srgb, #e9c46a 25%, var(--paper)); }
+  .why.w-stop { border-color: var(--late); color: var(--late); font-weight:600; }
+  .why.w-queue { color: var(--ink); }
+  .why.w-ext { color: var(--muted); }
+  .why.w-norm { color: var(--muted); border-style: dashed; }
+  .flag { display:inline-block; font-size:.68rem; font-weight:700; padding:0 5px; border-radius:3px; margin-right:3px; color:#fff; vertical-align: middle; }
+  .flag.fk { background: var(--late); } .flag.fl { background: var(--ink); color: var(--paper); }
+  .jflags { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:8px; }
+  .jflags button.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .jflags input[type=date] { width:auto; padding:6px 8px; }
   /* ---- grupid ---- */
   .gchips { display:flex; flex-wrap:wrap; gap:6px; margin: 0 0 12px; }
   .gchips button { border:1px solid var(--line); background:var(--paper); border-radius:16px; padding:6px 12px; font-weight:500; font-size:.88rem; }
@@ -625,7 +637,7 @@ function stationOf(code) {
 }
 const capH = c => Number(c.capacity_h) || 8;
 const isRunning = s => s.state === "käsil" || s.state === "paus";
-const byDue = (a, b) => (b.job.prioriteet - a.job.prioriteet) || cmpStr(a.job.tahtaeg || "9999", b.job.tahtaeg || "9999") || a.job.wono.localeCompare(b.job.wono) || a.seq - b.seq;
+const byDue = (a, b) => (+!!b.job.kiire - +!!a.job.kiire) || (+!!b.job.prioriteet - +!!a.job.prioriteet) || cmpStr(a.job.tahtaeg || "9999", b.job.tahtaeg || "9999") || a.job.wono.localeCompare(b.job.wono) || a.seq - b.seq;
 function queueSort(a, b) {
   const ra = isRunning(a) ? 0 : 1, rb = isRunning(b) ? 0 : 1;
   if (ra !== rb) return ra - rb;
@@ -642,6 +654,21 @@ function stageDur(s) {
   return { d: remH / capH(c), h: remH };
 }
 
+// Miks töö hilineb / võib hilineda — lühikesed sildid, olulisem enne
+function jobReasons(j, os) {
+  const out = [];
+  const first = os[0];
+  if (j.matDays > 0 && first && !isRunning(first)) out.push({ t: "materjal " + fmtDate(parseDate(j.material_date)), k: "mat", d: j.matDays });
+  for (const s of os) if (s.wait_reason) out.push({ t: s.stage_code + ": " + s.wait_reason, k: "stop", d: 99 });
+  const ww = os.filter(s => s.wait > 0.5).sort((a, b) => b.wait - a.wait)[0];
+  if (ww) out.push({ t: `${ww.stage_code} järjekord ${Math.round(ww.wait)} p`, k: "queue", d: ww.wait });
+  for (const s of os) { const c = stationOf(s.stage_code); if (c.is_external && (Number(c.lead_days) || 0) >= 5) out.push({ t: `${s.stage_code} ${Number(c.lead_days)} tp`, k: "ext", d: Number(c.lead_days) }); }
+  if (os.some(s => s.unknown)) out.push({ t: "norm puudub", k: "norm", d: 0 });
+  return out.sort((a, b) => b.d - a.d);
+}
+const whyHtml = j => (j.why || []).map(w => `<span class="why w-${w.k}">${esc(w.t)}</span>`).join(" ");
+const flagHtml = j => (j.kiire ? `<span class="flag fk">KIIRE</span>` : "") + (j.lukus ? `<span class="flag fl">LUKUS</span>` : "");
+
 function simulate() {
   const st = {}, free = {}, queues = {}, idx = {};
   const stat = code => (st[code] ??= { code, queue: 0, hours: 0, wait: 0, lateJobs: new Set(), unplanned: 0, running: 0, order: [] });
@@ -654,7 +681,9 @@ function simulate() {
   }
   for (const code in queues) queues[code].sort(queueSort);
   const done = new Set();
-  const ready = s => { const p = prevOf.get(s.id); return !p ? 0 : done.has(p.id) ? p.pEnd : null; };
+  const t0m = today0();
+  for (const j of S.jobs) { const md = j.material_date ? parseDate(j.material_date) : null; j.matDays = md && md > t0m ? workdaysBetween(t0m, md) : 0; }
+  const ready = s => { const p = prevOf.get(s.id); return !p ? (isRunning(s) ? 0 : s.job.matDays) : done.has(p.id) ? p.pEnd : null; };
   const place = (s, start, r) => {
     const x = stageDur(s);
     s.pStart = start; s.pEnd = start + x.d; s.wait = Math.max(0, start - r); s.remH = x.h; s.unknown = !!x.unknown;
@@ -705,6 +734,7 @@ function simulate() {
     j.slack = due && j.projDate ? workdaysBetween(j.projDate, due) : null;
     j.risk = j.slack == null ? "" : j.slack < 0 ? "late" : j.slack < RISK_DAYS ? "risk" : "ok";
     if (j.risk === "late") for (const s of os) if (s.wait > 0) stat(s.stage_code).lateJobs.add(j.id);
+    j.why = jobReasons(j, os);
   }
   for (const code in st) {
     const c = stationOf(code);
@@ -786,10 +816,12 @@ function stageCard(s) {
   const j = s.job; const p = plannedMin(s);
   const over = p != null && liveMin(s) > p;
   const timer = s.runSince ? `<span class="timer" data-live="${s.id}">${fmtClock(liveMin(s)*60000)}</span>` : "";
-  const wait = s.state === "lukus"
-    ? `<div class="waitnote">Ootab: <span class="mono">${esc(s.blockedBy.stage_code)}</span> (${esc(s.blockedBy.state)})</div>` : "";
+  const wait = (s.state === "lukus"
+    ? `<div class="waitnote">Ootab: <span class="mono">${esc(s.blockedBy.stage_code)}</span> (${esc(s.blockedBy.state)})${s.blockedBy.wait_reason ? " · " + esc(s.blockedBy.wait_reason) : ""}</div>` : "") +
+    (s.wait_reason ? `<div class="waitnote"><span class="why w-stop">${esc(s.wait_reason)}</span></div>` : "") +
+    (s.seq === 1 && s.state !== "valmis" && j.matDays > 0 ? `<div class="waitnote"><span class="why w-mat">materjal ${fmtDate(parseDate(j.material_date))}</span></div>` : "");
   return `<div class="card s-${s.state}">
-    <h3>${j.prioriteet ? `<span class="prio">PRIO</span>` : ""}<span>${esc(j.klient_nimi || "")} ${esc(j.tellimus || "")}</span>
+    <h3>${flagHtml(j)}${j.prioriteet ? `<span class="prio">PRIO</span>` : ""}<span>${esc(j.klient_nimi || "")} ${esc(j.tellimus || "")}</span>
       <span class="mono">${esc(j.toote_id || j.drawing || "")}</span> ${timer}</h3>
     <div class="meta"><span>Kogus <b>${esc(j.kogus ?? "–")}</b></span><span>Tähtaeg <b>${dueHtml(j)}</b></span>
       <span>${esc(j.nimetus || "")}</span>${j.drawing ? `<span>Joonis ${esc(j.drawing)}${j.revno ? " rev " + esc(j.revno) : ""}</span>` : ""}
@@ -844,27 +876,47 @@ function renderJobs() {
     .filter(j => !onlyLate || j.risk === "late" || j.risk === "risk")
     .sort((a, b) => (b.prioriteet - a.prioriteet) || ((a.tahtaeg||"9") < (b.tahtaeg||"9") ? -1 : (a.tahtaeg||"9") > (b.tahtaeg||"9") ? 1 : 0));
   $("jobCount").textContent = `${list.length} tööd`;
-  const head = `<tr><th></th><th>WO</th><th>Klient</th><th>Tellimus</th><th>Rida</th><th>Toode</th><th>Nimetus</th><th class="num">Kogus</th><th>Pind</th><th>Tähtaeg</th><th>Prognoos</th><th>Marsruut</th><th>Kus on</th></tr>`;
+  const head = `<tr><th></th><th>WO</th><th>Klient</th><th>Tellimus</th><th>Rida</th><th>Toode</th><th>Nimetus</th><th class="num">Kogus</th><th>Pind</th><th>Tähtaeg</th><th>Prognoos</th><th>Miks</th><th>Marsruut</th><th>Kus on</th></tr>`;
   const rows = list.map(j => {
     const cur = j.current;
     const prog = !cur ? `<span class="ok-t">valmis</span>` :
       `<span class="${j.risk === "late" ? "late" : j.risk === "risk" ? "risk" : ""}">${fmtDate(j.projDate)}${j.slack != null && j.slack < 0 ? ` (+${-j.slack} p)` : ""}${j.unplanned ? " *" : ""}</span>`;
-    let html = `<tr class="jobrow" data-job="${j.id}"><td>${j.prioriteet ? `<span class="prio">P</span>` : ""}</td>
+    let html = `<tr class="jobrow" data-job="${j.id}"><td>${flagHtml(j)}${j.prioriteet ? `<span class="prio">P</span>` : ""}</td>
       <td class="mono">${esc(j.wono)}</td><td>${esc(j.klient_nimi)}</td><td>${esc(j.tellimus)}</td><td>${esc(j.tl_rida)}</td>
       <td class="mono">${esc(j.toote_id || j.drawing)}</td><td>${esc(j.nimetus)}</td><td class="num">${esc(j.kogus)}</td>
-      <td>${esc(j.pinnatootlus)}</td><td>${dueHtml(j)}</td><td>${prog}</td><td>${routeHtml(j)}</td>
+      <td>${esc(j.pinnatootlus)}</td><td>${dueHtml(j)}</td><td>${prog}</td><td style="white-space:normal;max-width:260px">${cur && j.risk !== "ok" ? whyHtml(j) : ""}</td><td>${routeHtml(j)}</td>
       <td>${cur ? `<span class="mono">${esc(cur.stage_code)}</span> ${esc(cur.state)}` : ""}</td></tr>`;
-    if (openJob === j.id) html += `<tr class="detail"><td colspan="13"><div class="cards">${j.stages.map(stageCard).join("")}</div>
+    if (openJob === j.id) html += `<tr class="detail"><td colspan="14">${jobFlagsHtml(j)}<div class="cards">${j.stages.map(stageCard).join("")}</div>
       <p class="note">ERP staatus: ${esc(j.erp_status || "–")} · Marsruut ERP-s: <span class="mono">${esc(j.route_raw)}</span>
       · <button class="btn" data-jdopen="${j.id}">Ava joonis</button> <button class="btn" data-jdprint="${j.id}">Prindi joonis templiga</button></p></td></tr>`;
     return html;
   }).join("");
-  $("jobsTable").innerHTML = `<thead>${head}</thead><tbody>${rows || `<tr><td colspan="13" class="empty">Töid pole. Planeerija saab need importida.</td></tr>`}</tbody>`;
+  $("jobsTable").innerHTML = `<thead>${head}</thead><tbody>${rows || `<tr><td colspan="14" class="empty">Töid pole. Planeerija saab need importida.</td></tr>`}</tbody>`;
 }
 $("jobSearch").oninput = renderJobs; $("onlyLate").onchange = renderJobs;
+function jobFlagsHtml(j) {
+  const pl = isPlanner();
+  return `<div class="jflags">
+    ${pl ? `<button class="btn ${j.kiire ? "on" : ""}" data-jflag="kiire" data-id="${j.id}">KIIRE</button><button class="btn ${j.lukus ? "on" : ""}" data-jflag="lukus" data-id="${j.id}">LUKUS</button>` : flagHtml(j)}
+    <label class="chk">Materjal saabub ${pl ? `<input type="date" data-jmat="${j.id}" value="${esc(j.material_date || "")}">` : `<b>${j.material_date ? fmtDate(parseDate(j.material_date)) : "olemas"}</b>`}</label>
+    <span class="muted">Prognoos ${fmtDate(j.projDate)}${j.slack != null ? ` · varu ${j.slack} tp` : ""}</span> ${whyHtml(j)}</div>`;
+}
+async function updateJob(id, patch) {
+  const { error } = await sb.from("jobs").update(patch).eq("id", id);
+  if (error) return toast(error.message, true);
+  const j = S.jobs.find(x => x.id === id); if (j) Object.assign(j, patch);
+  S.sim = simulate(); render(); toast("Salvestatud");
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("button[data-jflag]"); if (!b) return;
+  e.stopPropagation(); const j = S.jobs.find(x => x.id === b.dataset.id); if (j) updateJob(j.id, { [b.dataset.jflag]: !j[b.dataset.jflag] });
+});
+document.addEventListener("change", e => {
+  const i = e.target.closest("input[data-jmat]"); if (i) updateJob(i.dataset.jmat, { material_date: i.value || null });
+});
 $("jobsTable").onclick = e => {
   const o = e.target.closest("[data-jdopen]"), pr = e.target.closest("[data-jdprint]");
-  if (o || pr) { e.stopPropagation(); const j = S.jobs.find(x => x.id === (o || pr).dataset[o ? "jdopen" : "jdprint"]); return o ? openDrawing(j) : printDrawings([j]); } const r = e.target.closest("tr.jobrow"); if (!r) return; openJob = openJob === r.dataset.job ? null : r.dataset.job; renderJobs(); };
+  if (o || pr) { e.stopPropagation(); const j = S.jobs.find(x => x.id === (o || pr).dataset[o ? "jdopen" : "jdprint"]); return o ? openDrawing(j) : printDrawings([j]); } if (e.target.closest("tr.detail")) return; const r = e.target.closest("tr.jobrow"); if (!r) return; openJob = openJob === r.dataset.job ? null : r.dataset.job; renderJobs(); };
 
 // ---------- KOORMUS ----------
 const fmtH = min => min == null || isNaN(min) ? "–" : (Math.round(min / 6) / 10).toLocaleString("et-EE", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " h";
@@ -1258,7 +1310,7 @@ function nadOpen(key, ni) {
     list.map(({ s, h }) => { const j = s.job; return `<tr><td class="mono">${esc(j.wono)}</td><td>${esc(j.klient_nimi)}</td><td class="mono">${esc(j.toote_id || j.drawing)}</td>
       <td class="num">${esc(j.kogus ?? "")}</td><td class="${j.tahtaeg && parseDate(j.tahtaeg) < today0() ? "late" : ""}">${fmtDate(parseDate(j.tahtaeg))}</td>
       <td class="mono">${esc(s.stage_code)}</td><td class="num">${plannedMin(s) == null ? `<span class="risk">norm puudub</span>` : fmtV(h)}</td><td>${esc(s.state)}</td><td>${routeHtml(j, s.id)}</td>
-      <td>${isPlanner() ? `<select data-pw="${j.id}">${opts(j)}</select>` : ""} ${jobWeek(j) ? `<span class="muted">W${isoWeek(jobWeek(j))}</span>` : ""}</td></tr>`; }).join("") +
+      <td>${flagHtml(j)}${isPlanner() && !j.lukus ? `<select data-pw="${j.id}">${opts(j)}</select>` : ""} ${jobWeek(j) ? `<span class="muted">W${isoWeek(jobWeek(j))}</span>` : ""}</td></tr>`; }).join("") +
     `</tbody></table></div>${isPlanner() ? `<p class="note">Nädal kehtib kogu tööle (kõik etapid), nagu Exceli „Nädal” veerg.</p>` : ""}</div>`;
   $("nadPop").classList.remove("hidden");
 }
@@ -1927,6 +1979,9 @@ function toISODate(v) {
 const str = v => v == null || String(v).trim() === "" ? null : String(v).trim();
 const numv = v => v == null || v === "" || isNaN(Number(v)) ? null : Number(v);
 
+// materjali saabumise veerg ERP ekspordis (esimene, mis leidub)
+const MAT_COLS = ["material_date", "Mat. Kp", "Mat.Kp", "MatKp", "mat_kp", "materjal_saabub", "Materjal", "MaterialDate", "matdate"];
+const MAT_COL = head => MAT_COLS.find(c => head.includes(c)) || null;
 async function readExport(file) {
   const wb = XLSX.read(await file.arrayBuffer(), { type: "array", cellDates: true });
   const sheet = wb.Sheets[wb.SheetNames[0]];
@@ -1948,6 +2003,7 @@ async function readExport(file) {
       kogus: numv(r.kogus), valmistamata: numv(r.valmistamata),
       tahtaeg: toISODate(r["T_TLS.tahtaeg"]), start_date: toISODate(r.StartDate),
       prioriteet: !!Number(r.Prioriteetne), route_raw: route,
+      ...(MAT_COL(head) ? { material_date: toISODate(r[MAT_COL(head)]) } : {}),
       erp_status: str(r.Text1585), pinnatootlus: str(r.Text1618), int_ext: str(r.Text1597),
     });
   }
@@ -1993,7 +2049,12 @@ async function runImport() {
   } catch (e) { error = e; }
   clearInterval(tick);
   if (error) { $("importLog").textContent = "Viga: " + (error.message || error) + (error.hint ? "\n" + error.hint : "") + (error.details ? "\n" + error.details : ""); $("doImport").disabled = false; return; }
-  $("importLog").textContent = `Valmis. Uusi: ${data.uued}, uuendatud: ${data.uuendatud}, marsruut muutus: ${data.marsruut_muutus}, suletud: ${data.suletud}, vahele jäetud: ${data.vahele_jaetud}.`;
+  let mat = "";
+  if (pendingRows.some(r => "material_date" in r)) {
+    const m = await sb.rpc("set_material_dates", { p_rows: pendingRows.filter(r => "material_date" in r).map(r => ({ wono: r.wono, material_date: r.material_date })) });
+    mat = m.error ? ` Materjali kuupäevi ei saanud salvestada: ${m.error.message}` : ` Materjali kuupäevi muudetud: ${m.data}.`;
+  }
+  $("importLog").textContent = `Valmis. Uusi: ${data.uued}, uuendatud: ${data.uuendatud}, marsruut muutus: ${data.marsruut_muutus}, suletud: ${data.suletud}, vahele jäetud: ${data.vahele_jaetud}.` + mat;
   pendingRows = null; await loadAll();
 }
 
