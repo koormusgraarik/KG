@@ -134,6 +134,7 @@
   .drop { border:1.5px dashed var(--line); border-radius:8px; padding:30px; text-align:center; cursor:pointer; display:block; max-width: 620px; }
   .drop.dragover { border-color:var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
   .drop input { display:none; }
+  .linklike { text-decoration: underline; cursor: pointer; color: var(--accent); }
   .log { font-family:var(--mono); font-size:.82rem; white-space:pre-wrap; margin-top:14px; max-width: 620px; }
 
   /* ---- koormus (TEL 2.0 stiilis) ---- */
@@ -237,6 +238,56 @@
   table.jrk tr.dragging td { background: color-mix(in srgb, var(--accent) 10%, var(--paper)); }
   body:has(tr.dragging) { cursor: grabbing; user-select: none; }
 
+  /* ---- nädalakoormus ---- */
+  .seg2 { display:inline-flex; border:1px solid var(--line); border-radius:6px; overflow:hidden; }
+  .seg2 button { border:none; background:var(--paper); padding:9px 14px; font-weight:500; color:var(--muted); }
+  .seg2 button.on { background:var(--ink); color:var(--paper); }
+  .nadwrap { overflow-x:auto; border:1px solid var(--line); border-radius:6px; margin-bottom: 8px; }
+  table.nad { border-collapse:separate; border-spacing:0; font-size:.84rem; width:auto; min-width:100%; }
+  table.nad th, table.nad td { padding:5px 8px; border-bottom:1px solid var(--line); border-right:1px solid color-mix(in srgb, var(--line) 60%, transparent); white-space:nowrap; }
+  table.nad thead th { position:sticky; top:0; background:var(--panel); font-size:.78rem; color:var(--ink); text-align:right; z-index:2; }
+  table.nad thead th small { display:block; font-weight:400; color:var(--muted); font-size:.7rem; }
+  table.nad thead th.now { background:var(--ink); color:var(--paper); } table.nad thead th.now small { color:var(--paper); opacity:.75; }
+  table.nad th.nm { position:sticky; left:0; background:var(--paper); text-align:left; font-weight:600; min-width:120px; z-index:1; }
+  table.nad thead th.nm { z-index:3; background:var(--panel); }
+  table.nad th.nm small { display:block; font-weight:400; color:var(--muted); font-size:.7rem; }
+  table.nad td.n { text-align:right; font-variant-numeric:tabular-nums; }
+  table.nad td, table.nad thead th:not(.nm) { width:62px; min-width:62px; }
+  table.nad th.nm { width:170px; min-width:170px; }
+  table.nad td.cap { color:var(--muted); background:var(--paper); }
+  table.nad td.z { color: color-mix(in srgb, var(--muted) 60%, transparent); }
+  table.nad td.ok { background: color-mix(in srgb, var(--done) 12%, var(--paper)); }
+  table.nad td.over { background: color-mix(in srgb, var(--late) 55%, var(--paper)); color: var(--ink); font-weight:600; }
+  table.nad td.clk { cursor:pointer; } table.nad td.clk:hover { outline:2px solid var(--accent); outline-offset:-2px; }
+  table.nad td.later { color:var(--muted); } table.nad td.back.z { color: color-mix(in srgb, var(--muted) 60%, transparent); } table.nad td.tot { font-weight:600; }
+  table.nad td.vb { background: color-mix(in srgb, var(--done) 8%, var(--paper)); }
+  table.nad td.neg { background: color-mix(in srgb, var(--late) 55%, var(--paper)); font-weight:600; }
+  table.nad tr.sum th, table.nad tr.sum td { font-weight:700; border-top:2px solid var(--ink); border-bottom:2px solid var(--ink); }
+  table.nad tr.sum th.nm { text-align:right; }
+  table.nad tr.tot th, table.nad tr.tot td { font-size:.95rem; border-top:3px double var(--ink); }
+  table.nad tr.gap td { height:8px; padding:0; border:none; background:transparent; }
+  #tab-nad h2 small { font-weight:400; font-size:.8rem; }
+  .pop { position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:30; display:flex; align-items:flex-start; justify-content:center; padding:5vh 12px; overflow-y:auto; }
+  .popin { background:var(--paper); border-radius:10px; padding:16px; width:min(1100px,100%); }
+  .pophead { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; margin-bottom:10px; }
+  .pop td select { width:auto; padding:5px 6px; }
+  #printArea { display:none; }
+  @media print {
+    body > *:not(#printArea) { display:none !important; }
+    #printArea { display:block !important; color:#000; }
+    #printArea, #printArea * { background:#fff !important; color:#000 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    #printArea .nadwrap { overflow:visible; border:none; }
+    #printArea table.nad { font-size:8.5pt; }
+    #printArea table.nad th, #printArea table.nad td { padding:2px 4px; border-color:#999 !important; }
+    #printArea table.nad td.ok { background:#e6f2e6 !important; } #printArea table.nad td.over, #printArea table.nad td.neg { background:#f2a7a0 !important; }
+    #printArea table.nad thead th.now { background:#000 !important; color:#fff !important; }
+    #printArea .ptitle { font-size:13pt; margin:0 0 6px; } #printArea h2 { font-size:11pt; margin:10px 0 4px; }
+    .plist .phead { display:flex; align-items:baseline; gap:16px; margin-bottom:8px; }
+    .plist .pcode { font-size:30pt; font-weight:700; } .plist .pdate { margin-left:auto; font-size:10pt; }
+    .plist table { border-collapse:collapse; width:100%; font-size:9.5pt; }
+    .plist th, .plist td { border:1px solid #000; padding:3px 5px; height:18pt; white-space:nowrap; overflow:hidden; max-width:42mm; }
+    .plist th { background:#ddd !important; } .plist .r { text-align:right; } .plist .c { text-align:center; } .plist .b { font-weight:700; }
+  }
   .toast { position:fixed; left:50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform:translateX(-50%); background:var(--ink); color:var(--paper); padding:10px 16px; border-radius:6px; font-size:.9rem; z-index:20; max-width: 90vw; }
   .toast.err { background: var(--late); color:#fff; }
   .empty { padding: 28px 0; color: var(--muted); }
@@ -246,7 +297,7 @@
 
 <div id="authView" class="auth hidden">
   <h1>Tootmise jälgimine</h1>
-  <div class="field"><label for="email">E-post</label><input id="email" type="email" autocomplete="username"></div>
+  <div class="field"><label for="email">Nimi või e-post</label><input id="email" type="text" autocomplete="username" autocapitalize="none" spellcheck="false"></div>
   <div class="field"><label for="password">Parool</label><input id="password" type="password" autocomplete="current-password"></div>
   <button class="btn primary" id="loginBtn" style="width:100%">Logi sisse</button>
   <div class="error" id="authError"></div>
@@ -256,15 +307,17 @@
   <header class="bar"><div class="bar-in">
     <div class="bar-top">
       <span class="brand">Tootmise jälgimine</span>
-      <span class="who"><span id="whoName"></span><button id="logoutBtn">Logi välja</button></span>
+      <span class="who"><a href="too.html" style="color:inherit">Sisestus</a><span id="whoName"></span><button id="logoutBtn">Logi välja</button></span>
     </div>
     <nav class="tabs" id="tabs">
       <button data-tab="pink">Pink</button>
       <button data-tab="tood">Tööd</button>
       <button data-tab="koormus">Koormus</button>
+      <button data-tab="nad">Nädalad</button>
       <button data-tab="jrk">Järjekord</button>
       <button data-tab="plan" data-planner>Ajanormid</button>
       <button data-tab="seaded" data-planner>Pingid ja kasutajad</button>
+      <button data-tab="joon">Joonised</button>
       <button data-tab="import" data-planner>Import</button>
     </nav>
   </div></header>
@@ -296,6 +349,17 @@
       <div id="reportBody"></div>
     </section>
 
+    <!-- NÄDALAD -->
+    <section id="tab-nad" class="hidden">
+      <div class="toolbar">
+        <div class="seg2" id="nadMode"><button data-m="ees">Ees ootav koormus</button><button data-m="tehtud">Tehtud normtunnid</button></div>
+        <select id="nadWeeks"><option value="8">8 nädalat</option><option value="13">13 nädalat</option><option value="26">26 nädalat</option></select>
+        <label class="chk" id="nadVabaWrap"><input type="checkbox" id="nadVaba" checked> Vaba maht</label>
+        <button class="btn" id="nadPrint">Prindi</button>
+      </div>
+      <div id="nadBody"></div>
+    </section>
+
     <!-- JÄRJEKORD -->
     <section id="tab-jrk" class="hidden">
       <div class="stations" id="jrkPicker"></div>
@@ -317,14 +381,31 @@
     <!-- SEADED -->
     <section id="tab-seaded" class="hidden">
       <h2 style="margin-top:0">Omad pingid</h2>
-      <p class="note">Maht = töötunde päevas (2 vahetust = 16). Vaikenormi kasutatakse prognoosis, kui etapil endal aega pole. „Ei ole etapp" jätab koodi järgmisel impordil marsruudist välja.</p>
+      <p class="note">h-MAX = pingi töötunnid nädalas (nagu Exceli Koormus lehel); pühadega nädalal arvestatakse vähem. Sama „Rida” nimega pingid liidetakse nädalakoormuses üheks reaks (nt F205-7/212-4), „Grupp” moodustab Summa-ploki. Vaikenormi kasutatakse prognoosis, kui etapil endal aega pole. „Ei ole etapp" jätab koodi järgmisel impordil marsruudist välja.</p>
       <div class="tw"><table id="stationTable"></table></div>
       <h2>Allhanked</h2>
       <p class="note">Tarneaeg tööpäevades — sellega arvestab prognoos. Tegelikku keskmist näed vahelehel Koormus.</p>
       <div class="tw"><table id="extTable"></table></div>
       <h2>Kasutajad</h2>
-      <p class="note">Uued kontod: Supabase → Authentication → Users → Add user (Auto Confirm). Profiil tekib automaatselt, siin saad nime ja rolli muuta.</p>
+      <p class="note">Uued kontod: Supabase → Authentication → Users → Add user (Auto Confirm), nt <span class="mono">mart@kg.local</span> — sisse saab siis logida lihtsalt nimega „mart”. Roll <b>kiosk</b> = tsentraalpunkti seade. Töölised ja PIN-id: lehel <a href="too.html">Sisestus</a> → Töölised.</p>
       <div class="tw"><table id="userTable"></table></div>
+    </section>
+
+    <!-- JOONISED -->
+    <section id="tab-joon" class="hidden">
+      <div class="drop" id="dwDrop" data-planner>
+        <div><b>Lohista jooniste kaust või PDF-id siia</b></div>
+        <div class="muted" style="margin-top:6px">või <label class="linklike">vali kaust<input type="file" id="dwDir" webkitdirectory multiple hidden></label> · <label class="linklike">vali failid<input type="file" id="dwFiles" accept=".pdf,application/pdf" multiple hidden></label></div>
+      </div>
+      <div class="toolbar" style="margin-top:10px"><label class="chk" data-planner><input type="checkbox" id="dwOverwrite"> Kirjuta sama nimega failid üle</label><span class="muted" id="dwStat"></span></div>
+      <div class="log" id="dwLog"></div>
+      <h2>Prindi joonised templiga</h2>
+      <div class="toolbar"><select id="dwRow"></select><select id="dwWeek"></select><button class="btn primary" id="dwPrintSel">Prindi selle rea ja nädala joonised</button></div>
+      <p class="note">Joonis leitakse töö joonise numbri järgi (ERP toote_id / Drawing) failinimest; mitme revisjoni korral võetakse uusim. Vale vaste korral vali õige fail käsitsi. Tempel pannakse joonise vabasse kohta, vasakusse serva suur nädala number; QR-koodi saab sisestusaknas skaneerida.</p>
+      <h2>Tööd ja joonised</h2>
+      <div class="toolbar"><input type="search" id="dwQ" placeholder="Otsi: WO, joonis, klient…"><label class="chk"><input type="checkbox" id="dwMissing"> Ainult need, millel joonis puudub</label></div>
+      <div class="tw"><table id="dwTable"></table></div>
+      <datalist id="dwAll"></datalist>
     </section>
 
     <!-- IMPORT -->
@@ -340,11 +421,15 @@
 </div>
 
 <div id="toast" class="toast hidden"></div>
+<div id="nadPop" class="pop hidden"></div>
+<div id="printArea"></div>
+<style id="pageStyle"></style>
 
 <script>
 // ============ SEADISTUS ============
 const SUPABASE_URL = "https://irdthackmhyzshfnodhv.supabase.co";   // ilma /rest/v1/ lõputa!
 const SUPABASE_ANON_KEY = "sb_publishable_ELnW_8d2wLlmD7wSCsfFIQ_XeD5rT-_";   // publishable (avalik) võti
+const LOGIN_DOMAIN = "kg.local";   // "mart" -> mart@kg.local
 const RISK_DAYS = 2;   // tööpäeva varu, millest väiksem = "ohus"
 // ===================================
 
@@ -371,7 +456,8 @@ const isPlanner = () => S.profile?.role === "planeerija";
 // ============ AUTH ============
 $("loginBtn").onclick = async () => {
   $("authError").textContent = ""; $("loginBtn").disabled = true;
-  const { error } = await sb.auth.signInWithPassword({ email: $("email").value.trim(), password: $("password").value });
+  const u = $("email").value.trim().toLowerCase();
+  const { error } = await sb.auth.signInWithPassword({ email: u.includes("@") ? u : `${u}@${LOGIN_DOMAIN}`, password: $("password").value });
   $("loginBtn").disabled = false;
   if (error) $("authError").textContent = "Sisselogimine ebaõnnestus: " + error.message;
 };
@@ -414,17 +500,18 @@ async function fetchAll(build) {
 
 async function loadAll() {
   try {
-    const [jobs, stages, actual, stations, profiles] = await Promise.all([
+    const [jobs, stages, actual, stations, doneHist, profiles] = await Promise.all([
       fetchAll(() => sb.from("jobs").select("*").eq("active", true).order("wono")),
       fetchAll(() => sb.from("job_stages").select("*, jobs!inner(active)").eq("jobs.active", true).order("id")),
       fetchAll(() => sb.from("v_stage_actual").select("*").order("stage_id")),
       fetchAll(() => sb.from("stations").select("*").order("code")),
+      fetchAll(() => sb.from("job_stages").select("id,stage_code,planned_min,finished_at").eq("status", "valmis").gte("finished_at", new Date(Date.now() - 190 * 86400000).toISOString()).order("id")),
       isPlanner() ? fetchAll(() => sb.from("profiles").select("*").order("name")) : Promise.resolve([]),
     ]);
     S.loadedAt = Date.now();
     const act = Object.fromEntries(actual.map(a => [a.stage_id, a]));
     S.stations = Object.fromEntries(stations.map(s => [s.code, s]));
-    S.profiles = profiles;
+    S.profiles = profiles; S.doneHist = doneHist;
     const byJob = {};
     S.jobs = jobs.map(j => (byJob[j.id] = { ...j, stages: [] }));
     S.stages = [];
@@ -653,7 +740,7 @@ $("tabs").onclick = e => { const b = e.target.closest("button[data-tab]"); if (b
 
 function render() {
   if (!S.session || !S.loadedAt) return;
-  ({ pink: renderPink, tood: renderJobs, koormus: renderReport, jrk: renderJrk, plan: renderPlan, seaded: renderSettings, import: () => {} })[currentTab]?.();
+  ({ pink: renderPink, tood: renderJobs, koormus: renderReport, nad: renderNad, joon: renderDw, jrk: renderJrk, plan: renderPlan, seaded: renderSettings, import: () => {} })[currentTab]?.();
 }
 
 function routeHtml(job, hereId) {
@@ -751,13 +838,16 @@ function renderJobs() {
       <td>${esc(j.pinnatootlus)}</td><td>${dueHtml(j)}</td><td>${prog}</td><td>${routeHtml(j)}</td>
       <td>${cur ? `<span class="mono">${esc(cur.stage_code)}</span> ${esc(cur.state)}` : ""}</td></tr>`;
     if (openJob === j.id) html += `<tr class="detail"><td colspan="13"><div class="cards">${j.stages.map(stageCard).join("")}</div>
-      <p class="note">ERP staatus: ${esc(j.erp_status || "–")} · Marsruut ERP-s: <span class="mono">${esc(j.route_raw)}</span></p></td></tr>`;
+      <p class="note">ERP staatus: ${esc(j.erp_status || "–")} · Marsruut ERP-s: <span class="mono">${esc(j.route_raw)}</span>
+      · <button class="btn" data-jdopen="${j.id}">Ava joonis</button> <button class="btn" data-jdprint="${j.id}">Prindi joonis templiga</button></p></td></tr>`;
     return html;
   }).join("");
   $("jobsTable").innerHTML = `<thead>${head}</thead><tbody>${rows || `<tr><td colspan="13" class="empty">Töid pole. Planeerija saab need importida.</td></tr>`}</tbody>`;
 }
 $("jobSearch").oninput = renderJobs; $("onlyLate").onchange = renderJobs;
-$("jobsTable").onclick = e => { const r = e.target.closest("tr.jobrow"); if (!r) return; openJob = openJob === r.dataset.job ? null : r.dataset.job; renderJobs(); };
+$("jobsTable").onclick = e => {
+  const o = e.target.closest("[data-jdopen]"), pr = e.target.closest("[data-jdprint]");
+  if (o || pr) { e.stopPropagation(); const j = S.jobs.find(x => x.id === (o || pr).dataset[o ? "jdopen" : "jdprint"]); return o ? openDrawing(j) : printDrawings([j]); } const r = e.target.closest("tr.jobrow"); if (!r) return; openJob = openJob === r.dataset.job ? null : r.dataset.job; renderJobs(); };
 
 // ---------- KOORMUS ----------
 const fmtH = min => min == null || isNaN(min) ? "–" : (Math.round(min / 6) / 10).toLocaleString("et-EE", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " h";
@@ -983,6 +1073,504 @@ function weeksSvg(W, weeks) {
     <div class="kleg"><span><i class="kcap"></i>võimsus</span><span><i class="kw ok"></i>mahub</span><span><i class="kw high"></i>kuni 120%</span><span><i class="kw over"></i>üle</span><span><i class="kcl"></i>kumulatiivne vaba</span><span>all: +vaba / −puudu h</span></div>`;
 }
 
+// ---------- NÄDALAKOORMUS (Exceli "Koormus" lehe moodi) ----------
+// Töö nädal = planeerija pandud plan_week (nagu Exceli "Nädal" veerg), muidu tähtaja nädal.
+// Möödunud nädala tööd (tegemata) näidatakse eraldi veerus "Varasem" — Excel neid ei näidanud.
+const mondayOf = d => { const x = new Date(d); x.setHours(0, 0, 0, 0); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; };
+const isoDate = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const fmtN = v => !v ? "–" : (Math.round(v * 10) / 10).toLocaleString("et-EE", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const fmtV = v => (Math.round(v * 10) / 10).toLocaleString("et-EE", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+function jobWeek(j) {   // planeeritud nädala esmaspäev (võib olla möödunud)
+  return j.plan_week ? mondayOf(parseDate(j.plan_week)) : j.tahtaeg ? mondayOf(parseDate(j.tahtaeg)) : null;
+}
+function workdaysOfWeek(mon) { let n = 0; for (let i = 0; i < 5; i++) { const d = new Date(mon); d.setDate(mon.getDate() + i); if (isWorkday(d)) n++; } return n; }
+
+let nadMode = store.get("nadMode") || "ees", nadN = Number(store.get("nadN")) || 13;
+
+function nadModel() {
+  // read ja plokid
+  const rows = {}, rowOf = {};
+  for (const s of Object.values(S.stations)) {
+    if (s.ignore || s.is_external) continue;
+    const key = s.rida || s.code;
+    const r = rows[key] ??= { key, grupp: s.grupp || "Muud pingid", codes: [], capDay: 0, sort: 1e9 };
+    r.codes.push(s.code); r.capDay += Number(s.capacity_h) || 0; r.sort = Math.min(r.sort, s.sort ?? 100);
+    rowOf[s.code] = r;
+  }
+  const groups = {};
+  for (const r of Object.values(rows)) { const g = groups[r.grupp] ??= { name: r.grupp, rows: [], sort: 1e9 }; g.rows.push(r); g.sort = Math.min(g.sort, r.sort); }
+  const blocks = Object.values(groups).sort((a, b) => ((a.name === "Muud pingid") - (b.name === "Muud pingid")) || (a.sort - b.sort) || a.name.localeCompare(b.name));
+  blocks.forEach(g => g.rows.sort((a, b) => (a.sort - b.sort) || a.key.localeCompare(b.key)));
+
+  // nädalad
+  const cur = mondayOf(today0());
+  const first = nadMode === "tehtud" ? new Date(cur.getFullYear(), cur.getMonth(), cur.getDate() - 7 * (nadN - 1)) : cur;
+  const weeks = Array.from({ length: nadN }, (_, i) => { const s = new Date(first); s.setDate(first.getDate() + 7 * i); return { s, wd: workdaysOfWeek(s) }; });
+  const idxOf = d => { if (!d) return null; const i = Math.round((mondayOf(d) - first) / (7 * 86400000)); return i; };
+
+  const empty = () => ({ w: weeks.map(() => 0), back: 0, later: 0, nodue: 0, total: 0, unplanned: 0, items: weeks.map(() => []), laterItems: [], backItems: [] });
+  for (const r of Object.values(rows)) Object.assign(r, empty(), { cap: weeks.map(w => r.capDay * w.wd) });
+
+  if (nadMode === "ees") {
+    for (const s of S.stages) {
+      if (s.state === "valmis") continue;
+      const r = rowOf[s.stage_code]; if (!r) continue;
+      const p = plannedMin(s); const h = p == null ? 0 : Math.max(p - liveMin(s), 0) / 60;
+      if (p == null) r.unplanned++;
+      r.total += h;
+      const wk = jobWeek(s.job);
+      if (!wk) { r.nodue += h; continue; }
+      const i = idxOf(wk);
+      if (i < 0) { r.back += h; r.backItems.push({ s, h }); }
+      else if (i >= nadN) { r.later += h; r.laterItems.push({ s, h }); }
+      else { r.w[i] += h; r.items[i].push({ s, h }); }
+    }
+  } else {
+    for (const d of S.doneHist || []) {
+      const r = rowOf[d.stage_code]; if (!r || !d.finished_at) continue;
+      const i = idxOf(new Date(d.finished_at)); if (i == null || i < 0 || i >= nadN) continue;
+      const h = (Number(d.planned_min) || 0) / 60; r.w[i] += h; r.total += h; r.items[i].push({ d, h });
+    }
+  }
+  const sumRows = (name, list) => {
+    const t = { key: name, sum: true, capDay: 0, ...empty(), cap: weeks.map(() => 0), items: null };
+    for (const r of list) { t.capDay += r.capDay; r.w.forEach((v, i) => { t.w[i] += v; t.cap[i] += r.cap[i]; }); t.back += r.back; t.later += r.later; t.nodue += r.nodue; t.total += r.total; t.unplanned += r.unplanned; }
+    return t;
+  };
+  blocks.forEach(g => g.sum = sumRows("Summa", g.rows));
+  const kokku = sumRows("KOKKU", blocks.flatMap(g => g.rows));
+  const vaba = r => { let acc = -(r.back || 0); return r.w.map((v, i) => (acc += r.cap[i] - v)); };   // mahajäämus sööb mahtu
+  return { blocks, weeks, kokku, vaba, cur };
+}
+
+function renderNad() {
+  document.querySelectorAll("#nadMode button").forEach(b => b.classList.toggle("on", b.dataset.m === nadMode));
+  $("nadWeeks").value = String(nadN);
+  $("nadVabaWrap").classList.toggle("hidden", nadMode !== "ees");
+  $("nadBody").innerHTML = nadTables(nadModel(), true);
+}
+
+function nadTables(M, interactive) {
+  const ees = nadMode === "ees";
+  const wkHead = M.weeks.map((w, i) => `<th class="wk${+w.s === +M.cur ? " now" : ""}">W${isoWeek(w.s)}<small>${w.s.getDate()}.${w.s.getMonth() + 1}${w.wd < 5 ? ` · ${w.wd} p` : ""}</small></th>`).join("");
+  const cell = (r, v, i) => {
+    const over = ees && v > 0.05 && v > r.cap[i] + 0.05;
+    const cls = !v ? "z" : over ? "over" : "ok";
+    const clk = interactive && !r.sum && v ? ` data-nr="${esc(r.key)}" data-ni="${i}"` : "";
+    return `<td class="n ${cls}${clk ? " clk" : ""}"${clk} title="${esc(r.key)} W${isoWeek(M.weeks[i].s)}: ${fmtV(v)} h${ees ? " / maht " + fmtV(r.cap[i]) + " h" : ""}">${fmtN(v)}</td>`;
+  };
+  const line = r => `<tr class="${r.sum ? "sum" : ""}${r.key === "KOKKU" ? " tot" : ""}">
+    <th class="nm">${esc(r.key)}${!r.sum && r.codes.length > 1 ? `<small>${esc(r.codes.join(", "))}</small>` : ""}${r.unplanned && ees ? `<small class="risk">${r.unplanned} normita</small>` : ""}</th>
+    <td class="n cap">${fmtV(r.capDay * 5)}</td>${ees ? `<td class="n back${r.back > 0.05 ? " neg" : " z"}${interactive && !r.sum && r.back ? " clk" : ""}"${interactive && !r.sum && r.back ? ` data-nr="${esc(r.key)}" data-ni="back"` : ""}>${fmtN(r.back)}</td>` : ""}${r.w.map((v, i) => cell(r, v, i)).join("")}
+    ${ees ? `<td class="n later${interactive && !r.sum && r.later ? " clk" : ""}"${interactive && !r.sum && r.later ? ` data-nr="${esc(r.key)}" data-ni="later"` : ""}>${fmtN(r.later)}</td>` : ""}
+    <td class="n tot">${fmtN(r.total)}</td></tr>`;
+  const gap = `<tr class="gap"><td colspan="${M.weeks.length + (ees ? 5 : 3)}"></td></tr>`;
+  const body = M.blocks.map(g => g.rows.map(line).join("") + (g.rows.length > 1 ? line(g.sum) : "")).join(gap) + gap + line(M.kokku);
+  let h = `<div class="nadwrap"><table class="nad"><thead><tr><th class="nm">${ees ? "Nädalane koormus" : "Tehtud normtunnid"}</th><th class="n">h-MAX</th>${ees ? `<th class="n">Varasem<small>tegemata</small></th>` : ""}${wkHead}${ees ? `<th class="n">Hiljem</th>` : ""}<th class="n">KOKKU</th></tr></thead><tbody>${body}</tbody></table></div>`;
+
+  if (ees && (!interactive || $("nadVaba").checked)) {
+    const vl = r => { const v = M.vaba(r); return `<tr class="${r.sum ? "sum" : ""}${r.key === "KOKKU" ? " tot" : ""}"><th class="nm">${esc(r.key)}</th><td class="n cap"></td><td></td>${v.map(x => `<td class="n ${x < -0.05 ? "neg" : "vb"}">${fmtV(x)}</td>`).join("")}<td></td><td></td></tr>`; };
+    const vbody = M.blocks.map(g => g.rows.map(vl).join("") + (g.rows.length > 1 ? vl(g.sum) : "")).join(gap) + gap + vl(M.kokku);
+    h += `<h2>Vaba maht <small class="muted">kumulatiivne: nädalate maht − koormus kokku kuni selle nädalani · punane = puudu</small></h2>
+      <div class="nadwrap"><table class="nad"><thead><tr><th class="nm">Vaba maht</th><th class="n"></th><th></th>${wkHead}<th></th><th></th></tr></thead><tbody>${vbody}</tbody></table></div>`;
+  }
+  const nodue = M.kokku.nodue;
+  if (interactive) h += `<p class="note">${ees
+    ? `Töö nädal = planeerija määratud nädal, muidu tähtaja nädal. „Varasem” = möödunud nädalatesse planeeritud, kuid valmis märkimata töö (Excelis need ei paistnud) — vaba maht arvestab ka seda. Tunnid = norm miinus juba tehtud. Klõpsa lahtril, et näha töid ja tõsta neid teise nädalasse.${nodue ? ` Tähtajata töid ${fmtV(nodue)} h (ainult KOKKU-s).` : ""}`
+    : "Valmis märgitud etappide normtunnid nädala kaupa, millal etapp valmis märgiti."}</p>`;
+  return h;
+}
+
+$("nadMode").onclick = e => { const b = e.target.closest("button[data-m]"); if (!b) return; nadMode = b.dataset.m; store.set("nadMode", nadMode); renderNad(); };
+$("nadWeeks").onchange = e => { nadN = Number(e.target.value); store.set("nadN", nadN); renderNad(); };
+$("nadVaba").onchange = renderNad;
+$("nadPrint").onclick = () => printHtml(`<h1 class="ptitle">${nadMode === "ees" ? "Nädalane koormus" : "Tehtud normtunnid"} <small>${new Date().toLocaleDateString("et-EE")}</small></h1>` + nadTables(nadModel(), false), "landscape");
+
+// lahtri klikk -> tööd selles reas ja nädalas
+$("nadBody").addEventListener("click", e => {
+  const c = e.target.closest("[data-nr]"); if (!c || nadMode !== "ees") return;
+  nadOpen(c.dataset.nr, c.dataset.ni);
+});
+let nadSel = null;
+function nadOpen(key, ni) {
+  nadSel = { key, ni, jobs: [] };
+  const M = nadModel(); const r = M.blocks.flatMap(g => g.rows).find(x => x.key === key); if (!r) return closeNadPop();
+  const list = nadSel.list = (ni === "later" ? r.laterItems : ni === "back" ? r.backItems : r.items[Number(ni)] || []).slice().sort((a, b) => cmpStr(a.s.job.tahtaeg || "9", b.s.job.tahtaeg || "9"));
+  const title = ni === "later" ? "hiljem" : ni === "back" ? "varasem (möödunud nädalad, tegemata)" : `W${isoWeek(M.weeks[ni].s)} (${fmtDate(M.weeks[ni].s)}–${fmtDate(new Date(+M.weeks[ni].s + 4 * 86400000))})`;
+  const tot = list.reduce((a, x) => a + x.h, 0), cap = ni === "later" || ni === "back" ? null : r.cap[ni];
+  const opts = j => `<option value="">tähtaja järgi${j.tahtaeg ? " (W" + isoWeek(parseDate(j.tahtaeg)) + ")" : ""}</option>` +
+    M.weeks.map(w => `<option value="${isoDate(w.s)}" ${j.plan_week && +mondayOf(parseDate(j.plan_week)) === +w.s ? "selected" : ""}>W${isoWeek(w.s)} · ${fmtDate(w.s)}</option>`).join("");
+  $("nadPop").innerHTML = `<div class="popin">
+    <div class="pophead"><div><b>${esc(key)}</b> · ${title}<br><span class="muted">${fmtV(tot)} h${cap != null ? ` / maht ${fmtV(cap)} h` : ""} · ${list.length} etappi</span></div><div style="display:flex;gap:6px"><button class="btn primary" data-pdw>Prindi joonised (${new Set(list.map(x => x.s.job.id)).size})</button><button class="btn" data-close>Sulge</button></div></div>
+    <div class="tw"><table><thead><tr><th>WO</th><th>Klient</th><th>Toode</th><th class="num">Kogus</th><th>Tähtaeg</th><th>Etapp</th><th class="num">Tunnid</th><th>Olek</th><th>Marsruut</th><th>Nädal</th></tr></thead><tbody>` +
+    list.map(({ s, h }) => { const j = s.job; return `<tr><td class="mono">${esc(j.wono)}</td><td>${esc(j.klient_nimi)}</td><td class="mono">${esc(j.toote_id || j.drawing)}</td>
+      <td class="num">${esc(j.kogus ?? "")}</td><td class="${j.tahtaeg && parseDate(j.tahtaeg) < today0() ? "late" : ""}">${fmtDate(parseDate(j.tahtaeg))}</td>
+      <td class="mono">${esc(s.stage_code)}</td><td class="num">${plannedMin(s) == null ? `<span class="risk">norm puudub</span>` : fmtV(h)}</td><td>${esc(s.state)}</td><td>${routeHtml(j, s.id)}</td>
+      <td>${isPlanner() ? `<select data-pw="${j.id}">${opts(j)}</select>` : ""} ${jobWeek(j) ? `<span class="muted">W${isoWeek(jobWeek(j))}</span>` : ""}</td></tr>`; }).join("") +
+    `</tbody></table></div>${isPlanner() ? `<p class="note">Nädal kehtib kogu tööle (kõik etapid), nagu Exceli „Nädal” veerg.</p>` : ""}</div>`;
+  $("nadPop").classList.remove("hidden");
+}
+function closeNadPop() { $("nadPop").classList.add("hidden"); nadSel = null; }
+$("nadPop").addEventListener("click", e => {
+  if (e.target.closest("[data-pdw]") && nadSel?.list) return printDrawings(nadSel.list.map(x => x.s.job));
+  if (e.target === $("nadPop") || e.target.closest("[data-close]")) closeNadPop();
+});
+$("nadPop").addEventListener("change", async e => {
+  const sel = e.target.closest("select[data-pw]"); if (!sel) return;
+  const v = sel.value || null; sel.disabled = true;
+  const { error } = await sb.from("jobs").update({ plan_week: v }).eq("id", sel.dataset.pw);
+  sel.disabled = false;
+  if (error) return toast(error.message, true);
+  const j = S.jobs.find(x => x.id === sel.dataset.pw); if (j) j.plan_week = v;
+  toast(v ? `Tõstetud nädalasse W${isoWeek(parseDate(v))}` : "Tagasi tähtaja järgi");
+  renderNad(); if (nadSel) nadOpen(nadSel.key, nadSel.ni);
+});
+
+// ---------- PRINT ----------
+function printHtml(html, orient) {
+  $("printArea").innerHTML = html;
+  $("pageStyle").textContent = `@page { size: A4 ${orient || "portrait"}; margin: 10mm; }`;
+  setTimeout(() => window.print(), 50);
+}
+function printStation(code) {
+  const list = S.stages.filter(s => s.stage_code === code && s.state !== "valmis").sort(queueSort);
+  const rows = list.map(s => { const j = s.job; const wk = jobWeek(j); return `<tr>
+    <td>${esc(j.klient_nimi || "")}</td><td>${esc(j.tellimus || "")}</td><td>${esc(j.toote_id || j.drawing || "")}</td><td>${esc(j.wono)}</td>
+    <td class="r b">${esc(j.kogus ?? "")}</td><td>${esc(j.route_raw || "")}</td><td>${fmtDate(parseDate(j.tahtaeg))}</td><td class="c b">${wk ? isoWeek(wk) : ""}</td>
+    <td class="r">${plannedMin(s) == null ? "" : fmtV(plannedMin(s) / 60)}</td><td>${s.state === "lukus" ? "ootab " + esc(s.blockedBy.stage_code) : ""}</td></tr>`; }).join("");
+  const blank = Array.from({ length: Math.max(8, 26 - list.length) }, () => `<tr>${"<td>&nbsp;</td>".repeat(10)}</tr>`).join("");
+  const name = S.stations[code]?.name;
+  printHtml(`<div class="plist"><div class="phead"><span class="pcode">${esc(code)}</span>${name ? `<span>${esc(name)}</span>` : ""}<span class="pdate">${new Date().toLocaleDateString("et-EE")} · nädal ${isoWeek(today0())}</span></div>
+    <table><thead><tr><th>Klient</th><th>Tel</th><th>Joonis</th><th>Töö nr</th><th>Töös</th><th>Marshruut</th><th>Tähtaeg</th><th>Nädal</th><th>Norm h</th><th>Märkus</th></tr></thead>
+    <tbody>${rows}${blank}</tbody></table></div>`, "portrait");
+}
+
+// ---------- JOONISED: templi mootor ----------
+// pdf.js renderdab joonise korraks pildiks -> otsitakse tühi ala templi jaoks -> pdf-lib paneb joonise A4-le
+// (servas suur nädala number) ja templi vabasse kohta. Kui vaba kohta pole, vähendatakse joonist ja tempel läheb alla.
+const PDF_LIBS = {   // esimene CDN, varuks teine
+  pdflib: ["https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js", "https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"],
+  pdfjs: ["https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js", "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"],
+  qr: ["https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js", "https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"],
+};
+const loadScript = src => new Promise((ok, bad) => { const s = document.createElement("script"); s.src = src; s.onload = () => ok(src); s.onerror = () => { s.remove(); bad(new Error("Teeki ei saanud laadida: " + src)); }; document.head.appendChild(s); });
+const loadAny = async list => { let err; for (const u of list) { try { return await loadScript(u); } catch (e) { err = e; } } throw err; };
+let pdfLibsReady = null;
+function loadPdfLibs() {
+  return pdfLibsReady ??= (async () => {
+    const [, pdfjsUrl] = await Promise.all([loadAny(PDF_LIBS.pdflib), loadAny(PDF_LIBS.pdfjs), loadAny(PDF_LIBS.qr)]);
+    pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsUrl.replace(/pdf\.min\.js$/, "pdf.worker.min.js");
+  })().catch(e => { pdfLibsReady = null; throw e; });
+}
+
+const STAMP_W = 236, STAMP_H = 82;      // templi suurus punktides A4-l (~83 × 29 mm)
+const STRIP = 46, MARGIN = 10;          // vasak serv nädala numbrile; muud veerised
+
+// Joonise esimese lehe "tindikaart" (1 = joon/tekst, 0 = tühi) summeeritud tabelina
+async function inkMap(bytes) {
+  const doc = await pdfjsLib.getDocument({ data: bytes.slice(0) }).promise;
+  try {
+    const page = await doc.getPage(1);
+    const vp0 = page.getViewport({ scale: 1 });
+    const sc = 900 / Math.max(vp0.width, vp0.height);
+    const vp = page.getViewport({ scale: sc });
+    const cv = document.createElement("canvas"); cv.width = Math.ceil(vp.width); cv.height = Math.ceil(vp.height);
+    const ctx = cv.getContext("2d", { willReadFrequently: true });
+    ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, cv.width, cv.height);
+    await page.render({ canvasContext: ctx, viewport: vp }).promise;
+    const W = cv.width, H = cv.height, d = ctx.getImageData(0, 0, W, H).data;
+    const I = new Uint32Array((W + 1) * (H + 1));
+    for (let y = 0; y < H; y++) {
+      let row = 0;
+      for (let x = 0; x < W; x++) {
+        const k = (y * W + x) * 4;
+        row += (d[k] + d[k + 1] + d[k + 2]) < 660 ? 1 : 0;      // heledam kui ~220 = tühi
+        I[(y + 1) * (W + 1) + x + 1] = I[y * (W + 1) + x + 1] + row;
+      }
+    }
+    return { W, H, I, sc };
+  } finally { doc.destroy(); }
+}
+function inkIn(m, x, y, w, h) {
+  const x0 = Math.max(0, x), y0 = Math.max(0, y), x1 = Math.min(m.W, x + w), y1 = Math.min(m.H, y + h);
+  if (x1 <= x0 || y1 <= y0) return 0;
+  const S = m.W + 1;
+  return m.I[y1 * S + x1] - m.I[y0 * S + x1] - m.I[y1 * S + x0] + m.I[y0 * S + x0];
+}
+// Otsi tühi ristkülik (suurus lähtejoonise punktides). Eelistus: lehe serva lähedal, siis üleval, siis paremal.
+function findSpot(m, wPt, hPt) {
+  const w = Math.ceil(wPt * m.sc), h = Math.ceil(hPt * m.sc), pad = Math.ceil(5 * m.sc), edge = Math.ceil(6 * m.sc);
+  if (w + 2 * edge > m.W || h + 2 * edge > m.H) return null;
+  let best = null;
+  const step = Math.max(2, Math.round(m.W / 300));
+  for (let y = edge; y + h + edge <= m.H; y += step) {
+    for (let x = edge; x + w + edge <= m.W; x += step) {
+      if (inkIn(m, x - pad, y - pad, w + 2 * pad, h + 2 * pad) > 0) continue;
+      const dEdge = Math.min(x, y, m.W - x - w, m.H - y - h);
+      const score = dEdge * 4 + y * 0.5 - x * 0.05;
+      if (!best || score < best.score) best = { x, y, score };
+    }
+  }
+  return best && { x: best.x / m.sc, y: best.y / m.sc };   // lähtelehe punktid, ülevalt vasakult
+}
+
+const pdfText = s => String(s ?? "").replace(/[‐-―]/g, "-").replace(/[^\x20-\x7E -ÿŒœŠšŸŽž‘’“”€]/g, "?");
+function fitText(font, s, size, maxW) {
+  s = pdfText(s); if (font.widthOfTextAtSize(s, size) <= maxW) return s;
+  while (s.length > 1 && font.widthOfTextAtSize(s + "…", size) > maxW) s = s.slice(0, -1);
+  return s + "…";
+}
+
+function stampInfo(j) {
+  const wk = jobWeek(j);
+  return {
+    wono: j.wono, route: j.route_raw || j.stages?.map(s => s.stage_code).join("-") || "",
+    kogus: j.kogus ?? "", tahtaeg: j.tahtaeg ? (([y, m, d]) => `${+d}.${+m}.${y.slice(2)}`)(j.tahtaeg.split("-")) : "–",
+    tellimus: j.tl_rida || j.tellimus || "", klient: j.klient_nimi || "", toode: j.toote_id || j.drawing || "",
+    week: wk ? isoWeek(wk) : null, prio: !!j.prioriteet,
+  };
+}
+
+function drawStamp(page, x, y, info, F, sc = 1) {
+  const { rgb } = PDFLib, k = rgb(0, 0, 0), z = v => v * sc, W = z(STAMP_W), H = z(STAMP_H), qrS = z(58), left = W - qrS - z(12);
+  page.drawRectangle({ x, y, width: W, height: H, color: rgb(1, 1, 1), borderColor: k, borderWidth: 1.2 });
+  // rida 1: töö nr suurelt + marsruut
+  page.drawText(pdfText(info.wono), { x: x + z(6), y: y + H - z(22), size: z(19), font: F.bold, color: k });
+  const wW = F.bold.widthOfTextAtSize(pdfText(info.wono), z(19));
+  const rW = left - wW - z(14); let rs = z(10.5);
+  while (rs > z(6.5) && F.bold.widthOfTextAtSize(pdfText(info.route), rs) > rW) rs -= .25;   // pikk marsruut: väiksem kiri
+  page.drawText(fitText(F.bold, info.route, rs, rW), { x: x + z(12) + wW, y: y + H - z(20), size: rs, font: F.bold, color: k });
+  if (info.prio) page.drawText("PRIO", { x: x + left - z(26), y: y + H - z(10), size: z(7), font: F.bold, color: rgb(.75, 0, 0) });
+  // rida 2: KOGUS | TÄHTAEG | TELLIMUS
+  const by = y + z(19), bh = z(32), cw = left / 3;
+  page.drawLine({ start: { x, y: by + bh }, end: { x: x + left, y: by + bh }, thickness: .6, color: k });
+  page.drawLine({ start: { x, y: by }, end: { x: x + left, y: by }, thickness: .6, color: k });
+  [["KOGUS", String(info.kogus)], ["TÄHTAEG", info.tahtaeg], ["TELLIMUS", info.tellimus]].forEach(([lab, val], i) => {
+    const cx = x + i * cw;
+    if (i) page.drawLine({ start: { x: cx, y: by }, end: { x: cx, y: by + bh }, thickness: .6, color: k });
+    page.drawText(pdfText(lab), { x: cx + z(4), y: by + bh - z(8), size: z(5.5), font: F.reg, color: k });
+    page.drawText(fitText(F.bold, val, z(12), cw - z(8)), { x: cx + z(4), y: by + z(6), size: z(12), font: F.bold, color: k });
+  });
+  page.drawLine({ start: { x: x + left, y }, end: { x: x + left, y: y + H }, thickness: .6, color: k });
+  // rida 3: klient, toode, prinditud
+  page.drawText(fitText(F.reg, `${info.klient}  ${info.toode}`, z(7), left - z(8)), { x: x + z(4), y: y + z(10), size: z(7), font: F.reg, color: k });
+  page.drawText(pdfText(`prinditud ${new Date().toLocaleDateString("et-EE")}`), { x: x + z(4), y: y + z(3), size: z(4.5), font: F.reg, color: rgb(.35, .35, .35) });
+  // QR töö numbriga (skaneeri sisestusaknas)
+  const q = qrcode(0, "M"); q.addData("WO" + info.wono); q.make();
+  const n = q.getModuleCount(), cs = qrS / n, qx = x + left + z(6), qy = y + (H - qrS) / 2 + z(3);
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (q.isDark(r, c))
+    page.drawRectangle({ x: qx + c * cs, y: qy + (n - 1 - r) * cs, width: cs + .05, height: cs + .05, color: k });
+  page.drawText("WO " + pdfText(info.wono), { x: qx + z(2), y: qy - z(7), size: z(5.5), font: F.reg, color: k });
+}
+
+function drawWeekStrip(page, PH, info, F) {
+  const { rgb, degrees } = PDFLib, k = rgb(0, 0, 0);
+  const wk = info.week == null ? "–" : String(info.week);
+  const size = wk.length > 1 ? 30 : 36;
+  page.drawText(wk, { x: (STRIP - F.bold.widthOfTextAtSize(wk, size)) / 2, y: PH - MARGIN - size + 4, size, font: F.bold, color: k });
+  page.drawText("NÄDAL", { x: (STRIP - F.reg.widthOfTextAtSize("NÄDAL", 6.5)) / 2, y: PH - MARGIN - size - 6, size: 6.5, font: F.reg, color: k });
+  const side = fitText(F.bold, `${info.wono}   ${info.route}`, 11, PH - 2 * MARGIN - 80);
+  page.drawText(side, { x: STRIP / 2 + 4, y: MARGIN + 6, size: 11, font: F.bold, color: k, rotate: degrees(90) });
+}
+
+// items: [{ job, bytes | null }] -> üks PDF (Uint8Array)
+async function buildStampedPdf(items, onProgress) {
+  await loadPdfLibs();
+  const { PDFDocument, StandardFonts, rgb, degrees } = PDFLib;
+  const out = await PDFDocument.create();
+  const F = { reg: await out.embedFont(StandardFonts.Helvetica), bold: await out.embedFont(StandardFonts.HelveticaBold) };
+  let i = 0;
+  for (const it of items) {
+    onProgress?.(++i, items.length);
+    const info = stampInfo(it.job);
+    let src = null, m = null;
+    if (it.bytes) {
+      try { src = await PDFDocument.load(it.bytes, { ignoreEncryption: true }); m = await inkMap(it.bytes); }
+      catch (e) { console.warn("Joonist ei saanud avada", it.job.wono, e); src = null; it.error = e.message; }
+    }
+    if (!src) {   // joonis puudub -> ainult tempel + märge
+      const page = out.addPage([595.28, 841.89]);
+      drawWeekStrip(page, 841.89, info, F);
+      drawStamp(page, (595.28 - STAMP_W) / 2 + STRIP / 2, 841.89 / 2, info, F);
+      page.drawText(pdfText(it.bytes ? "Joonist ei saanud avada: " + (it.error || "") : "Joonis puudub: " + (info.toode || "joonise nr teadmata")),
+        { x: STRIP + 20, y: 841.89 / 2 - 30, size: 11, font: F.reg, color: rgb(.6, 0, 0) });
+      continue;
+    }
+    const pages = src.getPages();
+    for (let p = 0; p < pages.length; p++) {
+      const sp = pages[p], rot = ((sp.getRotation().angle % 360) + 360) % 360, { width: sw, height: sh } = sp.getSize();
+      const vw = rot % 180 ? sh : sw, vh = rot % 180 ? sw : sh;
+      const land = vw >= vh, PW = land ? 841.89 : 595.28, PH = land ? 595.28 : 841.89;
+      const page = out.addPage([PW, PH]);
+      const emb = await out.embedPage(sp);
+      let ax = STRIP, ay = MARGIN, aw = PW - STRIP - MARGIN, ah = PH - 2 * MARGIN;
+      let fit = Math.min(aw / vw, ah / vh);
+      let spot = null, ssc = 1;
+      if (p === 0) for (ssc of [1, .85, .72]) { spot = findSpot(m, (STAMP_W * ssc + 4) / fit, (STAMP_H * ssc + 4) / fit); if (spot) break; }
+      if (p === 0 && !spot) { ssc = 1; ay += STAMP_H + 8; ah -= STAMP_H + 8; fit = Math.min(aw / vw, ah / vh); }
+      const dw = vw * fit, dh = vh * fit, dx = ax + (aw - dw) / 2, dy = ay + (ah - dh) / 2;
+      const place = { 0: { x: dx, y: dy, r: 0 }, 90: { x: dx, y: dy + dh, r: -90 }, 180: { x: dx + dw, y: dy + dh, r: 180 }, 270: { x: dx + dw, y: dy, r: 90 } }[rot];
+      page.drawPage(emb, { x: place.x, y: place.y, xScale: fit, yScale: fit, rotate: degrees(place.r) });
+      drawWeekStrip(page, PH, info, F);
+      if (p === 0) {
+        const sx = spot ? dx + spot.x * fit + 2 : STRIP + 4, sy = spot ? dy + dh - spot.y * fit - STAMP_H * ssc - 2 : MARGIN;
+        drawStamp(page, sx, sy, info, F, ssc);
+      }
+    }
+  }
+  return out.save();
+}
+
+// ---------- JOONISED: hoidla, sidumine tööga, printimine ----------
+const normKey = s => String(s || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+const tokensOf = name => String(name).toUpperCase().replace(/\.PDF$/, "").split(/[^A-Z0-9]+/).filter(Boolean);
+const safePath = n => n.normalize("NFKD").replace(/[̀-ͯ]/g, "").replace(/[^\w.\-]+/g, "_");
+let DRW = null;
+async function loadDrawings(force) {
+  if (DRW && !force) return DRW;
+  const rows = await fetchAll(() => sb.from("drawings").select("path,name,norm,uploaded_at").order("path"));
+  rows.forEach(d => d.tok = tokensOf(d.name));
+  return DRW = rows;
+}
+// võti peab langema kokku failinime terve osaga (nt PR42307-01 -> "PR42307" + "01"), mitte suvalise numbrijupiga
+function tokMatch(tok, key) {
+  for (let i = 0; i < tok.length; i++) { let c = ""; for (let k = i; k < tok.length && c.length < key.length; k++) { c += tok[k]; if (c === key) return true; } }
+  return false;
+}
+const revOf = name => { const m = String(name).toUpperCase().match(/REV[\s_\-.]?([A-Z0-9]{1,3})(?![A-Z0-9])/); return m ? m[1] : ""; };
+function drawingCandidates(j) {
+  const keys = [...new Set([j.toote_id, j.drawing, j.joonise_nr].map(normKey).filter(k => k.length >= 4))];
+  if (!keys.length || !DRW) return [];
+  const hits = [];
+  for (const d of DRW) { const k = keys.filter(k => tokMatch(d.tok, k)).sort((a, b) => b.length - a.length)[0]; if (k) hits.push({ d, k }); }
+  hits.sort((a, b) => (b.k.length - a.k.length) || cmpStr(revOf(b.d.name), revOf(a.d.name)) || cmpStr(b.d.uploaded_at || "", a.d.uploaded_at || ""));
+  return hits.map(h => h.d);
+}
+function drawingFor(j) { if (j.drawing_path) return DRW?.find(d => d.path === j.drawing_path) || null; return drawingCandidates(j)[0] || null; }
+async function drawingBytes(d) { const { data, error } = await sb.storage.from("joonised").download(d.path); if (error) throw error; return new Uint8Array(await data.arrayBuffer()); }
+
+async function openDrawing(j) {
+  const win = window.open("", "_blank");
+  try {
+    await loadDrawings(); const d = drawingFor(j);
+    if (!d) { win?.close(); return toast("Joonist ei leitud: " + (j.toote_id || j.drawing || "WO " + j.wono), true); }
+    const { data, error } = await sb.storage.from("joonised").createSignedUrl(d.path, 3600); if (error) throw error;
+    if (win) win.location.href = data.signedUrl; else window.open(data.signedUrl, "_blank");
+  } catch (e) { win?.close(); toast(e.message, true); }
+}
+
+async function printDrawings(jobs) {
+  jobs = [...new Map(jobs.map(j => [j.id, j])).values()];
+  if (!jobs.length) return toast("Töid pole", true);
+  if (jobs.length > 60 && !confirm(`Koostan ${jobs.length} joonist — see võtab hetke. Jätkata?`)) return;
+  const win = window.open("", "_blank");
+  if (win) win.document.write(`<p style="font-family:sans-serif;padding:20px">Koostan jooniseid templiga (${jobs.length})…</p>`);
+  try {
+    await Promise.all([loadPdfLibs(), loadDrawings()]);
+    const items = new Array(jobs.length); let miss = 0, next = 0, done = 0;
+    const worker = async () => { while (next < jobs.length) { const i = next++; const d = drawingFor(jobs[i]); if (!d) miss++;
+      items[i] = { job: jobs[i], bytes: d ? await drawingBytes(d).catch(() => null) : null }; toast(`Laen jooniseid ${++done}/${jobs.length}…`); } };
+    await Promise.all([1, 2, 3, 4].map(worker));
+    const pdf = await buildStampedPdf(items, (i, n) => toast(`Templid ${i}/${n}…`));
+    const url = URL.createObjectURL(new Blob([pdf], { type: "application/pdf" }));
+    if (win) win.location.href = url; else window.open(url, "_blank");
+    toast(miss ? `Valmis — ${miss} tööl joonist ei leitud (tempel on eraldi lehel)` : "Valmis — prindi avanenud aknast");
+  } catch (e) { console.error(e); win?.close(); toast("Jooniste koostamine ebaõnnestus: " + e.message, true); }
+}
+
+// --- Joonised vaheleht ---
+async function renderDw() {
+  try { await loadDrawings(); } catch (e) { $("dwStat").textContent = "Jooniste nimekirja ei saa lugeda: " + e.message + " (kas uuendus_joonised.sql on käivitatud?)"; return; }
+  const act = S.jobs.filter(j => j.current);
+  const miss = act.filter(j => !drawingFor(j));
+  $("dwStat").textContent = `${DRW.length} joonist · ${act.length - miss.length}/${act.length} pooleliolevale tööle leiti joonis`;
+  // prindi valik: rida + nädal (sama mis Nädalad vaates)
+  const keep = nadMode; nadMode = "ees"; const M = nadModel(); nadMode = keep;
+  const prevR = $("dwRow").value, prevW = $("dwWeek").value;
+  $("dwRow").innerHTML = M.blocks.flatMap(g => g.rows).map(r => `<option ${r.key === prevR ? "selected" : ""}>${esc(r.key)}</option>`).join("");
+  $("dwWeek").innerHTML = `<option value="back">Varasem (tegemata)</option>` + M.weeks.map((w, i) => `<option value="${i}" ${String(i) === (prevW || "0") ? "selected" : ""}>W${isoWeek(w.s)} · ${fmtDate(w.s)}</option>`).join("") + `<option value="later">Hiljem</option>`;
+  renderDwTable();
+}
+function renderDwTable() {
+  const q = $("dwQ").value.trim().toLowerCase(), onlyMiss = $("dwMissing").checked;
+  const list = S.jobs.filter(j => j.current)
+    .filter(j => !q || [j.wono, j.klient_nimi, j.toote_id, j.drawing, j.tellimus, j.route_raw].some(v => String(v ?? "").toLowerCase().includes(q)))
+    .map(j => ({ j, d: drawingFor(j) })).filter(x => !onlyMiss || !x.d)
+    .sort((a, b) => cmpStr(a.j.tahtaeg || "9", b.j.tahtaeg || "9"));
+  const pl = isPlanner();
+  $("dwTable").innerHTML = `<thead><tr><th>WO</th><th>Klient</th><th>Toode / joonise nr</th><th>Tähtaeg</th><th>Nädal</th><th>Joonis</th><th></th></tr></thead><tbody>` +
+    list.slice(0, 300).map(({ j, d }) => { const cand = pl ? drawingCandidates(j) : []; const wk = jobWeek(j); return `<tr data-dj="${j.id}">
+      <td class="mono">${esc(j.wono)}</td><td>${esc(j.klient_nimi)}</td><td class="mono">${esc(j.toote_id || "")}${j.drawing && j.drawing !== j.toote_id ? ` <span class="muted">${esc(j.drawing)}</span>` : ""}</td>
+      <td>${fmtDate(parseDate(j.tahtaeg))}</td><td>${wk ? "W" + isoWeek(wk) : ""}</td>
+      <td>${d ? `<span class="mono" style="font-size:.8rem">${esc(d.name)}</span>${j.drawing_path ? ` <span class="muted">(valitud)</span>` : cand.length > 1 ? ` <span class="muted">+${cand.length - 1}</span>` : ""}` : `<span class="risk">puudub</span>`}
+        ${pl ? `<br><input class="dwpick" list="dwAll" placeholder="vali teine joonis…" style="width:220px;margin-top:4px">${j.drawing_path ? ` <button class="btn" data-dauto>automaatne</button>` : ""}` : ""}</td>
+      <td style="white-space:nowrap">${d ? `<button class="btn" data-dopen>Ava</button> ` : ""}<button class="btn primary" data-dprint>Prindi templiga</button></td></tr>`; }).join("") +
+    `</tbody>` + (list.length > 300 ? `<caption class="muted" style="caption-side:bottom;padding:8px">Näitan 300/${list.length} — kitsenda otsingut</caption>` : "");
+  $("dwAll").innerHTML = pl ? DRW.map(d => `<option value="${esc(d.name)}">`).join("") : "";
+}
+$("dwQ").oninput = renderDwTable; $("dwMissing").onchange = renderDwTable;
+$("dwTable").addEventListener("click", async e => {
+  const tr = e.target.closest("tr[data-dj]"); if (!tr) return; const j = S.jobs.find(x => x.id === tr.dataset.dj); if (!j) return;
+  if (e.target.closest("[data-dopen]")) return openDrawing(j);
+  if (e.target.closest("[data-dprint]")) return printDrawings([j]);
+  if (e.target.closest("[data-dauto]")) return setDrawingPath(j, null);
+});
+$("dwTable").addEventListener("change", e => {
+  const inp = e.target.closest("input.dwpick"); if (!inp) return;
+  const j = S.jobs.find(x => x.id === inp.closest("tr").dataset.dj); const d = DRW.find(x => x.name === inp.value.trim());
+  if (!d) return toast("Sellist faili pole: " + inp.value, true);
+  setDrawingPath(j, d.path);
+});
+async function setDrawingPath(j, path) {
+  const { error } = await sb.from("jobs").update({ drawing_path: path }).eq("id", j.id);
+  if (error) return toast(error.message, true);
+  j.drawing_path = path; toast(path ? "Joonis seotud" : "Tagasi automaatsele"); renderDwTable();
+}
+$("dwPrintSel").onclick = () => {
+  const keep = nadMode; nadMode = "ees"; const M = nadModel(); nadMode = keep;
+  const r = M.blocks.flatMap(g => g.rows).find(x => x.key === $("dwRow").value); if (!r) return;
+  const ni = $("dwWeek").value, list = ni === "back" ? r.backItems : ni === "later" ? r.laterItems : r.items[Number(ni)];
+  printDrawings(list.map(x => x.s.job));
+};
+
+// üleslaadimine: failid, kaust või lohistamine
+async function uploadDrawings(files) {
+  files = [...files].filter(f => /\.pdf$/i.test(f.name));
+  if (!files.length) return toast("PDF-faile ei leitud", true);
+  await loadDrawings(true);
+  const have = new Set(DRW.map(d => d.path)), over = $("dwOverwrite").checked;
+  let ok = 0, skip = 0, fail = 0, next = 0; const errs = [];
+  const show = () => { $("dwLog").textContent = `Üles laetud ${ok}, vahele jäetud (juba olemas) ${skip}, vigu ${fail} / ${files.length}` + (errs.length ? "\n" + errs.slice(-8).join("\n") : ""); };
+  $("dwLog").classList.add("show");
+  const worker = async () => { while (next < files.length) {
+    const f = files[next++], path = safePath(f.name);
+    if (have.has(path) && !over) { skip++; show(); continue; }
+    const { error } = await sb.storage.from("joonised").upload(path, f, { upsert: true, contentType: "application/pdf" });
+    const e2 = error ? null : (await sb.from("drawings").upsert({ path, name: f.name, norm: normKey(f.name), size: f.size, uploaded_at: new Date().toISOString(), uploaded_by: S.profile?.name || null })).error;
+    if (error || e2) { fail++; errs.push(`${f.name}: ${(error || e2).message}`); } else ok++;
+    show();
+  } };
+  await Promise.all([1, 2, 3, 4].map(worker));
+  toast(`Valmis: ${ok} joonist üles laetud`); await loadDrawings(true); renderDw();
+}
+$("dwDir").onchange = e => { uploadDrawings(e.target.files); e.target.value = ""; };
+$("dwFiles").onchange = e => { uploadDrawings(e.target.files); e.target.value = ""; };
+async function filesFromDrop(dt) {
+  const out = [], walk = async entry => {
+    if (entry.isFile) out.push(await new Promise((ok, bad) => entry.file(ok, bad)));
+    else if (entry.isDirectory) { const rd = entry.createReader(); let batch;
+      do { batch = await new Promise((ok, bad) => rd.readEntries(ok, bad)); for (const en of batch) await walk(en); } while (batch.length); }
+  };
+  const entries = [...dt.items].map(i => i.webkitGetAsEntry?.()).filter(Boolean);
+  if (!entries.length) return [...dt.files];
+  for (const en of entries) await walk(en);
+  return out;
+}
+const dwDrop = $("dwDrop");
+["dragover", "dragenter"].forEach(ev => dwDrop.addEventListener(ev, e => { e.preventDefault(); dwDrop.classList.add("dragover"); }));
+["dragleave", "drop"].forEach(ev => dwDrop.addEventListener(ev, e => { e.preventDefault(); dwDrop.classList.remove("dragover"); }));
+dwDrop.addEventListener("drop", async e => { if (!isPlanner()) return toast("Jooniseid saab lisada planeerija", true); uploadDrawings(await filesFromDrop(e.dataTransfer)); });
+
 // ---------- JÄRJEKORD ----------
 let jrkStation = store.get("jrkSt") || null;
 function renderJrk() {
@@ -996,7 +1584,7 @@ function renderJrk() {
   const x = S.sim.stations[jrkStation];
   $("jrkTools").innerHTML = `<span class="muted">${isPlanner() ? "Lohista ⠿ või kasuta nooli · " : ""}${list.length} etappi · ${fmtH1(x?.hours || 0)} h · vaba ${x?.queue ? fmtDate(x.freeDate) : "kohe"} · ${manual ? "<b>käsitsi järjekord</b>" : "järjestatud prioriteedi ja tähtaja järgi"}</span>` +
     (isPlanner() && manual ? `<button class="btn" id="jrkReset">Järjesta tähtaja järgi</button>` : "") +
-    `<button class="btn" data-kst-go="${esc(jrkStation)}">Vaata ajakava</button>`;
+    `<button class="btn" data-kst-go="${esc(jrkStation)}">Vaata ajakava</button><button class="btn" data-print-st="${esc(jrkStation)}">Prindi pingi nimekiri</button><button class="btn" data-print-dw="${esc(jrkStation)}">Prindi joonised</button>`;
   const canMove = isPlanner();
   $("jrkList").innerHTML = list.length ? `<div class="tw"><table class="jrk"><thead><tr><th class="num">#</th><th>Töö</th><th class="num">Norm</th><th>Tähtaeg</th><th>Prognoos</th><th>Olek</th>${canMove ? "<th></th>" : ""}</tr></thead><tbody id="jrkBody">` +
     list.map((s, i) => {
@@ -1014,6 +1602,8 @@ function renderJrk() {
 }
 $("jrkPicker").onclick = e => { const b = e.target.closest("button[data-jst]"); if (!b) return; jrkStation = b.dataset.jst; store.set("jrkSt", jrkStation); renderJrk(); };
 $("jrkTools").addEventListener("click", async e => {
+  const pr = e.target.closest("[data-print-st]"); if (pr) return printStation(pr.dataset.printSt);
+  const pd = e.target.closest("[data-print-dw]"); if (pd) return printDrawings(S.stages.filter(s => s.stage_code === pd.dataset.printDw && s.state !== "valmis").sort(queueSort).map(s => s.job));
   const g = e.target.closest("[data-kst-go]"); if (g) { koormStation = g.dataset.kstGo; store.set("koormSt", koormStation); showTab("koormus"); return; }
   if (e.target.id === "jrkReset") { await saveQueue(jrkStation, []); }
 });
@@ -1105,6 +1695,16 @@ $("excelReport").onclick = () => {
       ["Etappe ilma ajanormita", R.unplanned],
     ], [28, 20]);
 
+    {
+      const keep = nadMode; nadMode = "ees"; const M = nadModel(); nadMode = keep;
+      const wk = M.weeks.map(w => "W" + isoWeek(w.s));
+      const r1 = x => Math.round(x * 10) / 10;
+      const rowsOf = fn => M.blocks.flatMap(g => [...g.rows.map(fn), ...(g.rows.length > 1 ? [fn(g.sum)] : []), []]).concat([fn(M.kokku)]);
+      add("Nädalakoormus", [["Rida", "h-MAX", "Varasem", ...wk, "Hiljem", "KOKKU"],
+        ...rowsOf(r => [r.key, r1(r.capDay * 5), r1(r.back), ...r.w.map(r1), r1(r.later), r1(r.total)]),
+        [], ["VABA MAHT (kumulatiivne)", "", "", ...wk],
+        ...rowsOf(r => [r.key, "", "", ...M.vaba(r).map(r1)])], [16, 8, 9, ...wk.map(() => 8), 8, 9]);
+    }
     add("Pinkide koormus", [
       ["Pink", "Etappe järjekorras", "Neist pooleli", "Tunde", "Maht h/p", "Koormus tp", "Ootamine kokku tp", "Hilinevaid töid ootab", "Normita etappe"],
       ...R.internal.map(x => [x.code, x.queue, x.running, +x.hours.toFixed(1), Number(S.stations[x.code]?.capacity_h ?? 8),
@@ -1194,20 +1794,22 @@ function renderSettings() {
   const row = (s, ext) => `<tr data-code="${esc(s.code)}"><td class="mono"><b>${esc(s.code)}</b></td>
       <td><input class="wide" data-f="name" value="${esc(s.name ?? "")}" placeholder="${ext ? "firma nimi" : "pingi nimi"}"></td>
       ${ext ? `<td><input type="number" step="0.5" data-f="lead_days" value="${esc(s.lead_days)}"></td>`
-            : `<td><input type="number" step="0.5" data-f="capacity_h" value="${esc(s.capacity_h)}"></td>
+            : `<td><input class="wide" data-f="grupp" value="${esc(s.grupp ?? "")}" placeholder="plokk"></td>
+               <td><input data-f="rida" value="${esc(s.rida ?? "")}" placeholder="${esc(s.code)}"></td>
+               <td><input type="number" step="0.5" data-f="capacity_h" data-week value="${esc(Math.round((Number(s.capacity_h) || 0) * 50) / 10)}"></td>
                <td><input data-f="default_min" data-hours value="${esc(minToH(s.default_min))}"></td>
                <td><input type="number" data-f="sort" value="${esc(s.sort ?? 100)}"></td>`}
       <td><input type="checkbox" data-f="is_external" ${s.is_external ? "checked" : ""}></td>
       <td><input type="checkbox" data-f="ignore" ${s.ignore ? "checked" : ""}></td></tr>`;
-  const own = all.filter(s => !s.is_external).sort((a, b) => a.code.localeCompare(b.code));
+  const own = all.filter(s => !s.is_external).sort((a, b) => ((a.sort ?? 100) - (b.sort ?? 100)) || a.code.localeCompare(b.code));
   const ext = all.filter(s => s.is_external).sort((a, b) => a.code.localeCompare(b.code));
-  $("stationTable").innerHTML = `<thead><tr><th>Kood</th><th>Nimi</th><th>Maht h/päevas</th><th>Vaikenorm h</th><th>Järjestus</th><th>Allhange</th><th>Ei ole etapp</th></tr></thead><tbody>` +
+  $("stationTable").innerHTML = `<thead><tr><th>Kood</th><th>Nimi</th><th>Grupp (plokk)</th><th>Rida</th><th>h-MAX nädalas</th><th>Vaikenorm h</th><th>Järjestus</th><th>Allhange</th><th>Ei ole etapp</th></tr></thead><tbody>` +
     own.map(s => row(s, false)).join("") + `</tbody>`;
   $("extTable").innerHTML = `<thead><tr><th>Kood</th><th>Nimi</th><th>Tarneaeg tööpäevi</th><th>Allhange</th><th>Ei ole etapp</th></tr></thead><tbody>` +
     ext.map(s => row(s, true)).join("") + `</tbody>`;
   $("userTable").innerHTML = `<thead><tr><th>Nimi</th><th>Roll</th><th>Oma pink</th></tr></thead><tbody>` +
     S.profiles.map(p => `<tr data-user="${p.user_id}"><td><input class="wide" data-f="name" value="${esc(p.name)}"></td>
-      <td><select data-f="role"><option ${p.role === "tooline" ? "selected" : ""}>tooline</option><option ${p.role === "planeerija" ? "selected" : ""}>planeerija</option></select></td>
+      <td><select data-f="role">${["tooline", "planeerija", "kiosk"].map(r => `<option ${p.role === r ? "selected" : ""}>${r}</option>`).join("")}</select></td>
       <td><select data-f="default_station"><option value="">–</option>${own.map(s => `<option ${p.default_station === s.code ? "selected" : ""}>${esc(s.code)}</option>`).join("")}</select></td></tr>`).join("") + `</tbody>`;
 }
 async function saveStation(e) {
@@ -1215,6 +1817,8 @@ async function saveStation(e) {
   let v = e.target.type === "checkbox" ? e.target.checked : e.target.value;
   if (e.target.dataset.hours !== undefined) { v = parseMinutes(v); if (Number.isNaN(v)) return toast("Arusaamatu väärtus", true); }
   else if (["capacity_h","lead_days","sort"].includes(f)) v = v === "" ? null : Number(String(v).replace(",", "."));
+  if (e.target.dataset.week !== undefined && v != null) v = Math.round(v / 5 * 1000) / 1000;   // h-MAX nädalas -> h päevas
+  if (["grupp","rida"].includes(f)) v = String(v).trim() || null;
   const { error } = await sb.from("stations").update({ [f]: v }).eq("code", tr.dataset.code);
   if (error) return toast(error.message, true);
   S.stations[tr.dataset.code][f] = v; S.sim = simulate(); toast("Salvestatud");
@@ -1275,7 +1879,7 @@ async function handleFile(file) {
   try {
     const { rows, noRoute } = await readExport(file);
     pendingRows = rows;
-    const codes = new Set(); rows.forEach(r => r.route_raw.split("-").map(s => s.trim()).filter(Boolean).forEach(c => codes.add(c)));
+    const codes = new Set(); rows.forEach(r => r.route_raw.split("-").map(s => s.trim().toUpperCase()).filter(Boolean).forEach(c => codes.add(c)));
     const fresh = [...codes].filter(c => !S.stations[c]).sort();
     const ign = [...codes].filter(c => S.stations[c]?.ignore);
     const known = new Set(S.jobs.map(j => j.wono));
@@ -1288,7 +1892,7 @@ async function handleFile(file) {
       ${ign.length ? `<p class="note">Välja jäetakse (märgitud „ei ole etapp”): ${ign.map(esc).join(", ")}</p>` : ""}
       <div class="tw" style="max-width:720px"><table><thead><tr><th>WO</th><th>Klient</th><th>Toode</th><th>Tähtaeg</th><th>Marsruut → etapid</th></tr></thead><tbody>
       ${rows.slice(0, 6).map(r => `<tr><td class="mono">${esc(r.wono)}</td><td>${esc(r.klient_nimi)}</td><td class="mono">${esc(r.toote_id)}</td><td>${esc(r.tahtaeg)}</td>
-        <td>${r.route_raw.split("-").map(s => s.trim()).filter(Boolean).map((c, i) => `<span class="chip">${i+1}. ${esc(c)}</span>`).join(" ")}</td></tr>`).join("")}
+        <td>${r.route_raw.split("-").map(s => s.trim().toUpperCase()).filter(Boolean).map((c, i) => `<span class="chip">${i+1}. ${esc(c)}</span>`).join(" ")}</td></tr>`).join("")}
       </tbody></table></div>
       <p style="margin-top:14px"><button class="btn primary" id="doImport">Impordi ${rows.length} tööd</button></p>
       <p class="note">Olemasolevate tööde staatused, ajalogid ja normid jäävad alles. Kui marsruut on ERP-s muutunud, säilivad samanimelised etapid.</p>`;

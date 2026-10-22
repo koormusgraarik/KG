@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2f5d4f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Töö sisestus</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.0/dist/umd/supabase.js"></script>
+<style>
+  :root {
+    --ink:#1c2521; --paper:#f6f5f1; --panel:#ecebe5; --line:#d3cfc2; --accent:#2f5d4f; --accent-ink:#fff; --muted:#6b716c;
+    --done:#3f8a5c; --run:#2c6fb3; --pause:#c08a1e; --late:#b3412c; --lock:#a9aca5;
+    --sans:"IBM Plex Sans",-apple-system,"Segoe UI",Roboto,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --ink:#e7e6df; --paper:#131719; --panel:#1b2023; --line:#30383a; --accent:#6fae95; --accent-ink:#0b120e;
+    --muted:#98a09a; --done:#5fb07d; --run:#5c9ee0; --pause:#dcab45; --late:#e0735c; --lock:#4d5452; } }
+  :root[data-theme="dark"] { --ink:#e7e6df; --paper:#131719; --panel:#1b2023; --line:#30383a; --accent:#6fae95; --accent-ink:#0b120e;
+    --muted:#98a09a; --done:#5fb07d; --run:#5c9ee0; --pause:#dcab45; --late:#e0735c; --lock:#4d5452; }
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink); font-family:var(--sans); font-size:16px; line-height:1.4;
+         padding: env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0); -webkit-tap-highlight-color: transparent; }
+  button, input, textarea, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .hidden { display:none !important; }
+  .mono { font-family: var(--mono); }
+  .muted { color: var(--muted); }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 0 14px; }
+
+  /* login */
+  .auth { max-width: 380px; margin: 12vh auto 0; padding: 0 20px; }
+  .auth h1 { font-size: 1.5rem; margin: 0 0 20px; }
+  .field { margin-bottom: 12px; }
+  .field label { display:block; font-size:.85rem; color:var(--muted); margin-bottom:4px; }
+  input[type=text], input[type=email], input[type=password], input[type=number], input[type=search], textarea, select {
+    width:100%; padding:12px; border:1px solid var(--line); border-radius:8px; background:var(--paper); }
+  .btn { border:1px solid var(--line); background:var(--paper); border-radius:8px; padding:12px 16px; font-weight:600; }
+  .btn.primary { background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
+  .btn:disabled { opacity:.4; }
+  .error { color: var(--late); font-size: .9rem; min-height: 1.3em; margin-top: 8px; }
+
+  /* top */
+  header.top { position: sticky; top: env(safe-area-inset-top,0); z-index: 5; background: var(--paper); border-bottom: 1px solid var(--line); }
+  .top-in { display:flex; align-items:center; gap:10px; padding: 10px 14px; max-width: 900px; margin: 0 auto; }
+  .who { font-weight: 700; font-size: 1.1rem; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .who small { font-weight: 400; color: var(--muted); font-size: .85rem; margin-left: 6px; }
+  .top-in button { border:1px solid var(--line); background:var(--paper); border-radius:8px; padding:8px 12px; font-weight:600; font-size:.9rem; }
+  .top-in button.out { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .idle { font-family: var(--mono); font-size: .8rem; color: var(--muted); }
+
+  /* kiosk: worker grid + pin */
+  .kgrid { display:grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; padding: 20px 0; }
+  .kgrid button { border:1px solid var(--line); background: var(--paper); border-radius: 12px; padding: 22px 12px; font-size: 1.2rem; font-weight: 600; text-align: center; }
+  .kgrid button small { display:block; font-size: .85rem; font-weight: 500; color: var(--muted); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .kgrid button.on small { color: var(--run); font-weight: 600; }
+  .kgrid button.on { border-color: var(--run); box-shadow: inset 0 -5px var(--run); }
+  .kgrid button:active { background: var(--panel); }
+  h2.kh { font-size: 1.3rem; margin: 22px 0 0; }
+  .linkbtn { background:none; border:none; color: var(--muted); text-decoration: underline; font-size: .85rem; padding: 8px; }
+  .pin { max-width: 340px; margin: 6vh auto 0; text-align: center; }
+  .pin h2 { margin: 0 0 4px; font-size: 1.5rem; }
+  .dots { display:flex; gap: 14px; justify-content: center; margin: 22px 0; }
+  .dots i { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--ink); }
+  .dots i.f { background: var(--ink); }
+  .dots.shake { animation: shake .35s; }
+  @keyframes shake { 25%{transform:translateX(-10px)} 75%{transform:translateX(10px)} }
+  .pad { display:grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .pad button { height: 72px; border-radius: 12px; border: 1px solid var(--line); background: var(--paper); font-size: 1.7rem; font-family: var(--mono); font-weight: 600; }
+  .pad button:active { background: var(--panel); }
+  .pad button.sm { font-family: var(--sans); font-size: 1rem; }
+
+  /* worker screen */
+  .scan { display:flex; gap: 8px; margin: 14px 0 6px; }
+  .scan input { flex: 1; font-family: var(--mono); font-size: 1.1rem; }
+  .scan button { white-space: nowrap; }
+  .stations { display:flex; gap: 6px; overflow-x: auto; padding: 8px 0; scrollbar-width: none; }
+  .stations button { flex: 0 0 auto; font-family:var(--mono); font-weight:600; border:1px solid var(--line); background:var(--paper); border-radius:8px; padding:10px 14px; }
+  .stations button.on { background:var(--ink); color:var(--paper); border-color:var(--ink); }
+  .stations button small { font-family:var(--sans); opacity:.7; margin-left: 4px; font-weight: 500; }
+  h3.sec { font-size: .82rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 18px 0 8px; font-weight: 600; }
+  .cards { display:grid; gap: 10px; }
+  .card { border:1px solid var(--line); border-left: 7px solid var(--accent); border-radius: 10px; padding: 12px 14px; background: var(--paper); text-align: left; width: 100%; }
+  button.card:active { background: var(--panel); }
+  .card.st-käsil { border-left-color: var(--run); background: color-mix(in srgb, var(--run) 8%, var(--paper)); }
+  .card.st-paus { border-left-color: var(--pause); }
+  .card.st-lukus { border-left-color: var(--lock); opacity: .5; }
+  .card.st-valmis { border-left-color: var(--done); opacity: .6; }
+  .card.mine { box-shadow: 0 0 0 2px var(--run); }
+  .card.hl { box-shadow: 0 0 0 3px var(--accent); }
+  .ct { display:flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+  .ct b { font-size: 1.08rem; }
+  .ct .timer { font-family: var(--mono); font-weight: 600; font-size: 1.1rem; color: var(--run); white-space: nowrap; }
+  .cm { font-size: .9rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 2px 12px; margin-top: 3px; }
+  .cm b { color: var(--ink); font-weight: 600; }
+  .late { color: var(--late) !important; font-weight: 600; }
+  .prio { color: var(--late); font-weight: 700; }
+  .route { display:flex; flex-wrap:wrap; gap:3px; margin-top: 7px; }
+  .chip { font-family:var(--mono); font-size:.75rem; font-weight:600; padding:2px 6px; border-radius:4px; border:1px solid var(--line); color: var(--muted); }
+  .chip.valmis { background:var(--done); border-color:var(--done); color:#fff; }
+  .chip.käsil { background:var(--run); border-color:var(--run); color:#fff; }
+  .chip.paus { background:var(--pause); border-color:var(--pause); color:#1c1606; }
+  .chip.avatud { border-color:var(--ink); color:var(--ink); }
+  .chip.here { outline: 2px solid var(--ink); outline-offset: 1px; }
+  .wait { font-size: .88rem; margin-top: 6px; font-weight: 500; }
+  .bar { height: 6px; background: color-mix(in srgb, var(--ink) 10%, transparent); border-radius: 3px; margin-top: 8px; overflow: hidden; }
+  .bar i { display:block; height: 100%; background: var(--done); }
+  .empty { padding: 26px 0; color: var(--muted); text-align: center; }
+
+  /* sheet */
+  .sheet-bg { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 20; display:flex; align-items: flex-end; justify-content: center; }
+  .sheet { background: var(--paper); width: 100%; max-width: 560px; border-radius: 16px 16px 0 0; padding: 18px 16px calc(18px + env(safe-area-inset-bottom,0)); max-height: 90vh; overflow-y: auto; }
+  @media (min-width: 700px) { .sheet-bg { align-items: center; } .sheet { border-radius: 16px; } }
+  .sheet h2 { margin: 0; font-size: 1.25rem; }
+  .sheet .sub { color: var(--muted); font-size: .92rem; margin: 2px 0 12px; }
+  .acts { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+  .acts button { padding: 18px 10px; border-radius: 12px; border: 1px solid var(--line); background: var(--paper); font-weight: 700; font-size: 1.1rem; }
+  .acts button.wide { grid-column: 1 / -1; }
+  .acts .go { background: var(--run); border-color: var(--run); color: #fff; }
+  .acts .ok { background: var(--done); border-color: var(--done); color: #fff; }
+  .acts .ps { background: var(--pause); border-color: var(--pause); color: #1c1606; }
+  .acts .cancel { font-weight: 500; }
+  .info { display:grid; grid-template-columns: auto 1fr; gap: 3px 14px; font-size: .93rem; margin: 8px 0; }
+  .info dt { color: var(--muted); } .info dd { margin: 0; }
+  .notes { font-size: .88rem; border-top: 1px solid var(--line); margin-top: 12px; padding-top: 8px; }
+  .notes p { margin: 4px 0; } .notes small { color: var(--muted); }
+  .qtyrow { display:flex; gap: 8px; align-items: center; }
+  .qtyrow input { font-size: 1.4rem; font-family: var(--mono); text-align: center; }
+  .qtyrow button { width: 56px; height: 54px; border-radius: 10px; border: 1px solid var(--line); background: var(--paper); font-size: 1.5rem; flex-shrink: 0; }
+  #camBox { position: relative; margin-top: 10px; } #camBox video { width: 100%; border-radius: 10px; background: #000; }
+
+  /* töölised (planeerija) */
+  table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+  th, td { padding: 8px; text-align: left; border-bottom: 1px solid var(--line); }
+  th { font-size: .78rem; color: var(--muted); }
+  .tw { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; margin-top: 10px; }
+
+  .toast { position:fixed; left:50%; top: calc(64px + env(safe-area-inset-top,0)); transform:translateX(-50%); background:var(--ink); color:var(--paper);
+           padding:12px 18px; border-radius:10px; z-index:40; max-width: 92vw; font-weight: 500; }
+  .toast.err { background: var(--late); color: #fff; }
+  .fatal { background: var(--late); color:#fff; padding: 12px 14px; font-size: .92rem; }
+</style>
+</head>
+<body>
+
+<div id="authView" class="auth hidden">
+  <h1>Töö sisestus</h1>
+  <div class="field"><label for="email">Nimi või e-post</label><input id="email" type="text" autocomplete="username" autocapitalize="none" spellcheck="false"></div>
+  <div class="field"><label for="password">Parool</label><input id="password" type="password" autocomplete="current-password"></div>
+  <button class="btn primary" id="loginBtn" style="width:100%">Logi sisse</button>
+  <div class="error" id="authError"></div>
+</div>
+
+<div id="appView" class="hidden">
+  <header class="top"><div class="top-in">
+    <div class="who" id="who"></div>
+    <span class="idle hidden" id="idle"></span>
+    <button id="mgrBtn" class="hidden">Töölised</button>
+    <a id="officeLink" class="hidden" href="index.html" style="font-size:.9rem;color:var(--muted)">Kontor</a>
+    <button id="outBtn" class="out">Välju</button>
+  </div></header>
+  <div id="fatal" class="fatal hidden"></div>
+
+  <!-- KIOSK: vali töötaja -->
+  <section id="vPick" class="wrap hidden">
+    <h2 class="kh">Kes sa oled?</h2>
+    <div class="kgrid" id="kGrid"></div>
+    <p style="text-align:right;margin-top:30px"><button class="linkbtn" id="devOut">Seadme väljalogimine</button></p>
+  </section>
+
+  <!-- KIOSK: PIN -->
+  <section id="vPin" class="wrap hidden">
+    <div class="pin">
+      <h2 id="pinName"></h2>
+      <div class="muted">Sisesta PIN</div>
+      <div class="dots" id="dots"><i></i><i></i><i></i><i></i></div>
+      <div class="pad" id="pad">
+        <button>1</button><button>2</button><button>3</button>
+        <button>4</button><button>5</button><button>6</button>
+        <button>7</button><button>8</button><button>9</button>
+        <button class="sm" data-k="back">Tagasi</button><button>0</button><button class="sm" data-k="del">⌫</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- TÖÖ -->
+  <section id="vWork" class="wrap hidden">
+    <div class="scan">
+      <input id="scanIn" type="search" inputmode="numeric" placeholder="Töökäsu nr (WO) või skaneeri" autocomplete="off">
+      <button class="btn" id="camBtn" title="Skaneeri kaameraga">📷</button>
+    </div>
+    <div id="camBox" class="hidden"><video id="cam" playsinline muted></video></div>
+    <div id="mine"></div>
+    <h3 class="sec">Pink</h3>
+    <div class="stations" id="stations"></div>
+    <div class="cards" id="queue"></div>
+    <p style="margin-top:14px"><label class="muted" style="font-size:.9rem"><input type="checkbox" id="showLocked"> Näita ka tulevasi (ootavad eelmist etappi)</label></p>
+  </section>
+
+  <!-- TÖÖLISED (planeerija) -->
+  <section id="vMgr" class="wrap hidden">
+    <h2 class="kh">Töölised</h2>
+    <p class="muted" style="font-size:.9rem">PIN on tsentraalpunkti jaoks (4 numbrit). Telefoni kasutajal pane kirja tema konto e-post (loo konto Supabase → Authentication → Users). Tühi PIN-väli = jääb samaks.</p>
+    <div class="tw"><table id="mgrTable"></table></div>
+    <p><button class="btn primary" id="addWorker">+ Lisa tööline</button> <button class="btn" id="mgrBack">Tagasi</button></p>
+  </section>
+</div>
+
+<div id="sheet" class="sheet-bg hidden"><div class="sheet" id="sheetBody"></div></div>
+<div id="toast" class="toast hidden"></div>
+
+<script>
+// ============ SEADISTUS ============
+const SUPABASE_URL = "https://irdthackmhyzshfnodhv.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_ELnW_8d2wLlmD7wSCsfFIQ_XeD5rT-_";
+const KIOSK_IDLE_SEC = 60;   // tsentraalpunktis logitakse tööline välja pärast nii mitu sekundit tegevusetust
+const LOGIN_DOMAIN = "kg.local";   // "mart" -> mart@kg.local
+// ===================================
+
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const store = { get(k){ try { return localStorage.getItem(k); } catch { return null; } }, set(k,v){ try { localStorage.setItem(k,v); } catch {} } };
+const cmpStr = (a, b) => a < b ? -1 : a > b ? 1 : 0;
+const fmtDate = s => { if (!s) return "–"; const [y,m,d] = s.split("-").map(Number); return `${d}.${m}.`; };
+const fmtH = min => min == null ? "–" : (Math.round(min / 6) / 10).toLocaleString("et-EE", { minimumFractionDigits: 1 }) + " h";
+const fmtClock = ms => { const s = Math.max(0, Math.floor(ms / 1000)); return `${Math.floor(s/3600)}:${String(Math.floor(s%3600/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`; };
+const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; };
+
+let S = { role: null, profile: null, worker: null, pin: null, workers: [], jobs: [], stages: [], stations: {}, openLogs: [], qty: {}, notes: {} };
+let station = null, focusJob = null;
+
+function toast(msg, err) { const t = $("toast"); t.textContent = msg; t.className = "toast" + (err ? " err" : ""); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.add("hidden"), err ? 5000 : 2200); }
+function fatal(msg) { $("fatal").textContent = msg; $("fatal").classList.toggle("hidden", !msg); }
+function show(id) { ["vPick","vPin","vWork","vMgr"].forEach(v => $(v).classList.toggle("hidden", v !== id)); }
+const isKiosk = () => S.role === "kiosk";
+
+// ============ AUTH ============
+$("loginBtn").onclick = async () => {
+  $("authError").textContent = ""; $("loginBtn").disabled = true;
+  const u = $("email").value.trim().toLowerCase();
+  const { error } = await sb.auth.signInWithPassword({ email: u.includes("@") ? u : `${u}@${LOGIN_DOMAIN}`, password: $("password").value });
+  $("loginBtn").disabled = false;
+  if (error) $("authError").textContent = /invalid/i.test(error.message) ? "Vale nimi või parool" : "Sisselogimine ebaõnnestus: " + error.message;
+};
+$("password").addEventListener("keydown", e => { if (e.key === "Enter") $("loginBtn").click(); });
+
+let sessUid;
+sb.auth.onAuthStateChange((_e, session) => setTimeout(() => onSession(session), 0));
+async function onSession(session) {
+  const uid = session?.user?.id || null; if (uid === sessUid) return; sessUid = uid;
+  if (!session) { S.worker = null; S.role = null; $("authView").classList.remove("hidden"); $("appView").classList.add("hidden"); return; }
+  $("authView").classList.add("hidden"); $("appView").classList.remove("hidden");
+  const { data: p, error } = await sb.from("profiles").select("*").eq("user_id", uid).maybeSingle();
+  if (error || !p) return fatal("Profiili ei saa lugeda: " + (error?.message || "profiil puudub"));
+  S.profile = p; S.role = p.role;
+  $("mgrBtn").classList.toggle("hidden", p.role !== "planeerija"); $("officeLink").classList.toggle("hidden", p.role !== "planeerija");
+  await loadAll();
+  subscribe();
+  if (isKiosk()) return kioskHome();
+  const { data: w, error: e2 } = await sb.rpc("me_worker");
+  if (e2) return fatal("Töölise andmeid ei saa lugeda: " + e2.message);
+  setWorker(w);
+}
+
+$("outBtn").onclick = () => isKiosk() ? kioskHome() : sb.auth.signOut();
+
+// ============ ANDMED ============
+async function fetchAll(build) {
+  const out = [];
+  for (let from = 0; ; from += 1000) { const { data, error } = await build().range(from, from + 999); if (error) throw error; out.push(...data); if (data.length < 1000) break; }
+  return out;
+}
+async function loadAll() {
+  try {
+    const [jobs, stages, actual, stations, logs, qty, workers] = await Promise.all([
+      fetchAll(() => sb.from("jobs").select("*").eq("active", true).order("wono")),
+      fetchAll(() => sb.from("job_stages").select("*, jobs!inner(active)").eq("jobs.active", true).order("id")),
+      fetchAll(() => sb.from("v_stage_actual").select("*").order("stage_id")),
+      fetchAll(() => sb.from("stations").select("*").order("code")),
+      fetchAll(() => sb.from("time_logs").select("id,stage_id,worker_id,worker_name,started_at").is("ended_at", null).order("id")),
+      fetchAll(() => sb.from("v_stage_qty").select("*").order("stage_id")),
+      fetchAll(() => sb.from("workers").select("id,name,user_id,default_station,active,has_pin").order("name")),
+    ]);
+    const act = Object.fromEntries(actual.map(a => [a.stage_id, a]));
+    S.stations = Object.fromEntries(stations.map(s => [s.code, s]));
+    S.openLogs = logs; S.qty = Object.fromEntries(qty.map(q => [q.stage_id, q])); S.workers = workers;
+    const byJob = {};
+    S.jobs = jobs.map(j => (byJob[j.id] = { ...j, stages: [] }));
+    S.stages = [];
+    for (const st of stages) {
+      const job = byJob[st.job_id]; if (!job) continue;
+      const s = { ...st, job, actualMin: act[st.id]?.actual_min || 0 };
+      job.stages.push(s); S.stages.push(s);
+    }
+    for (const j of S.jobs) {
+      j.stages.sort((a, b) => a.seq - b.seq);
+      let blocked = null;
+      for (const s of j.stages) {
+        if (s.status === "valmis") { s.state = "valmis"; continue; }
+        if (blocked) { s.state = "lukus"; s.blockedBy = blocked; continue; }
+        s.state = s.status === "ootel" ? "avatud" : s.status; blocked = s;
+      }
+    }
+    // kes pani pausile (viimane kell) — et pausil töö ei kaoks töölise silme eest
+    const paused = S.stages.filter(s => s.state === "paus").map(s => s.id);
+    S.lastBy = {};
+    for (let i = 0; i < paused.length; i += 150) {
+      const { data, error } = await sb.from("time_logs").select("stage_id,worker_id,ended_at").in("stage_id", paused.slice(i, i + 150)).order("ended_at", { ascending: false });
+      if (error) throw error;
+      for (const l of data) if (!(l.stage_id in S.lastBy)) S.lastBy[l.stage_id] = l.worker_id;
+    }
+    S.loadedAt = Date.now();
+    fatal("");
+    render();
+  } catch (e) { console.error(e); fatal("Andmete laadimine ebaõnnestus: " + (e.message || e)); }
+}
+let rt, rtTimer;
+function subscribe() {
+  if (rt) return;
+  const kick = () => { clearTimeout(rtTimer); rtTimer = setTimeout(loadAll, 600); };
+  rt = sb.channel("sisestus")
+    .on("postgres_changes", { event: "*", schema: "public", table: "job_stages" }, kick)
+    .on("postgres_changes", { event: "*", schema: "public", table: "time_logs" }, kick)
+    .on("postgres_changes", { event: "*", schema: "public", table: "stage_reports" }, kick).subscribe();
+  setInterval(() => { if (!document.hidden) loadAll(); }, 60000);
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden && sessUid) loadAll(); });
+
+// ============ KIOSK ============
+let pinWorker = null, pinBuf = "";
+function kioskHome() {
+  S.worker = null; S.pin = null; pinWorker = null; pinBuf = ""; closeSheet(); stopCam();
+  $("who").innerHTML = `Tsentraalpunkt <small id="clock"></small>`; tickClock(); keepAwake();
+  $("outBtn").classList.add("hidden"); $("idle").classList.add("hidden");
+  renderGrid(); show("vPick");
+}
+function renderGrid() {
+  const doing = {};
+  for (const l of S.openLogs) { const st = S.stages.find(x => x.id === l.stage_id); (doing[l.worker_id] ??= []).push(st ? `${st.stage_code} · ${st.job.toote_id || "WO " + st.job.wono}` : "töös"); }
+  const ws = S.workers.filter(w => w.active && w.has_pin);
+  $("kGrid").innerHTML = ws.length ? ws.map(w => `<button data-w="${w.id}" class="${doing[w.id] ? "on" : ""}">${esc(w.name)}
+      <small>${doing[w.id] ? esc(doing[w.id].join(", ")) : esc(w.default_station || "")}</small></button>`).join("")
+    : `<div class="empty">Töölisi pole lisatud. Planeerija saab neid lisada lehel too.html → „Töölised" (PIN on vajalik).</div>`;
+}
+function tickClock() { const c = $("clock"); if (c) c.textContent = new Date().toLocaleString("et-EE", { weekday: "short", day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" }); }
+setInterval(tickClock, 15000);
+let wakeLock = null;
+async function keepAwake() { try { if (isKiosk() && !wakeLock && "wakeLock" in navigator) { wakeLock = await navigator.wakeLock.request("screen"); wakeLock.addEventListener("release", () => wakeLock = null); } } catch {} }
+document.addEventListener("visibilitychange", () => { if (!document.hidden) keepAwake(); });
+$("devOut").onclick = () => { if (confirm("Logi see seade tsentraalpunkti kontolt välja?")) sb.auth.signOut(); };
+$("kGrid").onclick = e => { const b = e.target.closest("button[data-w]"); if (!b) return;
+  pinWorker = S.workers.find(w => w.id === b.dataset.w); pinBuf = ""; $("pinName").textContent = pinWorker.name; drawDots(); show("vPin"); };
+function drawDots() { [...$("dots").children].forEach((d, i) => d.classList.toggle("f", i < pinBuf.length)); }
+$("pad").onclick = async e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.k === "back") return kioskHome();
+  if (b.dataset.k === "del") { pinBuf = pinBuf.slice(0, -1); return drawDots(); }
+  if (pinBuf.length >= 4) return;
+  pinBuf += b.textContent.trim(); drawDots();
+  if (pinBuf.length === 4) {
+    const { data, error } = await sb.rpc("kiosk_login", { p_worker: pinWorker.id, p_pin: pinBuf });
+    const msg = error?.message || data?.error;
+    if (msg) { $("dots").classList.add("shake"); setTimeout(() => $("dots").classList.remove("shake"), 400); pinBuf = ""; drawDots(); toast(msg, true); return; }
+    $("toast").classList.add("hidden"); S.pin = pinBuf; pinBuf = ""; setWorker(data);
+  }
+};
+document.addEventListener("keydown", e => {   // füüsiline klaviatuur PIN-i jaoks
+  if ($("vPin").classList.contains("hidden")) return;
+  if (/^[0-9]$/.test(e.key)) [...$("pad").children].find(b => b.textContent.trim() === e.key)?.click();
+  if (e.key === "Backspace") $("pad").querySelector('[data-k="del"]').click();
+  if (e.key === "Escape") kioskHome();
+});
+
+// tegevusetuse taimer (ainult kioskis töölise ekraanil)
+let lastAct = Date.now();
+["pointerdown","keydown","scroll"].forEach(ev => document.addEventListener(ev, () => { lastAct = Date.now(); }, { passive: true }));
+setInterval(() => {
+  if (!isKiosk() || !S.worker) return;
+  const left = KIOSK_IDLE_SEC - Math.floor((Date.now() - lastAct) / 1000);
+  $("idle").textContent = left + " s";
+  if (left <= 0) kioskHome();
+}, 1000);
+
+// ============ TÖÖLISE VAADE ============
+function setWorker(w) {
+  S.worker = w; lastAct = Date.now();
+  $("who").innerHTML = `${esc(w.name)}${isKiosk() ? " <small>tsentraalpunkt</small>" : ""}`;
+  $("outBtn").classList.remove("hidden"); $("outBtn").textContent = isKiosk() ? "Valmis, välju" : "Logi välja";
+  $("idle").classList.toggle("hidden", !isKiosk());
+  station = (!isKiosk() && store.get("st")) || w.default_station || null;
+  focusJob = null; $("scanIn").value = "";
+  show("vWork"); render();
+  // vöötkoodilugejaga arvutis kursor kohe otsingusse; puutetahvlil mitte (muidu hüppab klaviatuur ette)
+  if (isKiosk() && matchMedia("(pointer: fine)").matches) setTimeout(() => $("scanIn").focus(), 50);
+}
+
+const isOwn = code => { const s = S.stations[code]; return s ? !s.is_external && !s.ignore : /^[TF]\d/i.test(code) || ["KEEV","LK"].includes(code); };
+const plannedMin = s => s.planned_min ?? S.stations[s.stage_code]?.default_min ?? null;
+const myLog = s => S.openLogs.find(l => l.stage_id === s.id && l.worker_id === S.worker?.id);
+const myPaused = s => s.state === "paus" && S.worker && S.lastBy?.[s.id] === S.worker.id && !S.openLogs.some(l => l.stage_id === s.id);
+const isMine = s => !!myLog(s) || myPaused(s);
+const othersOn = s => S.openLogs.filter(l => l.stage_id === s.id && l.worker_id !== S.worker?.id).map(l => l.worker_name);
+function queueSort(a, b) {
+  const r = s => (s.state === "käsil" || s.state === "paus") ? 0 : s.state === "avatud" ? 1 : 2;
+  return (r(a) - r(b)) || ((a.queue_pos ?? 1e9) - (b.queue_pos ?? 1e9)) || (b.job.prioriteet - a.job.prioriteet) ||
+    cmpStr(a.job.tahtaeg || "9999", b.job.tahtaeg || "9999") || a.job.wono.localeCompare(b.job.wono);
+}
+
+function render() {
+  if (!S.loadedAt) return;
+  if (isKiosk() && !S.worker) { if (!$("vPick").classList.contains("hidden")) renderGrid(); return; }
+  if (!S.worker || $("vWork").classList.contains("hidden")) return;
+  // minu käimasolevad
+  const run = S.stages.filter(s => myLog(s)), pau = S.stages.filter(myPaused);
+  $("mine").innerHTML = (run.length ? `<h3 class="sec">Minu töös (${run.length})</h3><div class="cards">${run.map(card).join("")}</div>` : "") +
+    (pau.length ? `<h3 class="sec">Minu pausil (${pau.length})</h3><div class="cards">${pau.map(card).join("")}</div>` : "");
+  // pingid
+  const own = Object.values(S.stations).filter(s => !s.is_external && !s.ignore).sort((a, b) => ((a.sort ?? 100) - (b.sort ?? 100)) || a.code.localeCompare(b.code));
+  const cnt = {}; S.stages.forEach(s => { if (["avatud","käsil","paus"].includes(s.state)) cnt[s.stage_code] = (cnt[s.stage_code] || 0) + 1; });
+  if (!station || !S.stations[station]) station = own[0]?.code || null;
+  $("stations").innerHTML = own.map(s => `<button data-st="${esc(s.code)}" class="${s.code === station ? "on" : ""}">${esc(s.code)}${cnt[s.code] ? `<small>${cnt[s.code]}</small>` : ""}</button>`).join("");
+  $("stations").querySelector("button.on")?.scrollIntoView({ block: "nearest", inline: "center" });
+  // järjekord
+  let list;
+  if (focusJob) {
+    list = focusJob.stages;
+    $("queue").innerHTML = `<div class="ct" style="margin-bottom:4px"><b>WO ${esc(focusJob.wono)} — kõik etapid</b><button class="btn" id="clearFocus">Sulge</button></div>` + list.map(card).join("");
+    $("clearFocus").onclick = () => { focusJob = null; $("scanIn").value = ""; render(); };
+    return;
+  }
+  list = S.stages.filter(s => s.stage_code === station && s.state !== "valmis" && (s.state !== "lukus" || $("showLocked").checked) && !isMine(s)).sort(queueSort);
+  $("queue").innerHTML = list.length ? list.map(card).join("") : `<div class="empty">Sellel pingil pole praegu töid.</div>`;
+}
+
+function card(s) {
+  const j = s.job; const p = plannedMin(s); const mine = myLog(s); const oth = othersOn(s);
+  const done = S.qty[s.id]?.done_qty || 0;
+  const late = j.tahtaeg && j.tahtaeg < today();
+  const timer = mine ? `<span class="timer" data-since="${mine.started_at}">${fmtClock(Date.now() - new Date(mine.started_at))}</span>` : "";
+  const stTxt = s.state === "lukus" ? "" : s.state === "avatud" ? "saab alustada" : s.state === "paus" && myPaused(s) ? "sinu paus — vajuta, et jätkata" : s.state;
+  return `<button class="card st-${s.state}${mine ? " mine" : ""}" data-sid="${s.id}" ${s.state === "lukus" ? "disabled" : ""}>
+    <div class="ct"><b>${j.prioriteet ? `<span class="prio">PRIO </span>` : ""}${esc(j.toote_id || j.drawing || "")} <span class="mono" style="font-size:.9rem">${esc(s.stage_code)}</span></b>${timer}</div>
+    <div class="cm"><span>${esc(j.klient_nimi || "")}</span><span>${esc(j.nimetus || "")}</span><span>Kogus <b>${esc(j.kogus ?? "–")}</b></span>
+      <span>Tähtaeg <b class="${late ? "late" : ""}">${fmtDate(j.tahtaeg)}</b></span>${p != null ? `<span>Norm <b>${fmtH(p)}</b></span>` : ""}
+      <span class="mono">WO ${esc(j.wono)}</span>${stTxt ? `<span>${stTxt}</span>` : ""}${oth.length ? `<span>töös: <b>${esc(oth.join(", "))}</b></span>` : ""}
+      ${S.qty[s.id]?.notes ? `<span>💬 ${S.qty[s.id].notes}</span>` : ""}</div>
+    ${j.kogus && done ? `<div class="bar"><i style="width:${Math.min(100, done / j.kogus * 100)}%"></i></div>` : ""}
+    <div class="route">${j.stages.map(x => `<span class="chip ${x.state === "lukus" ? "" : x.state}${x.id === s.id ? " here" : ""}">${esc(x.stage_code)}</span>`).join("")}</div>
+    ${s.state === "lukus" ? `<div class="wait">Ootab: <span class="mono">${esc(s.blockedBy.stage_code)}</span> (${esc(s.blockedBy.state)})</div>` : ""}
+  </button>`;
+}
+
+$("stations").onclick = e => { const b = e.target.closest("button[data-st]"); if (!b) return; station = b.dataset.st; focusJob = null; if (!isKiosk()) store.set("st", station); render(); };
+$("showLocked").onchange = render;
+document.addEventListener("click", e => { const c = e.target.closest("button.card[data-sid]"); if (c && !c.disabled) openSheet(c.dataset.sid); });
+setInterval(() => document.querySelectorAll("[data-since]").forEach(el => el.textContent = fmtClock(Date.now() - new Date(el.dataset.since))), 1000);
+
+// ============ SKANNIMINE / OTSING ============
+function findJob(raw) {
+  const t = String(raw).trim().replace(/^WO/i, "").trim(); if (!t) return null;
+  return S.jobs.find(j => j.wono === t) || S.jobs.find(j => j.wono === String(parseInt(t, 10))) ||
+         S.jobs.find(j => [j.toote_id, j.drawing].some(v => v && String(v).toLowerCase() === t.toLowerCase()));
+}
+function gotoJob(raw) {
+  const j = findJob(raw);
+  if (!j) return toast("Tööd ei leitud: " + raw, true);
+  const cur = j.stages.find(s => s.state !== "valmis");
+  if (cur && isOwn(cur.stage_code) && cur.state !== "lukus") { station = cur.stage_code; focusJob = null; render(); openSheet(cur.id); }
+  else { focusJob = j; render(); if (!cur) toast("Kõik etapid on valmis"); }
+  $("scanIn").value = "";
+}
+$("scanIn").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); gotoJob($("scanIn").value); } });
+
+let camStream = null, camLoop = null;
+if (!("BarcodeDetector" in window)) $("camBtn").classList.add("hidden");
+$("camBtn").onclick = async () => {
+  if (camStream) return stopCam();
+  try {
+    const det = new BarcodeDetector({ formats: ["qr_code", "code_128", "code_39", "ean_13", "ean_8", "itf"] });
+    camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+    $("cam").srcObject = camStream; await $("cam").play(); $("camBox").classList.remove("hidden");
+    camLoop = setInterval(async () => {
+      const codes = await det.detect($("cam")).catch(() => []);
+      if (codes[0]) { const v = codes[0].rawValue; stopCam(); gotoJob(v); }
+    }, 300);
+  } catch (e) { stopCam(); toast("Kaamera ei avanenud: " + e.message, true); }
+};
+function stopCam() { clearInterval(camLoop); camLoop = null; camStream?.getTracks().forEach(t => t.stop()); camStream = null; $("camBox").classList.add("hidden"); }
+
+// ============ TEGEVUSE AKEN ============
+function closeSheet() { $("sheet").classList.add("hidden"); }
+$("sheet").addEventListener("click", e => { if (e.target === $("sheet")) closeSheet(); });
+
+async function openSheet(sid) {
+  const s = S.stages.find(x => x.id === sid); if (!s) return;
+  const j = s.job; const mine = myLog(s); const oth = othersOn(s);
+  const done = S.qty[s.id]?.done_qty || 0;
+  const { data: notes } = await sb.from("stage_reports").select("worker_name,qty,note,created_at").eq("job_id", j.id).order("created_at", { ascending: false }).limit(8);
+  let btns = "";
+  if (s.state === "lukus") btns = `<button class="wide cancel" data-a="close">Ootab eelmist etappi (${esc(s.blockedBy.stage_code)})</button>`;
+  else if (s.state === "valmis") btns = `<button class="wide cancel" data-a="close">Etapp on valmis</button>`;
+  else {
+    btns = mine ? `<button class="ps" data-a="pause">Paus</button><button class="ok" data-a="finish">Valmis</button>`
+                : `<button class="go" data-a="start">${s.state === "avatud" ? "Alusta" : "Jätka"}</button><button class="ok" data-a="finish">Valmis</button>`;
+    btns += `<button class="wide" data-a="report">Lisa kogus / märkus</button>`;
+    btns += `<button class="wide" data-a="drawing">📄 Ava joonis</button>`;
+    btns += `<button class="wide cancel" data-a="close">Sulge</button>`;
+  }
+  $("sheetBody").innerHTML = `
+    <h2>${esc(j.toote_id || j.drawing || "")} · <span class="mono">${esc(s.stage_code)}</span></h2>
+    <div class="sub">${esc(j.klient_nimi || "")} · ${esc(j.nimetus || "")} · WO ${esc(j.wono)}</div>
+    <dl class="info">
+      <dt>Kogus</dt><dd><b>${esc(j.kogus ?? "–")}</b>${done ? ` · tehtud ${done}` : ""}</dd>
+      <dt>Tähtaeg</dt><dd class="${j.tahtaeg && j.tahtaeg < today() ? "late" : ""}">${fmtDate(j.tahtaeg)}</dd>
+      ${plannedMin(s) != null ? `<dt>Norm</dt><dd>${fmtH(plannedMin(s))} · tehtud ${fmtH(s.actualMin)}</dd>` : ""}
+      ${j.drawing ? `<dt>Joonis</dt><dd>${esc(j.drawing)}${j.revno ? " rev " + esc(j.revno) : ""}</dd>` : ""}
+      ${j.pinnatootlus ? `<dt>Pind</dt><dd>${esc(j.pinnatootlus)}</dd>` : ""}
+      ${oth.length ? `<dt>Töös</dt><dd>${esc(oth.join(", "))}</dd>` : ""}
+    </dl>
+    <div class="route">${j.stages.map(x => `<span class="chip ${x.state === "lukus" ? "" : x.state}${x.id === s.id ? " here" : ""}">${esc(x.stage_code)}</span>`).join("")}</div>
+    <div class="acts">${btns}</div>
+    ${notes?.length ? `<div class="notes">${notes.map(n => `<p>${n.qty != null ? `<b>${n.qty} tk</b> ` : ""}${esc(n.note || "")} <small>— ${esc(n.worker_name)}, ${new Date(n.created_at).toLocaleString("et-EE", { day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" })}</small></p>`).join("")}</div>` : ""}`;
+  $("sheetBody").onclick = e => { const b = e.target.closest("button[data-a]"); if (!b) return;
+    const a = b.dataset.a;
+    if (a === "close") return closeSheet();
+    if (a === "drawing") return openDrawing(j);
+    if (a === "finish" || a === "report") return qtyForm(s, a);
+    act(s, a);
+  };
+  $("sheet").classList.remove("hidden");
+}
+
+function qtyForm(s, a) {
+  const j = s.job; const done = S.qty[s.id]?.done_qty || 0;
+  const def = a === "finish" && j.kogus ? Math.max(0, j.kogus - done) : "";
+  $("sheetBody").innerHTML = `
+    <h2>${a === "finish" ? "Märgi valmis" : "Lisa kogus / märkus"}</h2>
+    <div class="sub">${esc(j.toote_id || "")} · <span class="mono">${esc(s.stage_code)}</span> · kogus ${esc(j.kogus ?? "–")}${done ? `, juba tehtud ${done}` : ""}</div>
+    <div class="field"><label>Tehtud kogus (tk)${a === "finish" ? "" : " — võib jätta tühjaks"}</label>
+      <div class="qtyrow"><button data-q="-1">−</button><input id="qIn" type="number" inputmode="numeric" min="0" value="${def}"><button data-q="1">+</button></div></div>
+    <div class="field"><label>Märkus / probleem</label><textarea id="nIn" rows="3" placeholder="nt materjal puudu, mõõt ei klapi…"></textarea></div>
+    <div class="acts"><button class="cancel" data-x="back">Tagasi</button><button class="${a === "finish" ? "ok" : "go"}" data-x="save">${a === "finish" ? "Valmis" : "Salvesta"}</button></div>`;
+  $("sheetBody").onclick = e => {
+    const q = e.target.closest("button[data-q]"); if (q) { const i = $("qIn"); i.value = Math.max(0, (Number(i.value) || 0) + Number(q.dataset.q)); return; }
+    const x = e.target.closest("button[data-x]"); if (!x) return;
+    if (x.dataset.x === "back") return openSheet(s.id);
+    const qty = $("qIn").value === "" ? null : Number($("qIn").value);
+    const note = $("nIn").value.trim();
+    if (a === "report" && qty == null && !note) return toast("Sisesta kogus või märkus", true);
+    act(s, a, qty, note);
+  };
+}
+
+async function act(s, a, qty = null, note = null) {
+  document.querySelectorAll("#sheetBody button").forEach(b => b.disabled = true);
+  const { error } = await sb.rpc("worker_action", { p_stage: s.id, p_action: a, p_worker: isKiosk() ? S.worker.id : null,
+    p_pin: isKiosk() ? S.pin : null, p_qty: qty, p_note: note || null });
+  if (error) { toast(error.message, true); document.querySelectorAll("#sheetBody button").forEach(b => b.disabled = false); return; }
+  closeSheet();
+  toast({ start: "Alustatud", pause: "Pausil", finish: "Valmis 👍", report: "Salvestatud" }[a]);
+  await loadAll();
+}
+
+// ============ JOONIS ============
+const normKey = v => String(v || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+const tokensOf = n => String(n).toUpperCase().replace(/\.PDF$/, "").split(/[^A-Z0-9]+/).filter(Boolean);
+function tokMatch(tok, key) { for (let i = 0; i < tok.length; i++) { let c = ""; for (let k = i; k < tok.length && c.length < key.length; k++) { c += tok[k]; if (c === key) return true; } } return false; }
+const revOf = n => { const m = String(n).toUpperCase().match(/REV[\s_\-.]?([A-Z0-9]{1,3})(?![A-Z0-9])/); return m ? m[1] : ""; };
+let DRW = null;
+function drawingFor(j) {
+  if (j.drawing_path) return DRW.find(d => d.path === j.drawing_path) || null;
+  const keys = [...new Set([j.toote_id, j.drawing, j.joonise_nr].map(normKey).filter(k => k.length >= 4))];
+  const hits = [];
+  for (const d of DRW) { const k = keys.filter(k => tokMatch(d.tok, k)).sort((a, b) => b.length - a.length)[0]; if (k) hits.push({ d, k }); }
+  hits.sort((a, b) => (b.k.length - a.k.length) || cmpStr(revOf(b.d.name), revOf(a.d.name)) || cmpStr(b.d.uploaded_at || "", a.d.uploaded_at || ""));
+  return hits[0]?.d || null;
+}
+async function openDrawing(j) {
+  const win = window.open("", "_blank");
+  try {
+    if (!DRW) { DRW = await fetchAll(() => sb.from("drawings").select("path,name,uploaded_at").order("path")); DRW.forEach(d => d.tok = tokensOf(d.name)); }
+    const d = drawingFor(j);
+    if (!d) { win?.close(); return toast("Joonist ei leitud: " + (j.toote_id || j.drawing || "WO " + j.wono), true); }
+    const { data, error } = await sb.storage.from("joonised").createSignedUrl(d.path, 3600); if (error) throw error;
+    if (win) win.location.href = data.signedUrl; else location.href = data.signedUrl;
+  } catch (e) { win?.close(); toast("Joonist ei saa avada: " + e.message, true); }
+}
+
+// ============ TÖÖLISED (planeerija) ============
+$("mgrBtn").onclick = () => { show("vMgr"); renderMgr(); };
+$("mgrBack").onclick = () => S.worker ? (show("vWork"), render()) : isKiosk() ? kioskHome() : show("vWork");
+async function renderMgr() {
+  const { data: st } = await sb.rpc("workers_pin_status");
+  const info = Object.fromEntries((st || []).map(x => [x.id, x]));
+  const own = Object.values(S.stations).filter(s => !s.is_external && !s.ignore).map(s => s.code).sort();
+  const row = w => `<tr data-id="${w?.id || ""}">
+    <td><input data-f="name" value="${esc(w?.name || "")}" placeholder="Nimi"></td>
+    <td><input data-f="pin" inputmode="numeric" maxlength="4" placeholder="${w && info[w.id]?.has_pin ? "●●●● (määratud)" : "4 numbrit"}"></td>
+    <td><select data-f="station"><option value="">–</option>${own.map(c => `<option ${w?.default_station === c ? "selected" : ""}>${esc(c)}</option>`).join("")}</select></td>
+    <td><input data-f="email" type="email" value="${esc(w && info[w.id]?.email || "")}" placeholder="telefoni konto e-post"></td>
+    <td><input type="checkbox" data-f="active" ${!w || w.active ? "checked" : ""}></td>
+    <td><button class="btn primary" data-save>Salvesta</button></td></tr>`;
+  $("mgrTable").innerHTML = `<thead><tr><th>Nimi</th><th>PIN</th><th>Pink</th><th>Telefon (e-post)</th><th>Aktiivne</th><th></th></tr></thead><tbody>${S.workers.map(row).join("")}</tbody>`;
+  $("addWorker").onclick = () => { $("mgrTable").querySelector("tbody").insertAdjacentHTML("beforeend", row(null)); };
+}
+$("mgrTable").addEventListener("click", async e => {
+  const b = e.target.closest("button[data-save]"); if (!b) return;
+  const tr = b.closest("tr"); const v = f => tr.querySelector(`[data-f="${f}"]`);
+  if (!v("name").value.trim()) return toast("Nimi on kohustuslik", true);
+  if (!tr.dataset.id && !v("pin").value && !v("email").value) return toast("Lisa PIN (tsentraalpunkt) või e-post (telefon)", true);
+  b.disabled = true;
+  const { error } = await sb.rpc("worker_save", { p_id: tr.dataset.id || null, p_name: v("name").value, p_pin: v("pin").value,
+    p_station: v("station").value, p_email: v("email").value, p_active: v("active").checked });
+  b.disabled = false;
+  if (error) return toast(error.message, true);
+  toast("Salvestatud"); await loadAll(); renderMgr();
+});
+
+sb.auth.getSession().then(({ data }) => onSession(data.session));
+</script>
+</body>
+</html>
