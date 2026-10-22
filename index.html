@@ -238,6 +238,18 @@
   table.jrk tr.dragging td { background: color-mix(in srgb, var(--accent) 10%, var(--paper)); }
   body:has(tr.dragging) { cursor: grabbing; user-select: none; }
 
+  /* ---- grupid ---- */
+  .gchips { display:flex; flex-wrap:wrap; gap:6px; margin: 0 0 12px; }
+  .gchips button { border:1px solid var(--line); background:var(--paper); border-radius:16px; padding:6px 12px; font-weight:500; font-size:.88rem; }
+  .gchips button small { margin-left:6px; color:var(--muted); font-size:.75rem; }
+  .gchips button.on { background:var(--ink); color:var(--paper); border-color:var(--ink); } .gchips button.on small { color:var(--paper); opacity:.7; }
+  .gchips button:first-child { font-weight:700; }
+  table.nad tr.ghead th { text-align:left; background: color-mix(in srgb, var(--accent) 10%, var(--paper)); color:var(--ink); font-size:.82rem; font-weight:700; cursor:pointer; position:sticky; left:0; }
+  table.nad tr.ghead th small { display:inline; margin-left:8px; font-weight:400; color:var(--muted); }
+  table.nad tr.ghead th:hover { background: color-mix(in srgb, var(--accent) 20%, var(--paper)); }
+  table.nad th.nm.rowclk { cursor:pointer; } table.nad th.nm.rowclk:hover { color:var(--accent); text-decoration:underline; }
+  table.kov tr.kgh td { background: color-mix(in srgb, var(--accent) 10%, var(--paper)); font-weight:700; cursor:pointer; }
+  table.grp td input { width: 220px; }
   /* ---- nädalakoormus ---- */
   .seg2 { display:inline-flex; border:1px solid var(--line); border-radius:6px; overflow:hidden; }
   .seg2 button { border:none; background:var(--paper); padding:9px 14px; font-weight:500; color:var(--muted); }
@@ -345,7 +357,8 @@
 
     <!-- KOORMUS -->
     <section id="tab-koormus" class="hidden">
-      <div class="toolbar"><select id="kStation"></select><button class="btn primary" id="excelReport">Laadi alla Excel</button><button class="btn" id="copyReport">Kopeeri raport tekstina</button></div>
+      <div id="kGroups"></div>
+      <div class="toolbar"><select id="kStation"></select><button class="btn" id="kAll">Kõik pingid</button><button class="btn primary" id="excelReport">Laadi alla Excel</button><button class="btn" id="copyReport">Kopeeri raport tekstina</button></div>
       <div id="reportBody"></div>
     </section>
 
@@ -357,6 +370,7 @@
         <label class="chk" id="nadVabaWrap"><input type="checkbox" id="nadVaba" checked> Vaba maht</label>
         <button class="btn" id="nadPrint">Prindi</button>
       </div>
+      <div id="nadGroups"></div>
       <div id="nadBody"></div>
     </section>
 
@@ -380,7 +394,10 @@
 
     <!-- SEADED -->
     <section id="tab-seaded" class="hidden">
-      <h2 style="margin-top:0">Omad pingid</h2>
+      <h2 style="margin-top:0">Grupid</h2>
+      <p class="note">Grupi nime muutmine muudab selle kõigil grupi pinkidel. Nooltega muudad gruppide järjekorda Nädalad- ja Koormus-vaates. Uue grupi teed, kui valid pingi juures „+ uus grupp…”.</p>
+      <div class="tw"><table class="grp" id="groupTable"></table></div>
+      <h2>Omad pingid</h2>
       <p class="note">h-MAX = pingi töötunnid nädalas (nagu Exceli Koormus lehel); pühadega nädalal arvestatakse vähem. Sama „Rida” nimega pingid liidetakse nädalakoormuses üheks reaks (nt F205-7/212-4), „Grupp” moodustab Summa-ploki. Vaikenormi kasutatakse prognoosis, kui etapil endal aega pole. „Ei ole etapp" jätab koodi järgmisel impordil marsruudist välja.</p>
       <div class="tw"><table id="stationTable"></table></div>
       <h2>Allhanked</h2>
@@ -852,6 +869,14 @@ $("jobsTable").onclick = e => {
 // ---------- KOORMUS ----------
 const fmtH = min => min == null || isNaN(min) ? "–" : (Math.round(min / 6) / 10).toLocaleString("et-EE", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " h";
 const fmtH1 = h => (Math.round(h * 10) / 10).toLocaleString("et-EE", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const NOGROUP = "Muud pingid";
+function groupList() {
+  const g = {};
+  for (const s of ownStations()) { const n = s.grupp || NOGROUP; const x = g[n] ??= { name: n, stations: [], sort: 1e9 }; x.stations.push(s); x.sort = Math.min(x.sort, s.sort ?? 100); }
+  return Object.values(g).sort((a, b) => ((a.name === NOGROUP) - (b.name === NOGROUP)) || (a.sort - b.sort) || a.name.localeCompare(b.name));
+}
+const groupChips = (cur, attr) => `<div class="gchips"><button data-${attr}="" class="${!cur ? "on" : ""}">Kõik pingid</button>` +
+  groupList().map(g => `<button data-${attr}="${esc(g.name)}" class="${cur === g.name ? "on" : ""}">${esc(g.name)}<small>${g.stations.length}</small></button>`).join("") + `</div>`;
 const ownStations = () => Object.values(S.stations).filter(s => !s.ignore && !s.is_external).sort((a, b) => ((a.sort ?? 100) - (b.sort ?? 100)) || a.code.localeCompare(b.code));
 const extStations = () => Object.values(S.stations).filter(s => !s.ignore && s.is_external).sort((a, b) => a.code.localeCompare(b.code));
 const jobLabel = j => `${j.klient_nimi || ""} ${j.toote_id || j.drawing || ""}`.trim();
@@ -873,17 +898,26 @@ function buildReport() {
   return { st, active, late, risk, unplanned, internal, acc: Object.values(acc).sort((a, b) => b.act / b.plan - a.act / a.plan) };
 }
 
-let koormStation = store.get("koormSt");
+let koormStation = store.get("koormSt"), koormGroup = store.get("koormGrp") || "";
+function setKoorm(st, grp) { koormStation = st; koormGroup = grp; store.set("koormSt", st); store.set("koormGrp", grp); renderReport(); window.scrollTo(0, 0); }
 function renderReport() {
   if (koormStation == null) koormStation = isPlanner() ? "" : (S.profile?.default_station || "");
   if (koormStation && !S.stations[koormStation]) koormStation = "";
-  const sel = $("kStation");
-  sel.innerHTML = `<option value="">Kõik pingid</option>` + ownStations().map(s => `<option value="${esc(s.code)}" ${s.code === koormStation ? "selected" : ""}>${esc(s.code)}${s.name ? " · " + esc(s.name) : ""}</option>`).join("");
+  const groups = groupList();
+  if (koormGroup && !groups.some(g => g.name === koormGroup)) koormGroup = "";
+  const curGrp = koormStation ? (S.stations[koormStation]?.grupp || NOGROUP) : koormGroup;
+  $("kGroups").innerHTML = groupChips(curGrp, "kgrp");
+  $("kAll").classList.toggle("hidden", !koormStation && !koormGroup);
+  $("kStation").innerHTML = `<option value="">${koormGroup ? esc(koormGroup) + " — kõik" : "Kõik pingid"}</option>` +
+    groups.map(g => `<optgroup label="${esc(g.name)}">${g.stations.map(s => `<option value="${esc(s.code)}" ${s.code === koormStation ? "selected" : ""}>${esc(s.code)}${s.name ? " · " + esc(s.name) : ""}</option>`).join("")}</optgroup>`).join("");
   $("reportBody").innerHTML = koormStation ? kStation(koormStation) : kOverview();
 }
-$("kStation").onchange = e => { koormStation = e.target.value; store.set("koormSt", koormStation); renderReport(); };
+$("kStation").onchange = e => setKoorm(e.target.value, e.target.value ? koormGroup : koormGroup);
+$("kAll").onclick = () => setKoorm("", "");
+$("kGroups").onclick = e => { const b = e.target.closest("button[data-kgrp]"); if (b) setKoorm("", b.dataset.kgrp); };
 $("reportBody").addEventListener("click", e => {
-  const p = e.target.closest("[data-kst]"); if (p) { koormStation = p.dataset.kst; store.set("koormSt", koormStation); renderReport(); window.scrollTo(0, 0); return; }
+  const g = e.target.closest("[data-kgh]"); if (g) return setKoorm("", koormGroup === g.dataset.kgh ? "" : g.dataset.kgh);
+  const p = e.target.closest("[data-kst]"); if (p) return setKoorm(p.dataset.kst, koormGroup);
   const q = e.target.closest("[data-gojrk]"); if (q) { jrkStation = q.dataset.gojrk; store.set("jrkSt", jrkStation); showTab("jrk"); }
 });
 
@@ -891,26 +925,35 @@ const kpi = (lab, val, sub, cls) => `<div class="kk ${cls || ""}"><small>${lab}<
 
 function kOverview() {
   const R = buildReport(); const weeks = weeksN(8); const T = today0();
-  const own = ownStations();
+  const groups = groupList().filter(g => !koormGroup || g.name === koormGroup);
+  const own = groups.flatMap(g => g.stations);
   const stagesAt = code => S.stages.filter(s => s.stage_code === code && s.state !== "valmis");
   const hoursAll = own.reduce((a, s) => a + (S.sim.stations[s.code]?.hours || 0), 0);
-  const overdue = R.active.filter(j => j.overdue);
-  const cannot = R.active.filter(j => j.risk === "late" && !j.overdue);
-  const bottleneck = R.internal[0];
+  const codesG = new Set(own.map(s => s.code));
+  const activeG = koormGroup ? R.active.filter(j => j.stages.some(x => x.state !== "valmis" && codesG.has(x.stage_code))) : R.active;
+  const overdue = activeG.filter(j => j.overdue);
+  const cannot = activeG.filter(j => j.risk === "late" && !j.overdue);
+  const riskG = activeG.filter(j => j.risk === "risk");
+  const bottleneck = R.internal.find(x => codesG.has(x.code));
+  const unplannedG = own.reduce((a, s) => a + (S.sim.stations[s.code]?.unplanned || 0), 0);
   let h = `<div class="kks">` +
-    kpi("Pooleli", fmtH1(hoursAll) + " h", R.active.length + " tööd omadel pinkidel") +
+    kpi("Pooleli", fmtH1(hoursAll) + " h", activeG.length + (koormGroup ? " tööd selles grupis" : " tööd omadel pinkidel")) +
     kpi("Hilinenud", overdue.length, overdue.length ? "tähtaeg möödas" : "pole", overdue.length ? "bad" : "ok") +
     kpi("Ei jõua tähtajaks", cannot.length, cannot.length ? "prognoosi järgi" : "kõik graafikus", cannot.length ? "bad" : "ok") +
-    kpi("Ohus", R.risk.length, `varu alla ${RISK_DAYS} tp`, R.risk.length ? "warn" : "ok") +
+    kpi("Ohus", riskG.length, `varu alla ${RISK_DAYS} tp`, riskG.length ? "warn" : "ok") +
     kpi("Pudelikael", bottleneck && bottleneck.wait > 0.05 ? esc(bottleneck.code) : "–", bottleneck && bottleneck.wait > 0.05 ? fmtH1(bottleneck.wait) + " p ootamist" : "ootamist pole", bottleneck && bottleneck.lateJobs.size ? "bad" : "") +
-    kpi("Normita etappe", R.unplanned, R.unplanned ? "prognoos liiga optimistlik" : "kõik planeeritud", R.unplanned ? "warn" : "ok") + `</div>`;
+    kpi("Normita etappe", unplannedG, unplannedG ? "prognoos liiga optimistlik" : "kõik planeeritud", unplannedG ? "warn" : "ok") + `</div>`;
 
   // pinkide tabel + nädalate koormusriba
-  h += `<section class="kcard"><h3>Pingid <small>vali pink, et näha tema ajakava · ruut = nädal, värv = tähtajaga tööd vs võimsus</small></h3><div class="tw"><table class="kov"><thead><tr>
+  h += `<section class="kcard"><h3>${koormGroup ? esc(koormGroup) : "Pingid"} <small>pingil klõps = selle pingi tööd ja ajakava · grupil klõps = ainult see grupp · ruut = nädal</small></h3><div class="tw"><table class="kov"><thead><tr>
     <th>Pink</th><th class="num">Pooleli</th><th class="num">Maht</th><th>Vaba alates</th>
     ${weeks.map((w, i) => `<th class="wk">${i === 0 ? "See" : "N" + isoWeek(w.s)}</th>`).join("")}
     <th class="num">Hilinenud</th><th class="num">Ei jõua</th><th class="num">Normita</th></tr></thead><tbody>`;
+  const ncol = weeks.length + 7;
   for (const s of own) {
+    const gi = groups.findIndex(g => g.stations[0] === s);
+    if (gi >= 0) { const g = groups[gi]; const gh = g.stations.reduce((a, x) => a + (S.sim.stations[x.code]?.hours || 0), 0);
+      h += `<tr class="kgh" data-kgh="${esc(g.name)}"><td colspan="${ncol}">${esc(g.name)} <span class="muted" style="font-weight:400">· ${g.stations.length} pinki · ${fmtH1(gh)} h pooleli${koormGroup ? " · klõpsa, et näha kõiki gruppe" : " · klõpsa, et näha ainult seda gruppi"}</span></td></tr>`; }
     const x = S.sim.stations[s.code] || { hours: 0, queue: 0, unplanned: 0, freeDate: T };
     const W = stationWeeks(s.code, weeks);
     const at = stagesAt(s.code);
@@ -1085,7 +1128,7 @@ function jobWeek(j) {   // planeeritud nädala esmaspäev (võib olla möödunud
 }
 function workdaysOfWeek(mon) { let n = 0; for (let i = 0; i < 5; i++) { const d = new Date(mon); d.setDate(mon.getDate() + i); if (isWorkday(d)) n++; } return n; }
 
-let nadMode = store.get("nadMode") || "ees", nadN = Number(store.get("nadN")) || 13;
+let nadMode = store.get("nadMode") || "ees", nadN = Number(store.get("nadN")) || 13, nadGroup = store.get("nadGrp") || "";
 
 function nadModel() {
   // read ja plokid
@@ -1093,13 +1136,13 @@ function nadModel() {
   for (const s of Object.values(S.stations)) {
     if (s.ignore || s.is_external) continue;
     const key = s.rida || s.code;
-    const r = rows[key] ??= { key, grupp: s.grupp || "Muud pingid", codes: [], capDay: 0, sort: 1e9 };
+    const r = rows[key] ??= { key, grupp: s.grupp || NOGROUP, codes: [], capDay: 0, sort: 1e9 };
     r.codes.push(s.code); r.capDay += Number(s.capacity_h) || 0; r.sort = Math.min(r.sort, s.sort ?? 100);
     rowOf[s.code] = r;
   }
   const groups = {};
   for (const r of Object.values(rows)) { const g = groups[r.grupp] ??= { name: r.grupp, rows: [], sort: 1e9 }; g.rows.push(r); g.sort = Math.min(g.sort, r.sort); }
-  const blocks = Object.values(groups).sort((a, b) => ((a.name === "Muud pingid") - (b.name === "Muud pingid")) || (a.sort - b.sort) || a.name.localeCompare(b.name));
+  const blocks = Object.values(groups).sort((a, b) => ((a.name === NOGROUP) - (b.name === NOGROUP)) || (a.sort - b.sort) || a.name.localeCompare(b.name));
   blocks.forEach(g => g.rows.sort((a, b) => (a.sort - b.sort) || a.key.localeCompare(b.key)));
 
   // nädalad
@@ -1137,13 +1180,15 @@ function nadModel() {
     for (const r of list) { t.capDay += r.capDay; r.w.forEach((v, i) => { t.w[i] += v; t.cap[i] += r.cap[i]; }); t.back += r.back; t.later += r.later; t.nodue += r.nodue; t.total += r.total; t.unplanned += r.unplanned; }
     return t;
   };
-  blocks.forEach(g => g.sum = sumRows("Summa", g.rows));
+  blocks.forEach(g => g.sum = sumRows("Kokku", g.rows));
   const kokku = sumRows("KOKKU", blocks.flatMap(g => g.rows));
   const vaba = r => { let acc = -(r.back || 0); return r.w.map((v, i) => (acc += r.cap[i] - v)); };   // mahajäämus sööb mahtu
   return { blocks, weeks, kokku, vaba, cur };
 }
 
 function renderNad() {
+  if (nadGroup && !groupList().some(g => g.name === nadGroup)) nadGroup = "";
+  $("nadGroups").innerHTML = groupChips(nadGroup, "ng");
   document.querySelectorAll("#nadMode button").forEach(b => b.classList.toggle("on", b.dataset.m === nadMode));
   $("nadWeeks").value = String(nadN);
   $("nadVabaWrap").classList.toggle("hidden", nadMode !== "ees");
@@ -1159,18 +1204,22 @@ function nadTables(M, interactive) {
     const clk = interactive && !r.sum && v ? ` data-nr="${esc(r.key)}" data-ni="${i}"` : "";
     return `<td class="n ${cls}${clk ? " clk" : ""}"${clk} title="${esc(r.key)} W${isoWeek(M.weeks[i].s)}: ${fmtV(v)} h${ees ? " / maht " + fmtV(r.cap[i]) + " h" : ""}">${fmtN(v)}</td>`;
   };
+  const nameOf = r => r.codes.length === 1 ? S.stations[r.codes[0]]?.name : null;
   const line = r => `<tr class="${r.sum ? "sum" : ""}${r.key === "KOKKU" ? " tot" : ""}">
-    <th class="nm">${esc(r.key)}${!r.sum && r.codes.length > 1 ? `<small>${esc(r.codes.join(", "))}</small>` : ""}${r.unplanned && ees ? `<small class="risk">${r.unplanned} normita</small>` : ""}</th>
+    <th class="nm${interactive && !r.sum && ees ? " rowclk" : ""}"${interactive && !r.sum && ees ? ` data-nrow="${esc(r.key)}" title="Kõik selle pingi tööd"` : ""}>${esc(r.key)}${!r.sum && nameOf(r) ? `<small>${esc(nameOf(r))}</small>` : ""}${!r.sum && r.codes.length > 1 ? `<small>${esc(r.codes.join(", "))}</small>` : ""}${r.unplanned && ees ? `<small class="risk">${r.unplanned} normita</small>` : ""}</th>
     <td class="n cap">${fmtV(r.capDay * 5)}</td>${ees ? `<td class="n back${r.back > 0.05 ? " neg" : " z"}${interactive && !r.sum && r.back ? " clk" : ""}"${interactive && !r.sum && r.back ? ` data-nr="${esc(r.key)}" data-ni="back"` : ""}>${fmtN(r.back)}</td>` : ""}${r.w.map((v, i) => cell(r, v, i)).join("")}
     ${ees ? `<td class="n later${interactive && !r.sum && r.later ? " clk" : ""}"${interactive && !r.sum && r.later ? ` data-nr="${esc(r.key)}" data-ni="later"` : ""}>${fmtN(r.later)}</td>` : ""}
     <td class="n tot">${fmtN(r.total)}</td></tr>`;
   const gap = `<tr class="gap"><td colspan="${M.weeks.length + (ees ? 5 : 3)}"></td></tr>`;
-  const body = M.blocks.map(g => g.rows.map(line).join("") + (g.rows.length > 1 ? line(g.sum) : "")).join(gap) + gap + line(M.kokku);
+  const ncols = M.weeks.length + (ees ? 5 : 3);
+  const blocks = nadGroup ? M.blocks.filter(g => g.name === nadGroup) : M.blocks;
+  const ghead = g => `<tr class="ghead"><th colspan="${ncols}"${interactive ? ` data-ngh="${esc(g.name)}"` : ""}>${esc(g.name)}${interactive ? `<small>${nadGroup ? "klõpsa, et näha kõiki gruppe" : "klõpsa, et näha ainult seda gruppi"}</small>` : ""}</th></tr>`;
+  const body = blocks.map(g => ghead(g) + g.rows.map(line).join("") + (g.rows.length > 1 ? line(g.sum) : "")).join(gap) + (nadGroup ? "" : gap + line(M.kokku));
   let h = `<div class="nadwrap"><table class="nad"><thead><tr><th class="nm">${ees ? "Nädalane koormus" : "Tehtud normtunnid"}</th><th class="n">h-MAX</th>${ees ? `<th class="n">Varasem<small>tegemata</small></th>` : ""}${wkHead}${ees ? `<th class="n">Hiljem</th>` : ""}<th class="n">KOKKU</th></tr></thead><tbody>${body}</tbody></table></div>`;
 
   if (ees && (!interactive || $("nadVaba").checked)) {
     const vl = r => { const v = M.vaba(r); return `<tr class="${r.sum ? "sum" : ""}${r.key === "KOKKU" ? " tot" : ""}"><th class="nm">${esc(r.key)}</th><td class="n cap"></td><td></td>${v.map(x => `<td class="n ${x < -0.05 ? "neg" : "vb"}">${fmtV(x)}</td>`).join("")}<td></td><td></td></tr>`; };
-    const vbody = M.blocks.map(g => g.rows.map(vl).join("") + (g.rows.length > 1 ? vl(g.sum) : "")).join(gap) + gap + vl(M.kokku);
+    const vbody = blocks.map(g => ghead(g) + g.rows.map(vl).join("") + (g.rows.length > 1 ? vl(g.sum) : "")).join(gap) + (nadGroup ? "" : gap + vl(M.kokku));
     h += `<h2>Vaba maht <small class="muted">kumulatiivne: nädalate maht − koormus kokku kuni selle nädalani · punane = puudu</small></h2>
       <div class="nadwrap"><table class="nad"><thead><tr><th class="nm">Vaba maht</th><th class="n"></th><th></th>${wkHead}<th></th><th></th></tr></thead><tbody>${vbody}</tbody></table></div>`;
   }
@@ -1184,10 +1233,13 @@ function nadTables(M, interactive) {
 $("nadMode").onclick = e => { const b = e.target.closest("button[data-m]"); if (!b) return; nadMode = b.dataset.m; store.set("nadMode", nadMode); renderNad(); };
 $("nadWeeks").onchange = e => { nadN = Number(e.target.value); store.set("nadN", nadN); renderNad(); };
 $("nadVaba").onchange = renderNad;
+$("nadGroups").onclick = e => { const b = e.target.closest("button[data-ng]"); if (!b) return; nadGroup = b.dataset.ng; store.set("nadGrp", nadGroup); renderNad(); };
 $("nadPrint").onclick = () => printHtml(`<h1 class="ptitle">${nadMode === "ees" ? "Nädalane koormus" : "Tehtud normtunnid"} <small>${new Date().toLocaleDateString("et-EE")}</small></h1>` + nadTables(nadModel(), false), "landscape");
 
 // lahtri klikk -> tööd selles reas ja nädalas
 $("nadBody").addEventListener("click", e => {
+  const g = e.target.closest("[data-ngh]"); if (g) { nadGroup = nadGroup === g.dataset.ngh ? "" : g.dataset.ngh; store.set("nadGrp", nadGroup); renderNad(); return; }
+  const rw = e.target.closest("[data-nrow]"); if (rw && nadMode === "ees") return nadOpen(rw.dataset.nrow, "all");
   const c = e.target.closest("[data-nr]"); if (!c || nadMode !== "ees") return;
   nadOpen(c.dataset.nr, c.dataset.ni);
 });
@@ -1195,9 +1247,9 @@ let nadSel = null;
 function nadOpen(key, ni) {
   nadSel = { key, ni, jobs: [] };
   const M = nadModel(); const r = M.blocks.flatMap(g => g.rows).find(x => x.key === key); if (!r) return closeNadPop();
-  const list = nadSel.list = (ni === "later" ? r.laterItems : ni === "back" ? r.backItems : r.items[Number(ni)] || []).slice().sort((a, b) => cmpStr(a.s.job.tahtaeg || "9", b.s.job.tahtaeg || "9"));
-  const title = ni === "later" ? "hiljem" : ni === "back" ? "varasem (möödunud nädalad, tegemata)" : `W${isoWeek(M.weeks[ni].s)} (${fmtDate(M.weeks[ni].s)}–${fmtDate(new Date(+M.weeks[ni].s + 4 * 86400000))})`;
-  const tot = list.reduce((a, x) => a + x.h, 0), cap = ni === "later" || ni === "back" ? null : r.cap[ni];
+  const list = nadSel.list = (ni === "all" ? [...r.backItems, ...r.items.flat(), ...r.laterItems] : ni === "later" ? r.laterItems : ni === "back" ? r.backItems : r.items[Number(ni)] || []).slice().sort((a, b) => cmpStr(a.s.job.tahtaeg || "9", b.s.job.tahtaeg || "9"));
+  const title = ni === "all" ? "kõik pooleliolevad tööd" : ni === "later" ? "hiljem" : ni === "back" ? "varasem (möödunud nädalad, tegemata)" : `W${isoWeek(M.weeks[ni].s)} (${fmtDate(M.weeks[ni].s)}–${fmtDate(new Date(+M.weeks[ni].s + 4 * 86400000))})`;
+  const tot = list.reduce((a, x) => a + x.h, 0), cap = ni === "later" || ni === "back" || ni === "all" ? null : r.cap[ni];
   const opts = j => `<option value="">tähtaja järgi${j.tahtaeg ? " (W" + isoWeek(parseDate(j.tahtaeg)) + ")" : ""}</option>` +
     M.weeks.map(w => `<option value="${isoDate(w.s)}" ${j.plan_week && +mondayOf(parseDate(j.plan_week)) === +w.s ? "selected" : ""}>W${isoWeek(w.s)} · ${fmtDate(w.s)}</option>`).join("");
   $("nadPop").innerHTML = `<div class="popin">
@@ -1791,10 +1843,15 @@ $("planTable").addEventListener("change", async e => {
 // ---------- PINGID JA KASUTAJAD ----------
 function renderSettings() {
   const all = Object.values(S.stations);
+  const groups = groupList(), grpNames = groups.map(g => g.name).filter(n => n !== NOGROUP);
+  $("groupTable").innerHTML = `<thead><tr><th></th><th>Grupp</th><th>Pingid</th><th class="num">h-MAX kokku</th></tr></thead><tbody>` +
+    groups.map((g, i) => `<tr data-grp="${esc(g.name)}"><td style="white-space:nowrap"><button class="btn" data-gmv="-1" ${i === 0 ? "disabled" : ""}>↑</button> <button class="btn" data-gmv="1" ${i === groups.length - 1 ? "disabled" : ""}>↓</button></td>
+      <td>${g.name === NOGROUP ? `<i class="muted">${NOGROUP} (grupita)</i>` : `<input data-grename value="${esc(g.name)}">`}</td>
+      <td class="mono">${g.stations.map(s => esc(s.code)).join(", ")}</td><td class="num">${fmtH1(g.stations.reduce((a, s) => a + (Number(s.capacity_h) || 0) * 5, 0))}</td></tr>`).join("") + `</tbody>`;
   const row = (s, ext) => `<tr data-code="${esc(s.code)}"><td class="mono"><b>${esc(s.code)}</b></td>
       <td><input class="wide" data-f="name" value="${esc(s.name ?? "")}" placeholder="${ext ? "firma nimi" : "pingi nimi"}"></td>
       ${ext ? `<td><input type="number" step="0.5" data-f="lead_days" value="${esc(s.lead_days)}"></td>`
-            : `<td><input class="wide" data-f="grupp" value="${esc(s.grupp ?? "")}" placeholder="plokk"></td>
+            : `<td><select data-f="grupp"><option value="">—</option>${grpNames.map(n => `<option ${s.grupp === n ? "selected" : ""}>${esc(n)}</option>`).join("")}<option value="__new">+ uus grupp…</option></select></td>
                <td><input data-f="rida" value="${esc(s.rida ?? "")}" placeholder="${esc(s.code)}"></td>
                <td><input type="number" step="0.5" data-f="capacity_h" data-week value="${esc(Math.round((Number(s.capacity_h) || 0) * 50) / 10)}"></td>
                <td><input data-f="default_min" data-hours value="${esc(minToH(s.default_min))}"></td>
@@ -1803,7 +1860,7 @@ function renderSettings() {
       <td><input type="checkbox" data-f="ignore" ${s.ignore ? "checked" : ""}></td></tr>`;
   const own = all.filter(s => !s.is_external).sort((a, b) => ((a.sort ?? 100) - (b.sort ?? 100)) || a.code.localeCompare(b.code));
   const ext = all.filter(s => s.is_external).sort((a, b) => a.code.localeCompare(b.code));
-  $("stationTable").innerHTML = `<thead><tr><th>Kood</th><th>Nimi</th><th>Grupp (plokk)</th><th>Rida</th><th>h-MAX nädalas</th><th>Vaikenorm h</th><th>Järjestus</th><th>Allhange</th><th>Ei ole etapp</th></tr></thead><tbody>` +
+  $("stationTable").innerHTML = `<thead><tr><th>Kood</th><th>Nimi</th><th>Grupp</th><th>Rida</th><th>h-MAX nädalas</th><th>Vaikenorm h</th><th>Järjestus</th><th>Allhange</th><th>Ei ole etapp</th></tr></thead><tbody>` +
     own.map(s => row(s, false)).join("") + `</tbody>`;
   $("extTable").innerHTML = `<thead><tr><th>Kood</th><th>Nimi</th><th>Tarneaeg tööpäevi</th><th>Allhange</th><th>Ei ole etapp</th></tr></thead><tbody>` +
     ext.map(s => row(s, true)).join("") + `</tbody>`;
@@ -1818,13 +1875,36 @@ async function saveStation(e) {
   if (e.target.dataset.hours !== undefined) { v = parseMinutes(v); if (Number.isNaN(v)) return toast("Arusaamatu väärtus", true); }
   else if (["capacity_h","lead_days","sort"].includes(f)) v = v === "" ? null : Number(String(v).replace(",", "."));
   if (e.target.dataset.week !== undefined && v != null) v = Math.round(v / 5 * 1000) / 1000;   // h-MAX nädalas -> h päevas
+  if (f === "grupp" && v === "__new") { v = prompt("Uue grupi nimi (nt Käsitreimine):"); if (!v) return renderSettings(); }
   if (["grupp","rida"].includes(f)) v = String(v).trim() || null;
   const { error } = await sb.from("stations").update({ [f]: v }).eq("code", tr.dataset.code);
   if (error) return toast(error.message, true);
   S.stations[tr.dataset.code][f] = v; S.sim = simulate(); toast("Salvestatud");
-  if (f === "is_external") renderSettings();
+  if (f === "is_external" || f === "grupp") renderSettings();
 }
 $("extTable").addEventListener("change", saveStation);
+$("groupTable").addEventListener("change", async e => {
+  const inp = e.target.closest("input[data-grename]"); if (!inp) return;
+  const old = inp.closest("tr").dataset.grp, nv = inp.value.trim();
+  if (!nv || nv === old) return (inp.value = old);
+  if (groupList().some(g => g.name === nv) && !confirm(`Grupp „${nv}” on juba olemas — liita need kokku?`)) return (inp.value = old);
+  const { error } = await sb.from("stations").update({ grupp: nv }).eq("grupp", old);
+  if (error) return toast(error.message, true);
+  Object.values(S.stations).forEach(s => { if (s.grupp === old) s.grupp = nv; });
+  if (nadGroup === old) nadGroup = nv; if (koormGroup === old) koormGroup = nv;
+  toast("Grupp ümber nimetatud"); renderSettings();
+});
+$("groupTable").addEventListener("click", async e => {
+  const b = e.target.closest("button[data-gmv]"); if (!b) return;
+  const groups = groupList(), i = groups.findIndex(g => g.name === b.closest("tr").dataset.grp), j = i + Number(b.dataset.gmv);
+  if (i < 0 || j < 0 || j >= groups.length) return;
+  [groups[i], groups[j]] = [groups[j], groups[i]];
+  const upd = [];   // järjestus = grupi nr * 100 + pingi nr grupis
+  groups.forEach((g, gi) => g.stations.forEach((s, si) => { const v = (gi + 1) * 100 + si; if (s.sort !== v) { s.sort = v; upd.push(sb.from("stations").update({ sort: v }).eq("code", s.code)); } }));
+  const res = await Promise.all(upd); const err = res.find(r => r.error);
+  if (err) toast(err.error.message, true); else toast("Järjekord salvestatud");
+  S.sim = simulate(); renderSettings();
+});
 $("stationTable").addEventListener("change", saveStation);
 $("userTable").addEventListener("change", async e => {
   const f = e.target.dataset.f; const tr = e.target.closest("tr[data-user]"); if (!f || !tr) return;
