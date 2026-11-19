@@ -184,6 +184,12 @@
   .impact .up { color:var(--done); font-weight:600; } .impact .dn { color:var(--late); font-weight:600; }
   /* pinkide plaan */
   #jrkPicker { gap:6px 14px; align-items:flex-end; }
+  .wltab { margin:-4px 0 14px; } .wltab table { font-size:.82rem; } .wltab th { font-weight:600; white-space:nowrap; } .wltab th small { font-weight:400; color:var(--muted); }
+  .wltab td { vertical-align:top; min-width:96px; } .wltab td:first-child { min-width:200px; max-width:300px; white-space:normal; }
+  .wltab td small { color:var(--muted); font-size:.74rem; } .wltab td:first-child small, .wltab td:last-child small { display:block; }
+  .wltab td:last-child { white-space:normal; min-width:140px; }
+  .wltab .pbar { height:6px; margin-top:4px; } .wltab .pbar i { background:var(--done); } .wltab .pbar.warn i { background:var(--pause); } .wltab .pbar.over i { background:var(--late); }
+  .wltab tr.gsum td { background: color-mix(in srgb, var(--ink) 5%, var(--paper)); border-top:2px solid var(--line); }
   .pgrp { display:flex; flex-wrap:wrap; gap:4px; align-items:flex-end; padding-left:8px; border-left:2px solid var(--line); position:relative; padding-top:16px; }
   .pgrp .pgl { position:absolute; top:0; left:8px; font-size:.72rem; color:var(--muted); white-space:nowrap; }
   #jrkPicker .pgset { font-family:var(--sans); font-weight:500; font-size:.85rem; min-width:0; }
@@ -2387,11 +2393,21 @@ function renderJrk() {
   const manual = list.some(s => s.queue_pos != null);
   $("jrkCrumb").innerHTML = jrkFrom ? `<a data-crumb="list">Tellimused</a> › <a data-crumb="order">${esc(jrkFrom.label)}</a> › <b>Pink ${esc(jrkStation)}</b>
       <span class="muted">— selle tellimuse tööd on kollasega</span><button class="x" data-crumb="clear">Peida märgistus ✕</button>` : "";
-  const W = weeksN(5), SW = stationWeeks(jrkStation, W);
-  $("jrkLoad").innerHTML = stationOf(jrkStation).is_external ? "" : `<div class="wload">` + W.map((w, i) => {
-    const r = SW.cap[i] ? SW.due[i] / SW.cap[i] : 0, c = r > 1 ? "over" : r > .85 ? "warn" : "";
-    return `<div title="Tähtajaga sel nädalal ${fmtH1(SW.due[i])} h, maht ${fmtH1(SW.cap[i])} h"><b>N${isoWeek(w.s)}</b> ${SW.cap[i] ? Math.round(r * 100) + "%" : "–"}<div class="pbar ${c}"><i style="width:${Math.min(100, r * 100)}%"></i></div></div>`;
-  }).join("") + `<div style="border:none;align-self:center">nädala koormus tähtaegade järgi</div></div>`;
+  const W = weeksN(6), SW = stationWeeks(jrkStation, W);
+  const gName = stationOf(jrkStation).grupp || NOGROUP, grp = groupList().find(g => g.name === gName);
+  const gm = grp ? grp.stations : [];
+  const GW = W.map(() => ({ cap: 0, due: 0 }));
+  for (const st of gm) { const x = stationWeeks(st.code, W); x.cap.forEach((c, i) => { GW[i].cap += c; GW[i].due += x.due[i]; }); }
+  const gBack = gm.reduce((a, st) => a + (S.sim.stations[st.code]?.hours || 0), 0), gDay = gm.reduce((a, st) => a + capH(stationOf(st.code)), 0);
+  const sBack = S.sim.stations[jrkStation]?.hours || 0, sDay = capH(stationOf(jrkStation));
+  const cell = (due, cap) => { const r = cap ? due / cap : 0, c = r > 1 ? "over" : r > .85 ? "warn" : "";
+    return `<td title="Tähtajaga ${fmtH1(due)} h, vaba maht ${fmtH1(cap)} h"><span class="${c === "over" ? "late" : c === "warn" ? "risk" : ""}">${cap ? Math.round(r * 100) + "%" : "–"}</span> <small>${fmtH1(due)}/${fmtH1(cap)} h</small><div class="pbar ${c}"><i style="width:${Math.min(100, r * 100)}%"></i></div></td>`; };
+  $("jrkLoad").innerHTML = stationOf(jrkStation).is_external ? "" : `<div class="tw wltab"><table><thead><tr><th>Nädala koormus (tähtaegade järgi)</th>${W.map((w, i) => `<th>N${isoWeek(w.s)}${i === 0 ? " <small>(alates täna)</small>" : ""}</th>`).join("")}<th>Kõik ees ootavad tööd</th></tr></thead><tbody>
+    <tr><td><b class="mono">${esc(jrkStation)}</b> <small>${fmtH1(sDay)} h/päevas · ${fmtH1(sDay * 5)} h/näd</small></td>${W.map((w, i) => cell(SW.due[i], SW.cap[i])).join("")}
+      <td><b>${fmtH1(sBack)} h</b> <small>≈ ${fmtH1(sDay ? sBack / sDay : 0)} tööpäeva</small></td></tr>
+    ${gm.length > 1 ? `<tr class="gsum"><td><b>Grupp: ${esc(gName)}</b> <small>${gm.length} pinki (${gm.map(x => esc(x.code)).join(", ")}) · ${fmtH1(gDay)} h/päevas · ${fmtH1(gDay * 5)} h/näd</small></td>${GW.map(g => cell(g.due, g.cap)).join("")}
+      <td><b>${fmtH1(gBack)} h</b> <small>≈ ${fmtH1(gDay ? gBack / gDay : 0)} tööpäeva kogu grupi mahuga</small></td></tr>` : ""}
+    </tbody></table></div>`;
   const x = S.sim.stations[jrkStation];
   $("jrkTools").innerHTML = `<span class="muted">${isPlanner() ? "Lohista ⠿ või kasuta nooli (⚡ kiired on alati eespool) · " : ""}${list.length} etappi · ${fmtH1(x?.hours || 0)} h · vaba ${x?.queue ? fmtDate(x.freeDate) : "kohe"} · ${manual ? "<b>käsitsi järjekord</b>" : "järjestatud prioriteedi ja tähtaja järgi"}</span>` +
     (isPlanner() && manual ? `<button class="btn" id="jrkReset">Järjesta tähtaja järgi</button>` : "") +
