@@ -95,6 +95,33 @@
   .legend { display: flex; gap: 18px; font-size: 14px; color: var(--muted); }
   .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
 
+  .tile { cursor: pointer; }
+  #ov { position: absolute; inset: 0; background: rgba(5,8,9,.72); z-index: 20; display: flex; align-items: center; justify-content: center; }
+  #ovp { width: 1700px; height: 900px; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 26px 32px; display: flex; flex-direction: column; gap: 20px; box-shadow: 0 20px 60px rgba(0,0,0,.5); }
+  .ovh { display: flex; align-items: center; gap: 22px; }
+  .ovh .oc { font-family: var(--mono); font-size: 64px; font-weight: 700; line-height: 1; }
+  .ovh .og { font-size: 24px; color: var(--muted); }
+  .ovh .os { font-size: 22px; font-weight: 700; letter-spacing: .08em; padding: 6px 16px; border-radius: 8px; background: #262e31; }
+  .ovh .os.run { background: var(--run); color: #fff; } .ovh .os.pause { background: var(--pause); color: #1c1606; } .ovh .os.down { background: var(--down); color: #fff; }
+  .ovx { margin-left: auto; font: inherit; font-size: 22px; background: var(--panel2); color: var(--ink); border: 1px solid var(--line); border-radius: 10px; padding: 12px 22px; cursor: pointer; }
+  .ovb { flex: 1; display: grid; grid-template-columns: 430px 1fr; gap: 26px; min-height: 0; }
+  .ovl { display: flex; flex-direction: column; gap: 14px; }
+  .ovbox { background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 16px 20px; display: flex; flex-direction: column; gap: 6px; }
+  .ovbox small { font-size: 16px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .ovbox b { font-size: 28px; } .ovbox span { font-size: 18px; color: var(--muted); }
+  .ovbox.now b { font-size: 30px; } .ovbox.now span { font-size: 19px; color: var(--ink); margin-bottom: 6px; }
+  .ovbox.now.run { border-left: 8px solid var(--run); } .ovbox.now.pause { border-left: 8px solid var(--pause); } .ovbox.now.down { border-left: 8px solid var(--down); }
+  .ovbox .gl.big { --u: 1.6; display: flex; align-items: center; gap: 12px; font-family: var(--mono); font-size: 24px; font-weight: 700; }
+  .ovlink { margin-top: auto; text-align: center; font-size: 20px; font-weight: 600; color: var(--ink); text-decoration: none; background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
+  .ovq { min-height: 0; overflow: hidden; }
+  .ovq table { width: 100%; border-collapse: collapse; font-size: 20px; }
+  .ovq th { text-align: left; font-size: 15px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; padding: 0 10px 10px; border-bottom: 1px solid var(--line); }
+  .ovq td { padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  .ovq td small { display: block; font-size: 15px; color: var(--muted); }
+  .ovq .n { text-align: right; } .ovq td.lt { color: var(--late); font-weight: 700; }
+  .ovq .st { font-size: 16px; font-weight: 700; padding: 3px 10px; border-radius: 6px; white-space: nowrap; }
+  .ovq .st.run { background: var(--run); color: #fff; } .ovq .st.pause { background: var(--pause); color: #1c1606; } .ovq .st.ok { color: var(--done); border: 1px solid var(--done); } .ovq .st.wait { color: var(--muted); border: 1px solid var(--line); }
+  .ovq .more, .ovq .empty { color: var(--muted); font-size: 18px; padding: 12px 10px; }
   #tools { position: fixed; right: 12px; bottom: 10px; display: flex; gap: 8px; opacity: 0; transition: opacity .3s; }
   body.active #tools { opacity: 1; }
   body:not(.active) { cursor: none; }
@@ -121,6 +148,7 @@
     <div class="kpis" id="kpis"></div>
   </header>
   <div id="floor"><div id="floorIn"></div></div>
+  <div id="ov" class="hidden"><div id="ovp"></div></div>
   <aside>
     <div class="legend"><span><i style="background:var(--run)"></i>Töös</span><span><i style="background:var(--pause)"></i>Paus</span><span><i style="background:var(--down)"></i>Seisab</span><span><i style="background:#262e31;outline:1px solid var(--line)"></i>Vaba</span><span style="margin-left:auto">riba = nädala koormus</span></div>
     <div class="box" id="lateBox"><h3>Hilineb <b id="lateN"></b></h3><div class="rows" id="late"></div></div>
@@ -142,6 +170,7 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const pad = n => String(n).padStart(2, "0");
+const fmtD = d => d ? `${d.getDate()}.${d.getMonth() + 1}.` : "–";
 const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const parseD = v => { if (!v) return null; const [y, m, d] = String(v).slice(0, 10).split("-").map(Number); return new Date(y, m - 1, d); };
 const mondayOf = d => { const x = new Date(d); x.setHours(0, 0, 0, 0); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; };
@@ -181,7 +210,7 @@ async function load() {
     const since = new Date(Date.now() - 864e5).toISOString();
     const [jobs, stages, actual, stations, logs, reports] = await Promise.all([
       fetchAll(() => sb.from("jobs").select("id,wono,toote_id,drawing,nimetus,klient_nimi,kogus,tahtaeg,plan_week,material_date,kiire,prioriteet").eq("active", true).order("wono")),
-      fetchAll(() => sb.from("job_stages").select("id,job_id,seq,stage_code,status,planned_min,finished_at,wait_reason, jobs!inner(active)").eq("jobs.active", true).order("id")),
+      fetchAll(() => sb.from("job_stages").select("id,job_id,seq,stage_code,status,planned_min,finished_at,wait_reason,queue_pos, jobs!inner(active)").eq("jobs.active", true).order("id")),
       fetchAll(() => sb.from("v_stage_actual").select("*").order("stage_id")),
       fetchAll(() => sb.from("stations").select("*").order("code")),
       fetchAll(() => sb.from("time_logs").select("id,stage_id,worker_name,started_at").is("ended_at", null).order("id")),
@@ -220,6 +249,48 @@ function subscribe() {
 // ---------- joonistamine ----------
 const planned = s => s.planned_min ?? D.st[s.stage_code]?.default_min ?? 0;
 const label = j => j.toote_id || j.drawing || j.nimetus || "WO " + j.wono;
+
+let R = null, ovCode = null, ovT = null;
+const stLabel = { "käsil": "TÖÖS", "paus": "PAUS", "avatud": "saab alustada", "lukus": "ootab" };
+function openOv(code) { ovCode = code; renderOv(); $("ov").classList.remove("hidden"); bumpOv(); }
+function closeOv() { ovCode = null; $("ov").classList.add("hidden"); clearTimeout(ovT); }
+function bumpOv() { clearTimeout(ovT); ovT = setTimeout(closeOv, 90000); }   // teler läheb ise üldvaatesse tagasi
+function renderOv() {
+  if (!D || !R || !ovCode) return;
+  const st = D.st[ovCode]; if (!st) return closeOv();
+  const now = new Date(), runs = R.logsBy[ovCode] || [];
+  const q = D.stages.filter(s => s.stage_code === ovCode && s.state !== "valmis");
+  const rk = s => s.state === "käsil" ? 0 : s.state === "paus" ? 1 : 2;
+  q.sort((a, b) => (rk(a) - rk(b)) || (+!!b.job.kiire - +!!a.job.kiire) || ((a.queue_pos ?? 1e9) - (b.queue_pos ?? 1e9)) ||
+    (+!!b.job.prioriteet - +!!a.job.prioriteet) || String(a.job.tahtaeg || "9").localeCompare(String(b.job.tahtaeg || "9")) || String(a.job.wono).localeCompare(String(b.job.wono)));
+  const remH = q.reduce((a, s) => a + Math.max(0, planned(s) - s.actualMin) / 60, 0);
+  const L = R.loadOf(ovCode), dayH = +st.capacity_h || 0;
+  const state = st.down_since ? ["down", "SEISAB"] : runs.length ? ["run", "TÖÖS"] : q.some(s => s.state === "paus" && s.wait_reason) ? ["pause", "PAUS"] : ["idle", "VABA"];
+  const today = ymd(now);
+  const nowHtml = st.down_since ? `<b>${esc(st.down_note || "rike / hooldus")}</b><span>seisab alates ${new Date(st.down_since).toLocaleString("et-EE", { weekday: "short", hour: "2-digit", minute: "2-digit" })} · ${fmtClock(now - new Date(st.down_since))}</span>`
+    : runs.length ? runs.map(({ l, s }) => `<b>${esc(l.worker_name)}</b><span>${esc(label(s.job))} · WO ${esc(s.job.wono)} · <span class="timer" data-since="${l.started_at}">${fmtClock(now - new Date(l.started_at))}</span>${planned(s) ? ` / norm ${f1(planned(s) / 60)} h` : ""}</span>`).join("")
+    : `<b>Praegu keegi ei tööta</b><span>${q.filter(s => s.state === "avatud").length} tööd saab kohe alustada</span>`;
+  $("ovp").innerHTML = `<div class="ovh"><span class="oc">${esc(ovCode)}</span><span class="og">${esc(st.grupp || "")}${st.name ? " · " + esc(st.name) : ""}</span>
+      <span class="os ${state[0]}">${state[1]}</span><button class="ovx" data-ovx>✕ Sulge</button></div>
+    <div class="ovb">
+      <div class="ovl">
+        <div class="ovbox now ${state[0]}">${nowHtml}</div>
+        <div class="ovbox"><small>Selle nädala koormus</small><div class="gl big">${R.lbar(L.h, L.cap)}</div><span>${f1(L.h)} h / ${f1(L.cap)} h (${f1(dayH)} h päevas)</span></div>
+        <div class="ovbox"><small>Kõik ees ootavad tööd</small><b>${f1(remH)} h</b><span>${q.length} etappi${dayH ? ` · ≈ ${f1(remH / dayH)} tööpäeva` : ""}</span></div>
+        <a class="ovlink" href="index.html?st=${encodeURIComponent(ovCode)}">Ava pingi plaan kontorivaates ›</a>
+      </div>
+      <div class="ovq"><table><thead><tr><th>#</th><th>Töö</th><th>WO</th><th class="n">Kogus</th><th class="n">Norm</th><th>Tähtaeg</th><th>Olek</th></tr></thead><tbody>
+      ${q.length ? q.slice(0, 14).map((s, i) => {
+        const j = s.job, late = j.tahtaeg && j.tahtaeg < today;
+        const ol = s.state === "käsil" ? `<span class="st run">töös${s.workers ? "" : ""}</span>` : s.state === "paus" ? `<span class="st pause">paus${s.wait_reason ? ": " + esc(s.wait_reason) : ""}</span>`
+          : s.state === "lukus" ? `<span class="st wait">ootab ${esc(j.cur?.stage_code || "")}</span>` : `<span class="st ok">saab alustada</span>`;
+        return `<tr class="${late ? "late" : ""}"><td class="n">${i + 1}</td><td>${j.kiire ? "⚡ " : ""}<b>${esc(label(j))}</b><small>${esc(j.klient_nimi || "")}${j.tellimus ? " · " + esc(j.tellimus) : ""}</small></td>
+          <td class="mono">${esc(j.wono)}</td><td class="n">${esc(j.kogus ?? "")}</td><td class="n mono">${planned(s) ? f1(planned(s) / 60) + " h" : "–"}</td>
+          <td class="mono ${late ? "lt" : ""}">${j.tahtaeg ? fmtD(parseD(j.tahtaeg)) : "–"}</td><td>${ol}</td></tr>`;
+      }).join("") : `<tr><td colspan="7" class="empty">Sellel pingil pole töid.</td></tr>`}
+      </tbody></table>${q.length > 14 ? `<div class="more">… ja veel ${q.length - 14} tööd</div>` : ""}</div>
+    </div>`;
+}
 
 function render() {
   if (!D) return;
@@ -275,25 +346,26 @@ function render() {
   const lcls = r => r > 1 ? "over" : r > 0.85 ? "warn" : "ok";
   const lbar = (h, cap) => { if (!cap) return `<span class="lbar"></span><span class="pc">${h ? f1(h) + "h" : "–"}</span>`;
     const r = h / cap; return `<span class="lbar"><i class="${lcls(r)}" style="width:${Math.min(100, r * 100)}%"></i></span><span class="pc ${r > 0.85 ? lcls(r) : ""}">${Math.round(r * 100)}%</span>`; };
+  R = { loadOf, lbar, logsBy, inWk };
   const tile = st => {
     const runs = logsBy[st.code] || [], q = byStation[st.code] || [];
     const queueH = q.filter(inWk).reduce((a, s) => a + Math.max(0, planned(s) - s.actualMin) / 60, 0);
     const L = loadOf(st.code), ft = `<div class="ft">${lbar(L.h, L.cap)}</div>`;
-    if (st.down_since) return `<div class="tile down"><div class="body"><div class="h"><span class="c">${esc(st.code)}</span><span class="s">SEISAB</span></div>
+    if (st.down_since) return `<div data-st="${esc(st.code)}" class="tile down"><div class="body"><div class="h"><span class="c">${esc(st.code)}</span><span class="s">SEISAB</span></div>
       <div class="w">${esc(st.down_note || "rike / hooldus")}</div><div class="j">alates ${new Date(st.down_since).toLocaleString("et-EE", { weekday: "short", hour: "2-digit", minute: "2-digit" })}</div>
       <div class="t"><span>${fmtClock(now - new Date(st.down_since))}</span><span>${f1(queueH)} h ootel</span></div></div>${ft}</div>`;
     if (runs.length) {
       const { l, s } = runs[0], p = planned(s), r = p ? s.actualMin / p : 0;
-      return `<div class="tile run"><div class="body"><div class="h"><span class="c">${esc(st.code)}</span><span class="s">TÖÖS</span></div>
+      return `<div data-st="${esc(st.code)}" class="tile run"><div class="body"><div class="h"><span class="c">${esc(st.code)}</span><span class="s">TÖÖS</span></div>
         <div class="w">${esc(runs.map(x => x.l.worker_name).join(", "))}</div><div class="j">${s.job.kiire ? "KIIRE · " : ""}${esc(label(s.job))} · ${esc(s.job.klient_nimi || "")}</div>
         <div class="t"><span class="timer" data-since="${l.started_at}">${fmtClock(now - new Date(l.started_at))}</span><span>${p ? Math.round(r * 100) + "%" : ""}</span></div>
         <div class="pb"><i style="width:${Math.min(100, r * 100)}%"></i></div></div>${ft}</div>`;
     }
     const paused = q.filter(s => s.state === "paus" && s.wait_reason)[0];
-    if (paused) return `<div class="tile pause"><div class="body"><div class="h"><span class="c">${esc(st.code)}</span><span class="s">PAUS</span></div>
+    if (paused) return `<div data-st="${esc(st.code)}" class="tile pause"><div class="body"><div class="h"><span class="c">${esc(st.code)}</span><span class="s">PAUS</span></div>
       <div class="w">${esc(paused.wait_reason)}</div><div class="j">${esc(label(paused.job))}</div>
       <div class="t"><span></span><span>${f1(queueH)} h ootel</span></div></div>${ft}</div>`;
-    return `<div class="tile idle"><div class="body"><div class="h"><span class="c">${esc(st.code)}</span><span class="s">VABA</span></div>
+    return `<div data-st="${esc(st.code)}" class="tile idle"><div class="body"><div class="h"><span class="c">${esc(st.code)}</span><span class="s">VABA</span></div>
       <div class="w">${q.length ? `${q.length} ${q.length === 1 ? "töö" : "tööd"} ootel` : "töid pole"}</div><div class="j">${st.name ? esc(st.name) : ""}</div>
       <div class="t"><span></span><span style="color:var(--muted)">${queueH ? f1(queueH) + " h" : ""}</span></div></div>${ft}</div>`;
   };
@@ -303,6 +375,7 @@ function render() {
     return `<section class="grp"><h2><span>${esc(g.name)}</span><b>${run}/${g.list.length}</b></h2><div class="gl">${lbar(gh.h, gh.cap)}</div><div class="tiles">${g.list.map(tile).join("")}</div></section>`;
   }).join("");
   fitFloor();
+  if (ovCode) renderOv();
 
   // --- hilinejad
   $("lateN").textContent = late.length ? late.length : "";
@@ -350,6 +423,9 @@ function tick() {
 }
 setInterval(tick, 1000); tick();
 let idleT;
+$("floorIn").addEventListener("click", e => { const t = e.target.closest("[data-st]"); if (t) openOv(t.dataset.st); });
+$("ov").addEventListener("click", e => { if (e.target.id === "ov" || e.target.closest("[data-ovx]")) closeOv(); else bumpOv(); });
+addEventListener("keydown", e => { if (e.key === "Escape") closeOv(); });
 addEventListener("mousemove", () => { document.body.classList.add("active"); clearTimeout(idleT); idleT = setTimeout(() => document.body.classList.remove("active"), 3000); });
 </script>
 </body>

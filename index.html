@@ -678,7 +678,8 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt
 const store = { get(k){ try { return localStorage.getItem(k); } catch { return null; } }, set(k,v){ try { localStorage.setItem(k,v); } catch {} } };
 
 let S = { session:null, profile:null, jobs:[], stages:[], stations:{}, profiles:[], loadedAt:0, sim:null };
-let currentTab = store.get("tab2") || "tell";
+const URLST = new URLSearchParams(location.search).get("st");   // tv.html -> pingi plaan
+let currentTab = URLST ? "jrk" : (store.get("tab2") || "tell");
 let currentStation = store.get("station") || null;
 
 function showFatal(msg) {
@@ -2380,7 +2381,7 @@ const dwDrop = $("dwDrop");
 dwDrop.addEventListener("drop", async e => { if (!isPlanner()) return toast("Jooniseid saab lisada planeerija", true); uploadDrawings(await filesFromDrop(e.dataTransfer)); });
 
 // ---------- JÄRJEKORD ----------
-let jrkStation = store.get("jrkSt") || null;
+let jrkStation = URLST || store.get("jrkSt") || null;
 function renderJrk() {
   const own = ownStations();
   if (!jrkStation || !S.stations[jrkStation]) jrkStation = S.profile?.default_station || own[0]?.code || null;
