@@ -184,6 +184,26 @@
   .impact .up { color:var(--done); font-weight:600; } .impact .dn { color:var(--late); font-weight:600; }
   /* pinkide plaan */
   #jrkPicker { gap:6px 14px; align-items:flex-end; }
+  #jrkPicker:empty, #jrkLoad:empty, #jrkTools:empty { display:none; }
+  .pall { display:grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap:12px; }
+  .pcard { border:1px solid var(--line); border-radius:10px; overflow:hidden; display:flex; flex-direction:column; }
+  .pch { display:grid; grid-template-columns: 1fr auto; gap:2px 10px; text-align:left; background:var(--panel); border:none; padding:10px 14px; }
+  .pch b { font-size:1rem; } .pch .muted { font-size:.8rem; grid-column:1; } .pch .go { grid-row: 1 / 3; grid-column:2; align-self:center; font-size:1.3rem; color:var(--muted); }
+  .pch:hover { background: color-mix(in srgb, var(--ink) 9%, var(--panel)); }
+  .pwk { display:grid; grid-template-columns: repeat(6, minmax(0,1fr)); gap:6px; padding:10px 14px 4px; font-size:.78rem; }
+  .pwk small { display:block; font-family:var(--mono); color:var(--muted); font-size:.7rem; } .pwk div div small { display:none; }
+  .pwk .pbar { height:6px; margin-top:3px; } .pwk span { font-weight:600; }
+  .pst { display:flex; flex-wrap:wrap; gap:6px; padding:8px 14px 14px; }
+  .pst button { border:1px solid var(--line); background:var(--paper); border-radius:8px; padding:6px 10px; text-align:left; min-width:96px; }
+  .pst button:hover { border-color:var(--ink); }
+  .pst b { font-family:var(--mono); } .pst span { display:block; font-size:.74rem; color:var(--muted); }
+  .pst .pbar { height:5px; margin-top:4px; }
+  .pall .pbar i, .wltab .pbar i { background:var(--done); } .pall .pbar.warn i { background:var(--pause); } .pall .pbar.over i { background:var(--late); }
+  .dot { display:inline-block; width:9px; height:9px; border-radius:50%; background:var(--lock); margin-right:6px; vertical-align:1px; }
+  .dot.run { background:var(--run); } .dot.pause { background:var(--pause); } .dot.down { background:var(--late); }
+  .wltab tr.clk { cursor:pointer; } .wltab tr.clk:hover td { background: color-mix(in srgb, var(--ink) 4%, transparent); } .wltab td.go { color:var(--muted); font-size:1.2rem; min-width:0; }
+  .grpt td:nth-last-child(2) { white-space:normal; min-width:150px; } .grpt td:nth-last-child(2) small { display:block; }
+  table.jrk td.jt { cursor:pointer; } table.jrk td.jt:hover b { text-decoration:underline; }
   .wltab { margin:-4px 0 14px; } .wltab table { font-size:.82rem; } .wltab th { font-weight:600; white-space:nowrap; } .wltab th small { font-weight:400; color:var(--muted); }
   .wltab td { vertical-align:top; min-width:96px; } .wltab td:first-child { min-width:200px; max-width:300px; white-space:normal; }
   .wltab td small { color:var(--muted); font-size:.74rem; } .wltab td:first-child small, .wltab td:last-child small { display:block; }
@@ -1025,7 +1045,9 @@ function showTab(tab) {
   if (tab === "mark") setTimeout(() => (mkStation ? $("mkList") : $("mkWo")).focus(), 50);
   if (!["tell", "jrk"].includes(tab)) $("impact").classList.add("hidden");
 }
-$("tabs").onclick = e => { const b = e.target.closest("button[data-tab]"); if (b) { moreOpen = false; showTab(b.dataset.tab); } };
+$("tabs").onclick = e => { const b = e.target.closest("button[data-tab]"); if (!b) return; moreOpen = false;
+  if (b.dataset.tab === currentTab) { if (currentTab === "jrk") { jrkLevel = "all"; store.set("jrkLvl", "all"); jrkFrom = null; } if (currentTab === "tell") { tellOrder = null; tellFromSt = null; } }
+  showTab(b.dataset.tab); };
 $("tabs2").onclick = e => { const b = e.target.closest("button[data-tab]"); if (b) showTab(b.dataset.tab); };
 $("moreBtn").onclick = () => { moreOpen = !moreOpen; $("tabs2").classList.toggle("hidden", !(moreOpen || !MAIN_TABS.includes(currentTab))); };
 
@@ -1168,6 +1190,7 @@ $("jobsTable").onclick = e => {
 
 // ============ TELLIMUSED (avaleht) ============
 // Tellimus = sama kliendi sama tellimuse numbriga tööd. Tellimuseta töö on omaette "tellimus".
+let tellFromSt = null;
 let tellOrder = null, tellFilter = store.get("tellF") || "open", tellQ = "", jrkFrom = null;
 const orderKey = j => j.tellimus ? "T:" + (j.klient_nimi || "") + "|" + j.tellimus : "W:" + j.wono;
 const oLabel = o => `${o.klient || ""} · ${o.tellimus || "WO " + o.jobs[0].wono}`.replace(/^ · /, "");
@@ -1337,7 +1360,7 @@ function renderOrders(orders) {
 
 function renderOrder(o) {
   const pl = isPlanner(), t0 = today0();
-  $("tellCrumb").innerHTML = `<a data-tc="list">‹ Tellimused</a> › <b>${esc(oLabel(o))}</b>`;
+  $("tellCrumb").innerHTML = `<a data-tc="list">‹ Tellimused</a> › <b>${esc(oLabel(o))}</b>` + (tellFromSt ? `<a class="x" data-tcst="${esc(tellFromSt)}" style="margin-left:auto">‹ tagasi pingi ${esc(tellFromSt)} plaani</a>` : "");
   const dn = o.jobs.length - o.open.length;
   const whys = !o.done && o.worst?.why?.length ? o.worst.why.slice(0, 3).map(w => `<span class="why w-${w.k}">${esc(w.t)}</span>`).join(" ") : "";
   const hero = `<div class="ohero r-${o.risk}">
@@ -1406,7 +1429,7 @@ function renderOrder(o) {
 }
 
 function openStationPlan(code, o) {
-  jrkStation = code; store.set("jrkSt", code);
+  jrkStation = code; store.set("jrkSt", code); jrkLevel = "station"; store.set("jrkLvl", "station");
   jrkFrom = o ? { key: o.key, label: oLabel(o) } : null;
   showTab("jrk");
   const r = document.querySelector("#jrkBody tr.hl"); if (r) r.scrollIntoView({ block: "center" }); else window.scrollTo(0, 0);
@@ -1419,7 +1442,8 @@ $("tab-tell").addEventListener("click", e => {
   const jb = e.target.closest("[data-jbolt]");
   if (jb) { const j = S.jobs.find(x => x.id === jb.dataset.jbolt); if (j) toggleKiire([j], `${j.toote_id || "WO " + j.wono} (${j.tellimus || ""})`); return; }
   const f = e.target.closest("[data-tf]"); if (f) { tellFilter = f.dataset.tf; store.set("tellF", tellFilter); return renderTell(); }
-  const c = e.target.closest("[data-tc]"); if (c) { tellOrder = null; renderTell(); return window.scrollTo(0, 0); }
+  const bs = e.target.closest("[data-tcst]"); if (bs) { const c0 = bs.dataset.tcst; tellFromSt = null; jrkFrom = null; jrkStation = c0; jrkLevel = "station"; showTab("jrk"); return; }
+  const c = e.target.closest("[data-tc]"); if (c) { tellOrder = null; tellFromSt = null; renderTell(); return window.scrollTo(0, 0); }
   const pr = e.target.closest("[data-oprint]"); if (pr) { const o = orders().find(x => x.key === pr.dataset.oprint); if (o) printDrawings(o.open.length ? o.open : o.jobs); return; }
   const g = e.target.closest("[data-gst],[data-ost]");
   if (g) { const o = orders().find(x => x.key === tellOrder); return openStationPlan(g.dataset.gst || g.dataset.ost, o); }
@@ -2382,7 +2406,60 @@ dwDrop.addEventListener("drop", async e => { if (!isPlanner()) return toast("Joo
 
 // ---------- JÄRJEKORD ----------
 let jrkStation = URLST || store.get("jrkSt") || null;
+let jrkLevel = URLST ? "station" : (store.get("jrkLvl") || "all"), jrkGroup = store.get("jrkGrp") || null;   // all -> group -> station
+function setJrk(level, val) {
+  jrkLevel = level; store.set("jrkLvl", level);
+  if (level === "group") { jrkGroup = val; store.set("jrkGrp", val); }
+  if (level === "station") { jrkStation = val; store.set("jrkSt", val); const g = stationOf(val).grupp || NOGROUP; jrkGroup = g; store.set("jrkGrp", g); }
+  if (level !== "station") jrkFrom = null;
+  renderJrk(); window.scrollTo(0, 0);
+}
+const loadCls = r => r > 1 ? "over" : r > .85 ? "warn" : "";
+const loadCell = (due, cap, tag = "td") => { const r = cap ? due / cap : 0, c = loadCls(r);
+  return `<${tag} title="Tähtajaga ${fmtH1(due)} h, vaba maht ${fmtH1(cap)} h"><span class="${c === "over" ? "late" : c === "warn" ? "risk" : ""}">${cap ? Math.round(r * 100) + "%" : "–"}</span> <small>${fmtH1(due)}/${fmtH1(cap)} h</small><div class="pbar ${c}"><i style="width:${Math.min(100, r * 100)}%"></i></div></${tag}>`; };
+function groupLoad(stations, W) {
+  const GW = W.map(() => ({ cap: 0, due: 0 }));
+  for (const st of stations) { const x = stationWeeks(st.code, W); x.cap.forEach((c, i) => { GW[i].cap += c; GW[i].due += x.due[i]; }); }
+  const back = stations.reduce((a, st) => a + (S.sim.stations[st.code]?.hours || 0), 0), day = stations.reduce((a, st) => a + capH(stationOf(st.code)), 0);
+  return { GW, back, day };
+}
+const runningAt = code => S.stages.filter(s => s.stage_code === code && s.state === "käsil");
+const stDot = code => { const st = stationOf(code); if (st.down_since) return `<i class="dot down" title="Seisab"></i>`;
+  const r = runningAt(code); if (r.length) return `<i class="dot run" title="Töös: ${esc(r.map(x => x.workers).filter(Boolean).join(", "))}"></i>`;
+  return S.stages.some(s => s.stage_code === code && s.state === "paus") ? `<i class="dot pause" title="Paus"></i>` : `<i class="dot" title="Vaba"></i>`; };
+
+// 1. samm: kõik grupid
+function renderJrkAll() {
+  $("jrkCrumb").innerHTML = `<b>Kõik pingid</b><span class="muted">— vali grupp või pink</span>`;
+  $("jrkPicker").innerHTML = ""; $("jrkLoad").innerHTML = ""; $("jrkTools").innerHTML = "";
+  const W = weeksN(6);
+  $("jrkList").innerHTML = `<div class="pall">${groupList().map(g => {
+    const L = groupLoad(g.stations, W);
+    return `<div class="pcard"><button class="pch" data-pgrp="${esc(g.name)}"><b>${esc(g.name)}</b><span class="muted">${g.stations.length} ${g.stations.length === 1 ? "pink" : "pinki"} · ${fmtH1(L.day * 5)} h/näd · ees ${fmtH1(L.back)} h ≈ ${fmtH1(L.day ? L.back / L.day : 0)} tp</span><span class="go">›</span></button>
+      <div class="pwk">${W.map((w, i) => `<div><small>N${isoWeek(w.s)}</small>${loadCell(L.GW[i].due, L.GW[i].cap, "div")}</div>`).join("")}</div>
+      <div class="pst">${g.stations.map(st => { const x = stationWeeks(st.code, W.slice(0, 1)), r = x.cap[0] ? x.due[0] / x.cap[0] : 0, n = S.sim.stations[st.code]?.queue || 0;
+        return `<button data-pst="${esc(st.code)}">${stDot(st.code)}<b>${esc(st.code)}</b><span>${n} tööd · ${fmtH1(S.sim.stations[st.code]?.hours || 0)} h</span><div class="pbar ${loadCls(r)}"><i style="width:${Math.min(100, r * 100)}%"></i></div></button>`; }).join("")}</div></div>`;
+  }).join("")}</div>
+  <p class="note">Ribad = tähtaegadega tööde tunnid nädala vaba mahu suhtes (roheline kuni 85%, kollane kuni 100%, punane üle). Pingi riba = see nädal. ${isPlanner() ? `<a class="linklike" data-gosettings2>⚙ Muuda pinkide gruppe</a>` : ""}</p>`;
+}
+// 2. samm: üks grupp (analoogpingid kõrvuti)
+function renderJrkGroup() {
+  const g = groupList().find(x => x.name === jrkGroup); if (!g) return setJrk("all");
+  $("jrkCrumb").innerHTML = `<a data-crumb="all">‹ Kõik pingid</a> › <b>${esc(g.name)}</b>`;
+  $("jrkPicker").innerHTML = ""; $("jrkLoad").innerHTML = ""; $("jrkTools").innerHTML = "";
+  const W = weeksN(6), L = groupLoad(g.stations, W);
+  const rows = g.stations.map(st => { const x = stationWeeks(st.code, W), sim = S.sim.stations[st.code], d = capH(stationOf(st.code));
+    const run = runningAt(st.code);
+    return `<tr class="clk" data-pst="${esc(st.code)}"><td>${stDot(st.code)}<b class="mono">${esc(st.code)}</b> <small>${fmtH1(d)} h/päevas${run.length ? " · töös: " + esc(run.map(r => jobLabel(r.job)).join(", ")) : ""}</small></td>
+      ${W.map((w, i) => loadCell(x.due[i], x.cap[i])).join("")}<td><b>${fmtH1(sim?.hours || 0)} h</b> <small>${sim?.queue || 0} tööd · vaba ${sim?.queue ? fmtDate(sim.freeDate) : "kohe"}</small></td><td class="go">›</td></tr>`; }).join("");
+  $("jrkList").innerHTML = `<p class="note" style="margin-top:0">Sama grupi pingid on analoogsed — kui üks on üle koormatud ja teisel on ruumi, saab töid nende vahel ümber tõsta. Vali pink, et näha selle järjekorda.</p>
+    <div class="tw wltab grpt"><table><thead><tr><th>Pink</th>${W.map((w, i) => `<th>N${isoWeek(w.s)}${i === 0 ? " <small>(alates täna)</small>" : ""}</th>`).join("")}<th>Ees ootab</th><th></th></tr></thead><tbody>${rows}
+    <tr class="gsum"><td><b>Grupp kokku</b> <small>${g.stations.length} pinki · ${fmtH1(L.day)} h/päevas · ${fmtH1(L.day * 5)} h/näd</small></td>${L.GW.map(x => loadCell(x.due, x.cap)).join("")}
+      <td><b>${fmtH1(L.back)} h</b> <small>≈ ${fmtH1(L.day ? L.back / L.day : 0)} tööpäeva kogu grupi mahuga</small></td><td></td></tr></tbody></table></div>`;
+}
 function renderJrk() {
+  if (jrkLevel === "all") return renderJrkAll();
+  if (jrkLevel === "group") return renderJrkGroup();
   const own = ownStations();
   if (!jrkStation || !S.stations[jrkStation]) jrkStation = S.profile?.default_station || own[0]?.code || null;
   const stBtn = s => { const n = S.sim.stations[s.code]?.queue || 0;
@@ -2392,8 +2469,10 @@ function renderJrk() {
   if (!jrkStation) { $("jrkList").innerHTML = `<div class="empty">Pinke pole.</div>`; return; }
   const list = S.stages.filter(s => s.stage_code === jrkStation && s.state !== "valmis").sort(queueSort);
   const manual = list.some(s => s.queue_pos != null);
+  const gN = stationOf(jrkStation).grupp || NOGROUP;
   $("jrkCrumb").innerHTML = jrkFrom ? `<a data-crumb="list">Tellimused</a> › <a data-crumb="order">${esc(jrkFrom.label)}</a> › <b>Pink ${esc(jrkStation)}</b>
-      <span class="muted">— selle tellimuse tööd on kollasega</span><button class="x" data-crumb="clear">Peida märgistus ✕</button>` : "";
+      <span class="muted">— selle tellimuse tööd on kollasega</span><button class="x" data-crumb="clear">Peida märgistus ✕</button>`
+    : `<a data-crumb="all">‹ Kõik pingid</a> › <a data-crumb="group">${esc(gN)}</a> › <b>Pink ${esc(jrkStation)}</b><span class="muted">— klõpsa tööl, et näha kogu tellimust</span>`;
   const W = weeksN(6), SW = stationWeeks(jrkStation, W);
   const gName = stationOf(jrkStation).grupp || NOGROUP, grp = groupList().find(g => g.name === gName);
   const gm = grp ? grp.stations : [];
@@ -2420,7 +2499,7 @@ function renderJrk() {
       const prog = s.pStart != null ? `${fmtDate(addWorkdays(today0(), s.pStart))} – ${fmtDate(addWorkdays(today0(), s.pEnd))}` : "–";
       const stateTxt = s.state === "lukus" ? `ootab <span class="mono">${esc(s.blockedBy.stage_code)}</span>` : s.state === "avatud" ? "saab alustada" : s.state;
       return `<tr class="r-${riskCls(j)}${pinned ? " pinned" : ""}${jrkFrom && orderKey(j) === jrkFrom.key ? " hl" : ""}" data-sid="${s.id}"><td class="num mono">${canMove && !pinned ? `<span class="grip" title="Lohista">⠿</span>` : ""}${i + 1}</td>
-        <td>${j.kiire ? "⚡ " : ""}<b>${esc(jobLabel(j))}</b>${j.prioriteet ? ` <span class="prio">PRIO</span>` : ""}<br><span class="muted">WO ${esc(j.wono)} · ${esc(j.tellimus || "")} · ${esc(j.nimetus || "")} · ${esc(j.kogus ?? "")} tk</span></td>
+        <td class="jt" data-jord="${esc(orderKey(j))}" title="Ava tellimus">${j.kiire ? "⚡ " : ""}<b>${esc(jobLabel(j))}</b>${j.prioriteet ? ` <span class="prio">PRIO</span>` : ""}<br><span class="muted">WO ${esc(j.wono)} · ${esc(j.tellimus || "")} · ${esc(j.nimetus || "")} · ${esc(j.kogus ?? "")} tk</span></td>
         <td class="num">${s.unknown ? `<span class="risk">puudub</span>` : fmtH(plannedMin(s))}</td>
         <td class="${j.overdue ? "late" : ""}">${fmtDate(parseDate(j.tahtaeg))}</td>
         <td class="${riskCls(j) === "ok" ? "" : riskCls(j)}">${prog}${j.slack != null && j.slack < 0 ? ` (+${-j.slack} p)` : ""}</td>
@@ -2428,13 +2507,22 @@ function renderJrk() {
         ${canMove ? `<td class="mv">${pinned ? `<span class="muted">töös</span>` : `<button data-jmv="top" data-id="${s.id}" title="Esimeseks">⤒</button><button data-jmv="up" data-id="${s.id}" title="Üles">↑</button><button data-jmv="down" data-id="${s.id}" title="Alla">↓</button>`}</td>` : ""}</tr>`;
     }).join("") + `</tbody></table></div>` : `<div class="empty">Sellel pingil pole pooleli töid.</div>`;
 }
-$("jrkPicker").onclick = e => { if (e.target.closest("[data-gosettings]")) { showTab("seaded"); return; } const b = e.target.closest("button[data-jst]"); if (!b) return; jrkStation = b.dataset.jst; store.set("jrkSt", jrkStation); renderJrk(); };
+$("jrkPicker").onclick = e => { if (e.target.closest("[data-gosettings]")) { showTab("seaded"); return; } const b = e.target.closest("button[data-jst]"); if (!b) return; setJrk("station", b.dataset.jst); };
 $("jrkCrumb").onclick = e => {
   const a = e.target.closest("[data-crumb]"); if (!a) return;
+  if (a.dataset.crumb === "all") return setJrk("all");
+  if (a.dataset.crumb === "group") return setJrk("group", stationOf(jrkStation).grupp || NOGROUP);
   if (a.dataset.crumb === "list") { tellOrder = null; showTab("tell"); }
   else if (a.dataset.crumb === "order") { tellOrder = jrkFrom.key; showTab("tell"); }
   else { jrkFrom = null; renderJrk(); }
 };
+$("jrkList").addEventListener("click", e => {
+  if (e.target.closest("[data-gosettings2]")) return showTab("seaded");
+  const g = e.target.closest("[data-pgrp]"); if (g) return setJrk("group", g.dataset.pgrp);
+  const p = e.target.closest("[data-pst]"); if (p) return setJrk("station", p.dataset.pst);
+  const o = e.target.closest("td.jt[data-jord]");
+  if (o && !e.target.closest(".grip")) { tellOrder = o.dataset.jord; tellFromSt = jrkStation; showTab("tell"); window.scrollTo(0, 0); }
+});
 $("jrkTools").addEventListener("click", async e => {
   const pr = e.target.closest("[data-print-st]"); if (pr) return printStation(pr.dataset.printSt);
   const pd = e.target.closest("[data-print-dw]"); if (pd) return printDrawings(S.stages.filter(s => s.stage_code === pd.dataset.printDw && s.state !== "valmis").sort(queueSort).map(s => s.job));
