@@ -58,6 +58,163 @@
   nav.tabs button.on { color:var(--ink); border-bottom-color:var(--accent); }
   main { max-width: 1180px; margin: 0 auto; padding: 18px 16px 80px; }
   .toolbar { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:14px; }
+  nav.tabs button.more { margin-left:auto; font-size:.9rem; }
+  nav.tabs2 { margin-top:0; border-top:1px dashed var(--line); }
+  nav.tabs2 button { font-size:.9rem; padding:7px 12px; }
+
+  /* ---- tellimused ---- */
+  .crumb { font-size:.92rem; color:var(--muted); margin:0 0 12px; display:flex; flex-wrap:wrap; gap:6px; align-items:center; min-height:0; }
+  .crumb:empty { display:none; }
+  .crumb a { color:var(--accent); cursor:pointer; text-decoration:none; font-weight:600; }
+  .crumb a:hover { text-decoration:underline; }
+  .crumb b { color:var(--ink); }
+  .crumb .x { margin-left:auto; background:none; border:1px solid var(--line); border-radius:5px; padding:2px 8px; font-size:.8rem; color:var(--muted); }
+  .osum { display:grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap:8px; margin-bottom:12px; }
+  .osum button { text-align:left; border:1px solid var(--line); background:var(--paper); border-radius:8px; padding:9px 12px; border-top:4px solid var(--line); }
+  .osum button b { display:block; font-family:var(--mono); font-size:1.5rem; line-height:1.15; }
+  .osum button span { font-size:.82rem; color:var(--muted); }
+  .osum button.on { background: color-mix(in srgb, var(--ink) 6%, var(--paper)); border-color: var(--ink); }
+  .osum .s-late { border-top-color: var(--late); } .osum .s-late b { color: var(--late); }
+  .osum .s-risk { border-top-color: var(--pause); } .osum .s-ok { border-top-color: var(--done); } .osum .s-done { border-top-color: var(--lock); }
+  @media (max-width: 700px) { .osum { grid-template-columns: repeat(3, minmax(0,1fr)); } }
+  .olist { border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+  .orow, .ohead { display:grid; grid-template-columns: 40px minmax(160px,1.4fr) minmax(90px,.7fr) 150px 170px minmax(170px,1.4fr) 22px; gap:12px; align-items:center; padding:9px 12px; }
+  .ohead { background:var(--panel); font-size:.78rem; color:var(--muted); font-weight:600; padding-top:6px; padding-bottom:6px; }
+  .orow { border-top:1px solid var(--line); cursor:pointer; box-shadow: inset 4px 0 transparent; }
+  .orow:hover { background: color-mix(in srgb, var(--ink) 4%, transparent); }
+  .orow.r-late { box-shadow: inset 4px 0 var(--late); } .orow.r-risk { box-shadow: inset 4px 0 var(--pause); }
+  .orow.r-done { opacity:.6; }
+  .oname { min-width:0; } .oname b { font-weight:600; } .oname .mono { font-size:.88rem; }
+  .oname small { display:block; color:var(--muted); font-size:.8rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .oname .whys { margin-top:3px; }
+  .ogo { color:var(--muted); font-size:1.3rem; text-align:right; }
+  .bolt { width:34px; height:34px; border-radius:50%; border:1px solid var(--line); background:var(--paper); font-size:1rem; line-height:1; filter: grayscale(1); opacity:.45; padding:0; }
+  .bolt:hover { opacity:.8; }
+  .bolt.on { filter:none; opacity:1; background: color-mix(in srgb, #e9c46a 35%, var(--paper)); border-color:#c08a1e; }
+  .bolt.some { filter:none; opacity:.75; border-style:dashed; border-color:#c08a1e; }
+  .bolt:disabled { cursor:default; }
+  .pbar { display:flex; height:9px; border-radius:5px; background: color-mix(in srgb, var(--ink) 10%, transparent); overflow:hidden; }
+  .pbar i { display:block; height:100%; } .pbar .d { background:var(--done); } .pbar .r { background:var(--run); }
+  .oprog small { font-family:var(--mono); font-size:.78rem; color:var(--muted); }
+  .odates { font-size:.88rem; line-height:1.35; }
+  .odates .mono { font-weight:600; }
+  .vchip { display:inline-block; font-size:.74rem; font-weight:700; padding:1px 8px; border-radius:9px; margin-top:2px; white-space:nowrap; }
+  .vchip.late { background: color-mix(in srgb, var(--late) 16%, var(--paper)); color:var(--late); }
+  .vchip.risk { background: color-mix(in srgb, var(--pause) 22%, var(--paper)); color: var(--ink); }
+  .vchip.ok { background: color-mix(in srgb, var(--done) 16%, var(--paper)); color: var(--done); }
+  .vchip.done { background: var(--panel); color: var(--muted); }
+  .otl { position:relative; height:26px; }
+  .otl .wk { position:absolute; top:0; bottom:0; border-left:1px solid color-mix(in srgb, var(--line) 70%, transparent); }
+  .otl .bar { position:absolute; top:8px; height:10px; border-radius:5px; background: var(--done); }
+  .otl .bar.late { background: var(--late); } .otl .bar.risk { background: var(--pause); }
+  .otl .bar.surf { opacity:.55; background-image: repeating-linear-gradient(135deg, transparent 0 4px, rgba(255,255,255,.55) 4px 7px); border-radius:0 5px 5px 0; }
+  .otl .bar.in { border-radius:5px 0 0 5px; }
+  .otl .idue { position:absolute; top:4px; bottom:4px; width:0; border-left:2px dashed var(--muted); }
+  .odates small, .oin small { display:block; font-size:.76rem; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .oin { font-size:.88rem; line-height:1.35; }
+  .oin .mono, .odates .mono { font-weight:600; }
+  .gtrack .idue { position:absolute; top:0; bottom:0; border-left:2px dashed var(--muted); z-index:1; }
+  .gtrack .idue span { position:absolute; top:2px; left:3px; font-size:.66rem; color:var(--muted); white-space:nowrap; background:var(--paper); padding:0 2px; }
+  .otl .due { position:absolute; top:2px; bottom:2px; width:0; border-left:2px solid var(--ink); }
+  .otl .due::after { content:""; position:absolute; top:-3px; left:-5px; border:4px solid transparent; border-top:5px solid var(--ink); }
+  .otl .now { position:absolute; top:0; bottom:0; border-left:2px dotted var(--accent); }
+  .otl .more { position:absolute; right:-2px; top:4px; font-size:.75rem; color:var(--muted); }
+  .ohead .tlh { position:relative; height:16px; }
+  .ohead .tlh span { position:absolute; top:0; font-family:var(--mono); font-size:.72rem; transform:translateX(2px); }
+  @media (max-width: 900px) {
+    .ohead { display:none; }
+    .orow { grid-template-columns: 40px 1fr 1fr 22px; grid-template-areas: "b n n g" "b p p g" "b i d g" "b t t g"; row-gap:6px; }
+    .orow .bolt { grid-area:b; align-self:start; } .orow .oname { grid-area:n; } .orow .oprog { grid-area:p; } .orow .oin { grid-area:i; } .orow .odates { grid-area:d; } .orow .otl { grid-area:t; } .orow .ogo { grid-area:g; }
+  }
+  /* tellimuse detail */
+  .ohero { display:grid; grid-template-columns: 1fr repeat(3, auto); gap:10px 22px; align-items:end; border:1px solid var(--line); border-radius:8px; padding:14px 16px; border-left:6px solid var(--done); margin-bottom:14px; }
+  .ohero.r-late { border-left-color: var(--late); } .ohero.r-risk { border-left-color: var(--pause); } .ohero.r-done { border-left-color: var(--lock); }
+  .ohero h2 { margin:0; font-size:1.25rem; }
+  .ohero .big small { display:block; font-size:.78rem; color:var(--muted); }
+  .ohero .big b { font-family:var(--mono); font-size:1.35rem; }
+  .ohero .wide { grid-column: 1 / -1; display:flex; flex-wrap:wrap; gap:10px 16px; align-items:center; }
+  .ohero .wide .pbar { flex:1; min-width:180px; height:12px; }
+  @media (max-width: 700px) { .ohero { grid-template-columns: repeat(3, 1fr); } .ohero > div:first-child { grid-column: 1 / -1; } }
+  .gwrap { border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+  .grow2 { display:grid; grid-template-columns: minmax(230px, 300px) 1fr; border-top:1px solid var(--line); }
+  .grow2:first-child { border-top:0; }
+  .grow2.gh { background:var(--panel); font-size:.75rem; color:var(--muted); }
+  .ginfo { padding:8px 10px; display:flex; gap:8px; align-items:flex-start; min-width:0; border-right:1px solid var(--line); }
+  .ginfo .bolt { width:28px; height:28px; font-size:.85rem; flex:none; }
+  .ginfo .t { min-width:0; flex:1; }
+  .ginfo .t b { font-family:var(--mono); font-size:.9rem; }
+  .ginfo .t small { display:block; color:var(--muted); font-size:.78rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .ginfo .dn { font-family:var(--mono); font-size:.7rem; color:var(--done); font-weight:600; }
+  .gtrack { position:relative; min-height:52px; }
+  @media (max-width: 760px) {
+    .grow2 { grid-template-columns: 1fr; }
+    .ginfo { border-right:0; border-bottom:1px dashed var(--line); }
+    .grow2.gh .ginfo { display:none; }
+    .gtrack .wkl .muted { display:none; }
+  }
+  .gh .gtrack { min-height:22px; }
+  .gtrack .day { position:absolute; top:0; bottom:0; }
+  .gtrack .day.we { background: color-mix(in srgb, var(--ink) 5%, transparent); }
+  .gtrack .wkl { position:absolute; top:3px; font-family:var(--mono); font-size:.72rem; padding-left:3px; border-left:1px solid var(--line); height:16px; }
+  .gtrack .now { position:absolute; top:0; bottom:0; border-left:2px dotted var(--accent); z-index:1; }
+  .gtrack .due { position:absolute; top:0; bottom:0; border-left:2px dashed var(--ink); z-index:1; }
+  .gtrack .due.late { border-left-color: var(--late); }
+  .gtrack .due span { position:absolute; bottom:2px; left:3px; font-size:.68rem; font-weight:600; white-space:nowrap; background:var(--paper); padding:0 2px; }
+  .seg { position:absolute; top:12px; height:26px; border-radius:4px; border:1px solid color-mix(in srgb, var(--ink) 35%, transparent); background: color-mix(in srgb, var(--accent) 22%, var(--paper));
+         font-family:var(--mono); font-size:.72rem; font-weight:700; padding:0 4px; overflow:hidden; white-space:nowrap; text-overflow:clip; color:var(--ink); z-index:2; min-width:6px; }
+  .seg:hover { outline:2px solid var(--ink); z-index:3; }
+  .seg.käsil { background:var(--run); color:#fff; border-color:var(--run); }
+  .seg.paus { background:var(--pause); color:#1c1606; border-color:var(--pause); }
+  .seg.ext { background: repeating-linear-gradient(135deg, var(--panel) 0 5px, color-mix(in srgb, var(--ink) 10%, var(--panel)) 5px 10px); color:var(--muted); }
+  .seg.wait { box-shadow: inset 0 -3px 0 var(--late); }
+  .gtrack .fin { position:absolute; left:8px; top:16px; font-size:.82rem; color:var(--done); font-weight:600; }
+  .legend { display:flex; flex-wrap:wrap; gap:14px; font-size:.78rem; color:var(--muted); margin:8px 2px 16px; }
+  .legend i { display:inline-block; width:22px; height:10px; border-radius:3px; vertical-align:-1px; margin-right:5px; border:1px solid color-mix(in srgb, var(--ink) 30%, transparent); }
+  .nextst { display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:8px; }
+  .nextst button { text-align:left; border:1px solid var(--line); background:var(--paper); border-radius:8px; padding:10px 12px; }
+  .nextst button:hover { border-color:var(--ink); }
+  .nextst b { font-family:var(--mono); font-size:1.05rem; } .nextst small { display:block; color:var(--muted); font-size:.8rem; }
+  .nextst .pbar { margin-top:6px; height:6px; }
+  /* mõju */
+  .impact { border:1px solid var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--paper)); border-radius:8px; padding:10px 40px 10px 14px; margin-bottom:14px; position:relative; font-size:.9rem; }
+  .impact b.t { display:block; margin-bottom:4px; }
+  .impact .x { position:absolute; right:8px; top:6px; background:none; border:none; font-size:1.2rem; color:var(--muted); }
+  .impact .ln { display:flex; flex-wrap:wrap; gap:4px 10px; margin-top:3px; }
+  .impact a { cursor:pointer; text-decoration:underline; text-decoration-color: var(--line); }
+  .impact .up { color:var(--done); font-weight:600; } .impact .dn { color:var(--late); font-weight:600; }
+  /* pinkide plaan */
+  table.jrk tr.hl td { background: color-mix(in srgb, #e9c46a 22%, var(--paper)); }
+  .wload { display:flex; flex-wrap:wrap; gap:8px; margin:-6px 0 12px; }
+  .wload > div { border:1px solid var(--line); border-radius:6px; padding:5px 10px; min-width:96px; font-size:.78rem; color:var(--muted); }
+  .wload > div b { color:var(--ink); font-family:var(--mono); }
+  .wload .pbar { height:6px; margin-top:4px; } .wload .pbar i { background:var(--done); } .wload .warn i { background:var(--pause); } .wload .over i { background:var(--late); }
+  /* märgi tehtuks */
+  .mk { max-width: 860px; }
+  .mkst button { min-width:58px; }
+  .mk-row { display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; }
+  .mk-in { display:flex; gap:8px; flex:1; min-width:260px; }
+  .mk-in input { font-size:1.35rem; font-family:var(--mono); padding:12px 14px; flex:1; }
+  .mk-in .btn { font-size:1rem; padding:0 18px; }
+  .mk-date { width:170px; margin-bottom:0; } .mk-date input { padding:12px; width:100%; border:1px solid var(--line); border-radius:6px; background:var(--paper); }
+  .mk-date.past input { border-color: var(--pause); background: color-mix(in srgb, var(--pause) 15%, var(--paper)); }
+  .mkmsg { padding:8px 12px; border-radius:6px; margin-top:8px; font-size:.92rem; border:1px solid var(--line); }
+  .mkmsg.ok { border-color: var(--done); background: color-mix(in srgb, var(--done) 10%, var(--paper)); }
+  .mkmsg.err { border-color: var(--late); background: color-mix(in srgb, var(--late) 10%, var(--paper)); color: var(--ink); }
+  .mkcard { border:1px solid var(--line); border-radius:8px; padding:12px 14px; margin-top:12px; }
+  .mkcard h3 { margin:0 0 2px; font-size:1.05rem; } .mkcard .muted { font-size:.86rem; }
+  .mkroute { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; align-items:center; }
+  .mkroute button { font-family:var(--mono); font-weight:700; font-size:1rem; min-width:72px; padding:10px 12px; border-radius:8px; border:1px solid var(--line); background:var(--paper); }
+  .mkroute button small { display:block; font-family:var(--sans); font-weight:500; font-size:.7rem; color:var(--muted); }
+  .mkroute button.valmis { background: color-mix(in srgb, var(--done) 16%, var(--paper)); border-color: var(--done); color: var(--done); cursor:default; }
+  .mkroute button.next { border:2px solid var(--ink); }
+  .mkroute button:not(.valmis):hover { background: var(--ink); color: var(--paper); }
+  .mkroute button:not(.valmis):hover small { color: var(--paper); }
+  .mkroute .ar { color:var(--muted); }
+  .mklog { border:1px solid var(--line); border-radius:8px; }
+  .mklog > div { display:grid; grid-template-columns: 52px 1fr auto; gap:10px; padding:8px 12px; border-top:1px solid var(--line); align-items:center; font-size:.9rem; }
+  .mklog > div:first-child { border-top:0; }
+  .mklog .tm { font-family:var(--mono); color:var(--muted); font-size:.82rem; }
+  .mklog .cd { font-family:var(--mono); font-weight:700; }
   .toolbar > * { flex: 0 0 auto; }
   .toolbar input[type=search], .toolbar select { width:auto; min-width: 180px; }
   .chk { display:flex; gap:6px; align-items:center; font-size:.9rem; }
@@ -334,11 +491,16 @@
       <span class="who"><a href="too.html" style="color:inherit">Sisestus</a><a href="tv.html" target="_blank" rel="noopener" style="color:inherit;margin-left:12px" title="Tehase teleriekraan (avaneb uues aknas)">📺 Teler</a><span id="whoName"></span><button id="logoutBtn">Logi välja</button></span>
     </div>
     <nav class="tabs" id="tabs">
+      <button data-tab="tell">Tellimused</button>
+      <button data-tab="jrk">Pinkide plaan</button>
+      <button data-tab="mark" data-disp>Märgi tehtuks</button>
+      <button id="moreBtn" class="more" type="button">Rohkem ▾</button>
+    </nav>
+    <nav class="tabs tabs2 hidden" id="tabs2">
       <button data-tab="pink">Pink</button>
       <button data-tab="tood">Tööd</button>
       <button data-tab="koormus">Koormus</button>
       <button data-tab="nad">Nädalad</button>
-      <button data-tab="jrk">Järjekord</button>
       <button data-tab="plan" data-planner>Ajanormid</button>
       <button data-tab="seaded" data-planner>Pingid ja kasutajad</button>
       <button data-tab="joon">Joonised</button>
@@ -347,6 +509,28 @@
   </div></header>
 
   <main>
+    <div id="impact" class="impact hidden"></div>
+    <!-- TELLIMUSED -->
+    <section id="tab-tell" class="hidden">
+      <div class="crumb" id="tellCrumb"></div>
+      <div id="tellBody"></div>
+    </section>
+    <!-- MÄRGI TEHTUKS -->
+    <section id="tab-mark" class="hidden">
+      <div class="mk">
+        <p class="note" style="margin-top:0">Paberilt valmis tööde märkimine. Vali pink, kirjuta töönumber (WO) ja vajuta Enter — töö märgitakse selles pingis valmis.
+          Kui eelmised etapid on veel märkimata, märgitakse ka need. Mitu numbrit korraga: eralda tühikuga.</p>
+        <div class="field"><label>Pink</label><div class="stations mkst" id="mkSt"></div></div>
+        <div class="mk-row">
+          <div class="mk-in"><input id="mkWo" type="search" placeholder="Töönumber (WO)…" autocomplete="off" enterkeyhint="go" spellcheck="false"><button class="btn primary" id="mkGo">Märgi valmis</button></div>
+          <div class="field mk-date"><label for="mkDate">Valmis kuupäev</label><input type="date" id="mkDate"></div>
+        </div>
+        <div id="mkMsg"></div>
+        <div id="mkCard"></div>
+        <h2>Täna märgitud</h2>
+        <div id="mkLog"></div>
+      </div>
+    </section>
     <!-- PINK -->
     <section id="tab-pink" class="hidden">
       <div class="stations" id="stationPicker"></div>
@@ -388,7 +572,9 @@
 
     <!-- JÄRJEKORD -->
     <section id="tab-jrk" class="hidden">
+      <div class="crumb" id="jrkCrumb"></div>
       <div class="stations" id="jrkPicker"></div>
+      <div id="jrkLoad"></div>
       <div class="toolbar" id="jrkTools"></div>
       <div id="jrkList"></div>
     </section>
@@ -468,7 +654,7 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt
 const store = { get(k){ try { return localStorage.getItem(k); } catch { return null; } }, set(k,v){ try { localStorage.setItem(k,v); } catch {} } };
 
 let S = { session:null, profile:null, jobs:[], stages:[], stations:{}, profiles:[], loadedAt:0, sim:null };
-let currentTab = store.get("tab") || "pink";
+let currentTab = store.get("tab2") || "tell";
 let currentStation = store.get("station") || null;
 
 function showFatal(msg) {
@@ -481,6 +667,7 @@ function toast(msg, isErr) {
   clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.add("hidden"), isErr ? 5000 : 2200);
 }
 const isPlanner = () => S.profile?.role === "planeerija";
+const isDisp = () => ["planeerija", "dispetser"].includes(S.profile?.role);
 
 // ============ AUTH ============
 $("loginBtn").onclick = async () => {
@@ -506,9 +693,11 @@ async function onSession(session) {
   if (error) showFatal("Profiili lugemine ebaõnnestus: " + error.message);
   else if (!data) showFatal("Sinu kasutajal pole profiili (tabel profiles). Käivita SQL Editoris planeerija rolli päring.");
   S.profile = data || { name: session.user.email, role: "tooline" };
-  $("whoName").textContent = S.profile.name + (isPlanner() ? " · planeerija" : "");
+  $("whoName").textContent = S.profile.name + (isPlanner() ? " · planeerija" : S.profile.role === "dispetser" ? " · dispetšer" : "");
   document.querySelectorAll("[data-planner]").forEach(b => b.classList.toggle("hidden", !isPlanner()));
-  if (!isPlanner() && ["plan","seaded","import"].includes(currentTab)) currentTab = "pink";
+  document.querySelectorAll("[data-disp]").forEach(b => b.classList.toggle("hidden", !isDisp()));
+  if (!isPlanner() && ["plan","seaded","import"].includes(currentTab)) currentTab = "tell";
+  if (!isDisp() && currentTab === "mark") currentTab = "tell";
   if (!currentStation && S.profile.default_station) currentStation = S.profile.default_station;
   showTab(currentTab);
   await loadAll();
@@ -608,6 +797,11 @@ function addWorkdays(start, n) {
   while (k > 0) { d.setDate(d.getDate()+1); if (isWorkday(d)) k--; }
   return d;
 }
+function subWorkdays(start, n) {   // n tööpäeva tagasi
+  const d = new Date(start); let k = Math.round(n);
+  while (k > 0) { d.setDate(d.getDate() - 1); if (isWorkday(d)) k--; }
+  return d;
+}
 function workdaysBetween(a, b) { // b - a tööpäevades (märgiga)
   const sign = b >= a ? 1 : -1; let [x, y] = sign > 0 ? [new Date(a), new Date(b)] : [new Date(b), new Date(a)];
   let n = 0; while (x < y) { x.setDate(x.getDate()+1); if (isWorkday(x)) n++; } return n * sign;
@@ -641,6 +835,8 @@ const byDue = (a, b) => (+!!b.job.kiire - +!!a.job.kiire) || (+!!b.job.prioritee
 function queueSort(a, b) {
   const ra = isRunning(a) ? 0 : 1, rb = isRunning(b) ? 0 : 1;
   if (ra !== rb) return ra - rb;
+  const ka = a.job.kiire ? 0 : 1, kb = b.job.kiire ? 0 : 1;   // ⚡ kiired on alati järjekorra eesotsas
+  if (ka !== kb) return ka - kb;
   const qa = a.queue_pos ?? Infinity, qb = b.queue_pos ?? Infinity;
   if (qa !== qb) return qa < qb ? -1 : 1;
   return byDue(a, b);
@@ -735,6 +931,20 @@ function simulate() {
     j.risk = j.slack == null ? "" : j.slack < 0 ? "late" : j.slack < RISK_DAYS ? "risk" : "ok";
     if (j.risk === "late") for (const s of os) if (s.wait > 0) stat(s.stage_code).lateJobs.add(j.id);
     j.why = jobReasons(j, os);
+    // majas valmis vs lõpp koos pinnakattega (marsruudi lõpus olevad allhanked: värv, tsink jms)
+    const isExt = s => !!stationOf(s.stage_code).is_external;
+    let lastInt = -1; j.stages.forEach((s, i) => { if (!isExt(s)) lastInt = i; });
+    const trail = lastInt >= 0 ? j.stages.slice(lastInt + 1) : [];
+    j.surf = trail.map(s => s.stage_code);
+    j.surfLead = trail.filter(s => s.state !== "valmis").reduce((a, s) => a + (Number(stationOf(s.stage_code).lead_days) || 0), 0);
+    const intOpen = os.filter(s => !isExt(s));
+    j.hasInt = lastInt >= 0;
+    j.inDone = j.hasInt && !intOpen.length;
+    if (!j.hasInt) j.inDate = null;
+    else if (j.inDone) { const f = j.stages.filter(s => !isExt(s) && s.finished_at).map(s => new Date(s.finished_at)); j.inDate = f.length ? new Date(Math.max(...f)) : null; }
+    else j.inDate = addWorkdays(t0, Math.max(...intOpen.map(s => s.pEnd ?? 0)));
+    j.inDue = due ? subWorkdays(due, j.surfLead) : null;
+    j.inSlack = j.current && !j.inDone && j.inDue && j.inDate ? workdaysBetween(j.inDate, j.inDue) : null;
   }
   for (const code in st) {
     const c = stationOf(code);
@@ -777,17 +987,26 @@ function stationWeeks(code, weeks) {
 }
 
 // ============ RENDER ============
+const MAIN_TABS = ["tell", "jrk", "mark"];
+let moreOpen = false;
 function showTab(tab) {
-  currentTab = tab; store.set("tab", tab);
-  document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === tab));
+  currentTab = tab; store.set("tab2", tab);
+  document.querySelectorAll("nav.tabs button[data-tab]").forEach(b => b.classList.toggle("on", b.dataset.tab === tab));
+  const inMore = !MAIN_TABS.includes(tab);
+  $("tabs2").classList.toggle("hidden", !(moreOpen || inMore));
+  $("moreBtn").classList.toggle("on", inMore);
   document.querySelectorAll("main > section").forEach(s => s.classList.toggle("hidden", s.id !== "tab-" + tab));
   render();
+  if (tab === "mark") setTimeout(() => $("mkWo").focus(), 50);
+  if (!["tell", "jrk"].includes(tab)) $("impact").classList.add("hidden");
 }
-$("tabs").onclick = e => { const b = e.target.closest("button[data-tab]"); if (b) showTab(b.dataset.tab); };
+$("tabs").onclick = e => { const b = e.target.closest("button[data-tab]"); if (b) { moreOpen = false; showTab(b.dataset.tab); } };
+$("tabs2").onclick = e => { const b = e.target.closest("button[data-tab]"); if (b) showTab(b.dataset.tab); };
+$("moreBtn").onclick = () => { moreOpen = !moreOpen; $("tabs2").classList.toggle("hidden", !(moreOpen || !MAIN_TABS.includes(currentTab))); };
 
 function render() {
   if (!S.session || !S.loadedAt) return;
-  ({ pink: renderPink, tood: renderJobs, koormus: renderReport, nad: renderNad, joon: renderDw, jrk: renderJrk, plan: renderPlan, seaded: renderSettings, import: () => {} })[currentTab]?.();
+  ({ tell: renderTell, mark: renderMark, pink: renderPink, tood: renderJobs, koormus: renderReport, nad: renderNad, joon: renderDw, jrk: renderJrk, plan: renderPlan, seaded: renderSettings, import: () => {} })[currentTab]?.();
 }
 
 function routeHtml(job, hereId) {
@@ -901,11 +1120,15 @@ function jobFlagsHtml(j) {
     <label class="chk">Materjal saabub ${pl ? `<input type="date" data-jmat="${j.id}" value="${esc(j.material_date || "")}">` : `<b>${j.material_date ? fmtDate(parseDate(j.material_date)) : "olemas"}</b>`}</label>
     <span class="muted">Prognoos ${fmtDate(j.projDate)}${j.slack != null ? ` · varu ${j.slack} tp` : ""}</span> ${whyHtml(j)}</div>`;
 }
-async function updateJob(id, patch) {
-  const { error } = await sb.from("jobs").update(patch).eq("id", id);
+async function updateJob(id, patch) { return updateJobs([id], patch); }
+async function updateJobs(ids, patch, what, focusKey) {
+  if (!ids.length) return;
+  const before = orderSnap();
+  const { error } = await sb.from("jobs").update(patch).in("id", ids);
   if (error) return toast(error.message, true);
-  const j = S.jobs.find(x => x.id === id); if (j) Object.assign(j, patch);
+  for (const id of ids) { const j = S.jobs.find(x => x.id === id); if (j) Object.assign(j, patch); }
   S.sim = simulate(); render(); toast("Salvestatud");
+  if ("kiire" in patch || "lukus" in patch || "material_date" in patch) showImpact(before, what || "Muudatuse mõju", focusKey ?? orderKey(S.jobs.find(x => x.id === ids[0]) || {}));
 }
 document.addEventListener("click", e => {
   const b = e.target.closest("button[data-jflag]"); if (!b) return;
@@ -917,6 +1140,367 @@ document.addEventListener("change", e => {
 $("jobsTable").onclick = e => {
   const o = e.target.closest("[data-jdopen]"), pr = e.target.closest("[data-jdprint]");
   if (o || pr) { e.stopPropagation(); const j = S.jobs.find(x => x.id === (o || pr).dataset[o ? "jdopen" : "jdprint"]); return o ? openDrawing(j) : printDrawings([j]); } if (e.target.closest("tr.detail")) return; const r = e.target.closest("tr.jobrow"); if (!r) return; openJob = openJob === r.dataset.job ? null : r.dataset.job; renderJobs(); };
+
+// ============ TELLIMUSED (avaleht) ============
+// Tellimus = sama kliendi sama tellimuse numbriga tööd. Tellimuseta töö on omaette "tellimus".
+let tellOrder = null, tellFilter = store.get("tellF") || "open", tellQ = "", jrkFrom = null;
+const orderKey = j => j.tellimus ? "T:" + (j.klient_nimi || "") + "|" + j.tellimus : "W:" + j.wono;
+const oLabel = o => `${o.klient || ""} · ${o.tellimus || "WO " + o.jobs[0].wono}`.replace(/^ · /, "");
+const stageW = s => { const c = stationOf(s.stage_code); if (c.is_external) return 2; const p = plannedMin(s); return p != null ? Math.max(p / 60, 0.2) : 2; };
+const isoDay = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+function riskOf(slack, overdue, done) {
+  if (done) return "done";
+  if (overdue || (slack != null && slack < 0)) return "late";
+  if (slack != null && slack < RISK_DAYS) return "risk";
+  return "ok";
+}
+function vchip(risk, slack, hasDue = true) {
+  if (risk === "done") return `<span class="vchip done">valmis</span>`;
+  if (!hasDue) return `<span class="vchip done">tähtaeg puudub</span>`;
+  if (slack == null) return "";
+  return risk === "late" ? `<span class="vchip late">${slack < 0 ? `${-slack} tp hiljaks` : "tähtaeg möödas"}</span>`
+       : `<span class="vchip ${risk}">varu ${slack} tp</span>`;
+}
+
+function buildOrders() {
+  const m = new Map(), t0 = today0();
+  for (const j of S.jobs) { const k = orderKey(j); let o = m.get(k); if (!o) m.set(k, o = { key: k, klient: j.klient_nimi, tellimus: j.tellimus, jobs: [] }); o.jobs.push(j); }
+  for (const o of m.values()) {
+    o.jobs.sort((a, b) => cmpStr(String(a.tl_rida ?? "").padStart(4, "0"), String(b.tl_rida ?? "").padStart(4, "0")) || cmpStr(a.wono, b.wono));
+    const open = o.jobs.filter(j => j.current);
+    o.open = open; o.done = !open.length;
+    let tot = 0, dn = 0, run = 0;
+    for (const j of o.jobs) for (const s of j.stages) {
+      const w = stageW(s); tot += w;
+      if (s.state === "valmis") dn += w;
+      else if (isRunning(s)) { const p = plannedMin(s); run += w * (p ? Math.min(1, liveMin(s) / p) : 0.3); }
+    }
+    o.pct = tot ? dn / tot : 1; o.pctRun = tot ? run / tot : 0;
+    const dues = (open.length ? open : o.jobs).map(j => parseDate(j.tahtaeg)).filter(Boolean);
+    o.due = dues.length ? new Date(Math.min(...dues)) : null;
+    const projs = open.map(j => j.projDate).filter(Boolean);
+    o.proj = projs.length ? new Date(Math.max(...projs)) : null;
+    o.slack = o.due && o.proj ? workdaysBetween(o.proj, o.due) : null;
+    o.overdue = !o.done && !!o.due && o.due < t0;
+    o.risk = riskOf(o.slack, o.overdue, o.done);
+    o.kiire = open.length && open.every(j => j.kiire) ? "on" : open.some(j => j.kiire) ? "some" : "";
+    o.worst = open.slice().sort((a, b) => (a.slack ?? 999) - (b.slack ?? 999))[0] || null;
+    const where = {};
+    for (const j of open) where[j.current.stage_code] = (where[j.current.stage_code] || 0) + 1;
+    o.where = Object.entries(where).sort((a, b) => b[1] - a[1]).map(([c, n]) => n > 1 ? `${c} ×${n}` : c).join(", ");
+    o.unplanned = open.some(j => j.unplanned);
+    const intJobs = open.filter(j => j.hasInt && !j.inDone);
+    o.inDone = !o.done && !intJobs.length;
+    const ind = intJobs.map(j => j.inDate).filter(Boolean);
+    o.inDate = ind.length ? new Date(Math.max(...ind)) : null;
+    const idue = intJobs.map(j => j.inDue).filter(Boolean);
+    o.inDue = idue.length ? new Date(Math.min(...idue)) : null;
+    o.inSlack = o.inDate && o.inDue ? workdaysBetween(o.inDate, o.inDue) : null;
+    o.inRisk = o.inDone ? "done" : riskOf(o.inSlack, !!o.inDue && o.inDue < t0, false);
+    o.surf = [...new Set(open.flatMap(j => j.surf))];
+    o.surfLead = Math.max(0, ...open.map(j => j.surfLead));
+    o.pind = [...new Set(o.jobs.map(j => j.pinnatootlus).filter(Boolean))].join(", ");
+    o.search = [o.klient, o.tellimus, ...o.jobs.flatMap(j => [j.wono, j.toote_id, j.drawing, j.nimetus])].join(" ").toLowerCase();
+  }
+  return [...m.values()];
+}
+const RISK_ORDER = { late: 0, risk: 1, ok: 2, done: 3 };
+const orderSort = (a, b) => (RISK_ORDER[a.risk] - RISK_ORDER[b.risk]) ||
+  (a.risk === "late" ? (a.slack ?? 0) - (b.slack ?? 0) : 0) || ((a.due || 9e15) - (b.due || 9e15)) || cmpStr(a.key, b.key);
+
+// ---- muudatuse mõju (prognooside võrdlus enne/pärast) ----
+function orderSnap() {
+  const m = {}; if (!S.sim) return m;
+  for (const o of buildOrders()) if (!o.done && o.proj) m[o.key] = { proj: o.proj, risk: o.risk, label: oLabel(o) };
+  return m;
+}
+function showImpact(before, title, focusKey) {
+  const after = orderSnap(), ch = [];
+  for (const k in after) {
+    const b = before[k]; if (!b) continue;
+    const d = workdaysBetween(b.proj, after[k].proj);
+    if (d) ch.push({ k, d, a: after[k], b });
+  }
+  const up = ch.filter(c => c.d < 0).sort((x, y) => x.d - y.d), dn = ch.filter(c => c.d > 0).sort((x, y) => y.d - x.d);
+  const item = c => `<span><a data-okey="${esc(c.k)}">${esc(c.a.label)}</a> <span class="${c.d < 0 ? "up" : "dn"}">${c.d < 0 ? "" : "+"}${c.d} tp</span> → ${fmtDate(c.a.proj)}${c.a.risk === "late" && c.b.risk !== "late" ? ` <span class="dn">jääb hiljaks!</span>` : c.a.risk !== "late" && c.b.risk === "late" ? ` <span class="up">jõuab nüüd õigeks ajaks</span>` : ""}</span>`;
+  const lst = (arr, lab) => arr.length ? `<div class="ln"><b>${lab}:</b> ${arr.slice(0, 8).map(item).join(" · ")}${arr.length > 8 ? ` <span class="muted">ja veel ${arr.length - 8}</span>` : ""}</div>` : "";
+  $("impact").innerHTML = `<button class="x" data-impx title="Sulge">×</button><b class="t">${esc(title)}</b>` +
+    (ch.length ? lst(up, "Valmib varem") + lst(dn, "Valmib hiljem") : `<span class="muted">Ühegi tellimuse prognoos ei muutunud.</span>`) + focusNote(focusKey, ch);
+  $("impact").classList.remove("hidden");
+}
+function focusNote(key, ch) {
+  if (!key || ch.some(c => c.k === key)) return "";
+  const o = buildOrders().find(x => x.key === key); if (!o || o.done) return "";
+  const w = (o.worst?.why || []).slice(0, 3).map(x => `<span class="why w-${x.k}">${esc(x.t)}</span>`).join(" ");
+  return `<div class="ln"><span>Selle tellimuse valmimine (${fmtDate(o.proj)}) ei muutunud${w ? " — seda piirab: " + w : ""}.</span></div>`;
+}
+$("impact").onclick = e => {
+  if (e.target.closest("[data-impx]")) return $("impact").classList.add("hidden");
+  const a = e.target.closest("[data-okey]"); if (a) { tellOrder = a.dataset.okey; showTab("tell"); window.scrollTo(0, 0); }
+};
+
+async function toggleKiire(jobs, label, key) {
+  if (!isPlanner()) return toast("Kiireks saab märkida planeerija", true);
+  const open = jobs.filter(j => j.current); if (!open.length) return;
+  const on = !open.every(j => j.kiire);
+  await updateJobs(open.map(j => j.id), { kiire: on }, `${on ? "⚡ Kiireks" : "Kiire maha"}: ${label} — mõju tellimustele`, key ?? orderKey(open[0]));
+}
+
+function renderTell() {
+  const orders = buildOrders();
+  const o = tellOrder && orders.find(x => x.key === tellOrder);
+  if (tellOrder && !o) tellOrder = null;
+  return o ? renderOrder(o) : renderOrders(orders);
+}
+
+function renderOrders(orders) {
+  $("tellCrumb").innerHTML = "";
+  const cnt = { open: 0, late: 0, risk: 0, ok: 0, done: 0 };
+  for (const o of orders) { cnt[o.risk]++; if (!o.done) cnt.open++; }
+  const q = tellQ.trim().toLowerCase();
+  const list = orders.filter(o => tellFilter === "open" ? !o.done : o.risk === tellFilter).filter(o => !q || o.search.includes(q)).sort(orderSort);
+  const card = (f, lab, sub) => `<button data-tf="${f}" class="s-${f}${tellFilter === f ? " on" : ""}"><b>${cnt[f]}</b><span>${lab}${sub ? ` · ${sub}` : ""}</span></button>`;
+  // ajajoon: 8 nädalat alates selle nädala esmaspäevast
+  const W = weeksN(8), t0 = W[0].s, span = 56 * 864e5;
+  const pos = d => Math.max(0, Math.min(100, (d - t0) / span * 100));
+  const nowP = pos(today0());
+  const wkLines = W.map(w => `<i class="wk" style="left:${pos(w.s)}%"></i>`).join("");
+  const tl = o => {
+    if (o.done) return `<div class="otl">${wkLines}</div>`;
+    const end = o.proj || today0(), cls = o.risk === "late" ? "late" : o.risk === "risk" ? "risk" : "";
+    const l = nowP, r = pos(end) + 100 / 56;   // lõpp = prognoosipäeva lõpp
+    const m = o.inDate && !o.inDone && o.surf.length ? Math.min(r, pos(o.inDate) + 100 / 56) : (o.inDone && o.surf.length ? l : r);
+    return `<div class="otl" title="Majas valmis ${o.inDone ? "✓" : fmtDate(o.inDate)}${o.surf.length ? ` · koos pinnakattega ${fmtDate(o.proj)}` : ""}${o.due ? ` · tähtaeg ${fmtDate(o.due)}` : ""}">${wkLines}<i class="now" style="left:${nowP}%"></i>
+      ${m > l ? `<i class="bar ${cls}${m < r ? " in" : ""}" style="left:${l}%;width:${Math.max(1, m - l)}%"></i>` : ""}
+      ${m < r ? `<i class="bar surf ${cls}" style="left:${m}%;width:${Math.max(1, r - m)}%"></i>` : ""}
+      ${o.inDue && o.surf.length && !o.inDone ? `<i class="idue" style="left:${pos(o.inDue) + 100 / 56}%" title="Majast välja hiljemalt ${fmtDate(o.inDue)}"></i>` : ""}
+      ${o.due ? `<i class="due" style="left:${pos(o.due) + 100 / 56}%" title="Tähtaeg ${fmtDate(o.due)}"></i>` : ""}${end - t0 > span ? `<span class="more">›</span>` : ""}</div>`;
+  };
+  const inCell = o => {
+    if (o.done) return `<div class="oin"></div>`;
+    if (o.inDone) return `<div class="oin"><span class="vchip ok">✓ majas tehtud</span><small>${o.surf.length ? "ootab " + esc(o.surf.join(", ")) : ""}</small></div>`;
+    if (!o.inDate) return `<div class="oin"><small>ainult allhange</small></div>`;
+    return `<div class="oin"><span class="muted">valmib</span> <span class="mono ${o.inRisk === "late" ? "late" : ""}">${fmtDate(o.inDate)}</span>
+      ${o.surf.length && o.inDue ? `<small>majast välja hiljemalt ${fmtDate(o.inDue)}</small>${vchip(o.inRisk, o.inSlack)}` : `<small>pinnakatet pole</small>`}</div>`;
+  };
+  const pl = isPlanner();
+  const rows = list.map(o => {
+    const dn = o.jobs.length - o.open.length;
+    const whys = !o.done && o.risk !== "ok" && o.worst?.why?.length ? `<div class="whys">${o.worst.why.slice(0, 2).map(w => `<span class="why w-${w.k}">${esc(w.t)}</span>`).join(" ")}</div>` : "";
+    return `<div class="orow r-${o.risk}" data-ord="${esc(o.key)}">
+      <button class="bolt ${o.kiire}" data-obolt="${esc(o.key)}" title="${pl ? "Märgi kogu tellimus kiireks" : o.kiire ? "Kiire" : ""}" ${pl && !o.done ? "" : "disabled"}>⚡</button>
+      <div class="oname"><b>${esc(o.klient || "–")}</b> <span class="mono">${esc(o.tellimus || "WO " + o.jobs[0].wono)}</span>
+        <small>${o.jobs.length} ${o.jobs.length === 1 ? "detail" : "detaili"}${dn ? ` · ${dn} valmis` : ""}${o.where ? ` · praegu ${esc(o.where)}` : ""}</small>${whys}</div>
+      <div class="oprog"><div class="pbar"><i class="d" style="width:${o.pct * 100}%"></i><i class="r" style="width:${o.pctRun * 100}%"></i></div><small>${Math.round((o.pct + o.pctRun) * 100)}% tehtud</small></div>
+      ${inCell(o)}
+      <div class="odates">${o.due ? `<span class="muted">tähtaeg</span> <span class="mono">${fmtDate(o.due)}</span>` : `<span class="muted">tähtaeg puudub</span>`}<br>
+        ${o.done ? "" : `<span class="muted">valmib</span> <span class="mono ${o.risk === "late" ? "late" : ""}">${fmtDate(o.proj)}${o.unplanned ? "*" : ""}</span> `}${vchip(o.risk, o.slack, !!o.due)}
+        ${o.surf.length || o.pind ? `<small title="${esc(o.pind)}">${o.surf.length ? "+ " + esc(o.surf.join(", ")) + ` ${o.surfLead} tp` : ""}${o.pind ? (o.surf.length ? " · " : "") + esc(o.pind) : ""}</small>` : ""}</div>
+      ${tl(o)}<div class="ogo">›</div></div>`;
+  }).join("");
+  const head = `<div class="ohead"><span></span><span>Tellimus</span><span>Valmidus</span><span>Majas valmis</span><span>Lõpp koos pinnakattega</span>
+    <span class="tlh">${W.map(w => `<span style="left:${pos(w.s)}%">N${isoWeek(w.s)}</span>`).join("")}</span><span></span></div>`;
+  $("tellBody").innerHTML = `
+    <div class="osum">${card("open", "pooleli")}${card("late", "hilineb")}${card("risk", "ohus", `varu alla ${RISK_DAYS} tp`)}${card("ok", "graafikus")}${card("done", "valmis")}</div>
+    <div class="toolbar"><input type="search" id="tellQ" placeholder="Otsi: klient, tellimus, WO, joonis…" value="${esc(tellQ)}" style="max-width:340px">
+      <span class="muted">${list.length} tellimust</span></div>
+    <p class="note" style="margin:-6px 0 10px">⚡ = kiire (tööd tõstetakse pinkide järjekorras ette) · riba: täis osa = majas, viirutatud = pinnakate/allhange · ┆ = majast välja hiljemalt, ▼ = tähtaeg · klõpsa real, et näha detaile</p>
+    ${list.length ? `<div class="olist">${head}${rows}</div>` : `<div class="empty">Selles valikus tellimusi pole.</div>`}`;
+  const qi = $("tellQ"); qi.oninput = () => { tellQ = qi.value; const p = qi.selectionStart; renderOrders(orders); const n = $("tellQ"); n.focus(); n.setSelectionRange(p, p); };
+}
+
+function renderOrder(o) {
+  const pl = isPlanner(), t0 = today0();
+  $("tellCrumb").innerHTML = `<a data-tc="list">‹ Tellimused</a> › <b>${esc(oLabel(o))}</b>`;
+  const dn = o.jobs.length - o.open.length;
+  const whys = !o.done && o.worst?.why?.length ? o.worst.why.slice(0, 3).map(w => `<span class="why w-${w.k}">${esc(w.t)}</span>`).join(" ") : "";
+  const hero = `<div class="ohero r-${o.risk}">
+    <div><h2>${esc(o.klient || "")} <span class="mono">${esc(o.tellimus || "WO " + o.jobs[0].wono)}</span></h2>
+      <div class="muted">${o.jobs.length} ${o.jobs.length === 1 ? "detail" : "detaili"} · ${dn} valmis${o.jobs[0].kontakt ? " · kontakt " + esc(o.jobs[0].kontakt) : ""}</div>
+      ${o.surf.length || o.pind ? `<div class="muted">Pinnakate: ${o.surf.length ? `<span class="mono">${esc(o.surf.join(", "))}</span> ${o.surfLead} tp` : ""}${o.pind ? (o.surf.length ? " · " : "") + esc(o.pind) : ""}</div>` : ""}</div>
+    <div class="big"><small>Majas valmis${o.surf.length && o.inDue && !o.inDone ? ` (hiljemalt ${fmtDate(o.inDue)})` : ""}</small><b class="${o.inRisk === "late" ? "late" : ""}">${o.done || o.inDone ? "✓" : o.inDate ? fmtDate(o.inDate) : "–"}</b></div>
+    <div class="big"><small>Lõpptähtaeg</small><b>${fmtDate(o.due)}</b></div>
+    <div class="big"><small>Valmib koos pinnakattega</small><b class="${o.risk === "late" ? "late" : ""}">${o.done ? "valmis" : fmtDate(o.proj)}</b> ${vchip(o.risk, o.slack, !!o.due)}</div>
+    <div class="wide"><div class="pbar"><i class="d" style="width:${o.pct * 100}%"></i><i class="r" style="width:${o.pctRun * 100}%"></i></div>
+      <span class="mono">${Math.round((o.pct + o.pctRun) * 100)}%</span>
+      ${pl && !o.done ? `<button class="btn ${o.kiire === "on" ? "primary" : ""}" data-obolt="${esc(o.key)}">⚡ ${o.kiire === "on" ? "Kiire — võta maha" : "Märgi kogu tellimus kiireks"}</button>` : o.kiire ? `<span class="vchip risk">⚡ kiire</span>` : ""}
+      <button class="btn" data-oprint="${esc(o.key)}">Prindi joonised</button> ${whys}</div></div>`;
+
+  // --- ajajoon: read = detailid, lõigud = etapid ---
+  const days = calDays(200);
+  let maxI = 20;
+  for (const j of o.open) for (const s of j.stages) if (s.state !== "valmis" && s.pEnd != null) maxI = Math.max(maxI, calPos(s.pEnd, days) + 2);
+  if (o.due) maxI = Math.max(maxI, (o.due - t0) / 864e5 + 3);
+  const N = Math.min(200, Math.ceil(maxI));
+  const P = i => i / N * 100;
+  const dayBg = days.slice(0, N).map((d, i) => d.wd ? "" : `<i class="day we" style="left:${P(i)}%;width:${P(1)}%"></i>`).join("");
+  const wkl = days.slice(0, N).map((d, i) => d.date.getDay() === 1 || i === 0 ? `<span class="wkl" style="left:${P(i)}%">N${isoWeek(d.date)}${N < 60 ? ` <span class="muted">${fmtDate(d.date)}</span>` : ""}</span>` : "").join("");
+  const dueI = o.due ? (o.due - t0) / 864e5 + 1 : null;   // tähtaja päeva lõpp
+  const dueLine = (due, late) => due == null ? "" : due < 0 ? "" : `<i class="due ${late ? "late" : ""}" style="left:${P(Math.min(N, due))}%"><span>tähtaeg</span></i>`;
+  const rows = o.jobs.map(j => {
+    const jd = parseDate(j.tahtaeg), jdi = jd ? (jd - t0) / 864e5 + 1 : null;
+    const segs = j.current ? j.stages.filter(s => s.state !== "valmis" && s.pStart != null).map(s => {
+      const ext = stationOf(s.stage_code).is_external;
+      const l = calPos(s.pStart, days), r = Math.max(calPos(s.pEnd, days), l + 0.25);
+      const tip = `${s.stage_code}${ext ? " (allhange)" : ""}: ${fmtDate(addWorkdays(t0, s.pStart))} – ${fmtDate(addWorkdays(t0, s.pEnd))}` +
+        (ext ? "" : ` · ${fmtH1(s.remH || 0)} h`) + (s.wait > 0.5 ? ` · ootab pingi järjekorras ${Math.round(s.wait)} tp` : "") + (s.unknown ? " · norm puudub" : "") + (ext ? "" : " — klõpsa, et avada pingi plaan");
+      return `<button class="seg ${s.state === "käsil" || s.state === "paus" ? s.state : ""}${ext ? " ext" : ""}${s.wait > 0.5 ? " wait" : ""}" ${ext ? "" : `data-gst="${esc(s.stage_code)}"`} title="${esc(tip)}" style="left:${P(l)}%;width:${P(r - l)}%">${esc(s.stage_code)}</button>`;
+    }).join("") : `<span class="fin">✓ valmis</span>`;
+    const doneCh = j.stages.filter(s => s.state === "valmis").map(s => "✓" + esc(s.stage_code)).join(" ");
+    const risk = j.current ? riskOf(j.slack, j.overdue, false) : "done";
+    return `<div class="grow2"><div class="ginfo"><button class="bolt ${j.kiire && j.current ? "on" : ""}" data-jbolt="${j.id}" ${pl && j.current ? "" : "disabled"} title="Kiire detail">⚡</button>
+        <div class="t"><b>${esc(j.toote_id || j.drawing || "WO " + j.wono)}</b> ${esc(j.nimetus || "")}
+        <small>WO ${esc(j.wono)} · ${esc(j.kogus ?? "–")} tk${jd && (!o.due || +jd !== +o.due) ? ` · tähtaeg ${fmtDate(jd)}` : ""}${j.current && j.hasInt ? ` · majas ${j.inDone ? "✓" : fmtDate(j.inDate)}` : ""}${j.pinnatootlus ? ` · ${esc(j.pinnatootlus)}` : ""}</small>
+        ${doneCh ? `<div class="dn">${doneCh}</div>` : ""}${vchip(risk, j.slack, !!jd)}</div></div>
+      <div class="gtrack">${dayBg}<i class="now" style="left:0"></i>${j.current && !j.inDone && j.surf.length && j.inDue && j.inDue >= t0 ? `<i class="idue" style="left:${P(Math.min(N, (j.inDue - t0) / 864e5 + 1))}%"><span>majast välja</span></i>` : ""}${dueLine(jdi, risk === "late")}${segs}</div></div>`;
+  }).join("");
+  const gantt = `<div class="gwrap"><div class="grow2 gh"><div class="ginfo">Detail</div><div class="gtrack">${dayBg}${wkl}</div></div>${rows}</div>
+    <div class="legend"><span><i style="background:color-mix(in srgb, var(--accent) 22%, var(--paper))"></i>plaanis</span><span><i style="background:var(--run)"></i>töös</span>
+      <span><i style="background:var(--pause)"></i>paus</span><span><i style="background:repeating-linear-gradient(135deg, var(--panel) 0 4px, #999 4px 6px)"></i>allhange</span>
+      <span><i style="box-shadow:inset 0 -3px 0 var(--late)"></i>ootab pingi järjekorras</span><span>┆ majast välja hiljemalt (tähtaeg miinus pinnakatte aeg) · punane ┆ lõpptähtaeg · hall taust = puhkepäev</span></div>`;
+
+  // --- järgmised sammud pinkides ---
+  const by = {};
+  for (const j of o.open) for (const s of j.stages) if (s.state !== "valmis" && !stationOf(s.stage_code).is_external) (by[s.stage_code] ??= []).push(s);
+  const ext = [...new Set(o.open.flatMap(j => j.stages.filter(s => s.state !== "valmis" && stationOf(s.stage_code).is_external).map(s => s.stage_code)))];
+  const steps = Object.entries(by).map(([code, list]) => {
+    const ord = S.sim.stations[code]?.order || [];
+    const idx = Math.min(...list.map(s => ord.indexOf(s)).filter(i => i >= 0));
+    const start = Math.min(...list.map(s => s.pStart ?? 1e9));
+    const wait = Math.max(...list.map(s => s.wait || 0));
+    return { code, n: list.length, idx: isFinite(idx) ? idx + 1 : null, tot: ord.length, start, wait, run: list.some(isRunning) };
+  }).sort((a, b) => a.start - b.start);
+  const stepsHtml = steps.length ? `<h2>Kus see tellimus edasi liigub</h2>
+    <p class="note" style="margin-top:-4px">Vali pink, et näha selle pingi plaani ja tõsta tööd ümber. Tellimuse tööd on seal kollasega.</p>
+    <div class="nextst">${steps.map(x => `<button data-ost="${esc(x.code)}"><b>${esc(x.code)}</b> <span class="muted">${x.n} ${x.n === 1 ? "töö" : "tööd"}</span>
+      <small>${x.run ? "praegu töös" : x.idx ? `järjekorras ${x.idx}. / ${x.tot}` : ""} · algab ~${fmtDate(addWorkdays(t0, x.start))}${x.wait > 0.5 ? ` · ootab ${Math.round(x.wait)} tp` : ""}</small>
+      <div class="pbar"><i class="${x.wait > 0.5 ? "r" : "d"}" style="width:${x.idx ? Math.max(4, 100 - (x.idx - 1) / Math.max(1, x.tot) * 100) : 100}%"></i></div></button>`).join("")}</div>
+    ${ext.length ? `<p class="note">Allhanked: ${ext.map(c => `<span class="mono">${esc(c)}</span> ${Number(stationOf(c).lead_days) || 0} tp`).join(" · ")}</p>` : ""}` : "";
+  $("tellBody").innerHTML = hero + gantt + stepsHtml;
+}
+
+function openStationPlan(code, o) {
+  jrkStation = code; store.set("jrkSt", code);
+  jrkFrom = o ? { key: o.key, label: oLabel(o) } : null;
+  showTab("jrk");
+  const r = document.querySelector("#jrkBody tr.hl"); if (r) r.scrollIntoView({ block: "center" }); else window.scrollTo(0, 0);
+}
+
+$("tab-tell").addEventListener("click", e => {
+  const orders = () => buildOrders();
+  const b = e.target.closest("[data-obolt]");
+  if (b) { e.stopPropagation(); const o = orders().find(x => x.key === b.dataset.obolt); if (o) toggleKiire(o.jobs, oLabel(o)); return; }
+  const jb = e.target.closest("[data-jbolt]");
+  if (jb) { const j = S.jobs.find(x => x.id === jb.dataset.jbolt); if (j) toggleKiire([j], `${j.toote_id || "WO " + j.wono} (${j.tellimus || ""})`); return; }
+  const f = e.target.closest("[data-tf]"); if (f) { tellFilter = f.dataset.tf; store.set("tellF", tellFilter); return renderTell(); }
+  const c = e.target.closest("[data-tc]"); if (c) { tellOrder = null; renderTell(); return window.scrollTo(0, 0); }
+  const pr = e.target.closest("[data-oprint]"); if (pr) { const o = orders().find(x => x.key === pr.dataset.oprint); if (o) printDrawings(o.open.length ? o.open : o.jobs); return; }
+  const g = e.target.closest("[data-gst],[data-ost]");
+  if (g) { const o = orders().find(x => x.key === tellOrder); return openStationPlan(g.dataset.gst || g.dataset.ost, o); }
+  const r = e.target.closest("[data-ord]"); if (r) { tellOrder = r.dataset.ord; renderTell(); window.scrollTo(0, 0); }
+});
+
+// ============ MÄRGI TEHTUKS (dispetšer, paberilt) ============
+let mkStation = store.get("mkSt") || "", mkJob = null, mkMsgs = [];
+function renderMark() {
+  const sts = Object.values(S.stations).filter(s => !s.ignore)
+    .sort((a, b) => (+!!a.is_external - +!!b.is_external) || ((a.sort ?? 100) - (b.sort ?? 100)) || a.code.localeCompare(b.code));
+  if (mkStation && !S.stations[mkStation]) mkStation = "";
+  $("mkSt").innerHTML = `<button data-mks="" class="${!mkStation ? "on" : ""}" style="font-family:var(--sans)">Vali töö juures</button>` +
+    sts.map(s => `<button data-mks="${esc(s.code)}" class="${s.code === mkStation ? "on" : ""}">${esc(s.code)}</button>`).join("");
+  if (!$("mkDate").value) $("mkDate").value = isoDay(today0());
+  $("mkDate").closest(".mk-date").classList.toggle("past", $("mkDate").value !== isoDay(today0()));
+  $("mkWo").placeholder = mkStation ? `WO number — märgitakse valmis pingis ${mkStation}` : "WO number — seejärel vali etapp";
+  $("mkGo").textContent = mkStation ? `Märgi ${mkStation} valmis` : "Otsi";
+  $("mkMsg").innerHTML = mkMsgs.map(m => `<div class="mkmsg ${m.ok ? "ok" : "err"}">${m.html}</div>`).join("");
+  renderMkCard(); renderMkLog();
+}
+function findJob(tok) {
+  const t = String(tok).trim().replace(/^wo[\s:#-]*/i, "").toUpperCase();
+  return S.jobs.find(j => String(j.wono).toUpperCase() === t) || null;
+}
+function renderMkCard() {
+  const j = mkJob && S.jobs.find(x => x.id === mkJob);
+  if (!j || mkStation) { $("mkCard").innerHTML = ""; return; }
+  $("mkCard").innerHTML = `<div class="mkcard"><h3>WO ${esc(j.wono)} · ${esc(j.toote_id || j.drawing || "")} ${esc(j.nimetus || "")}</h3>
+    <div class="muted">${esc(j.klient_nimi || "")} ${esc(j.tellimus || "")} · ${esc(j.kogus ?? "–")} tk · tähtaeg ${fmtDate(parseDate(j.tahtaeg))}</div>
+    <div class="note" style="margin-top:8px">Vajuta etapil, mis on valmis${j.current ? " (eelmised märgitakse kaasa)" : ""}:</div>
+    <div class="mkroute">${j.stages.map((s, i) => (i ? `<span class="ar">→</span>` : "") +
+      `<button class="${s.state === "valmis" ? "valmis" : s === j.current ? "next" : ""}" data-mkstage="${s.id}" ${s.state === "valmis" ? "disabled" : ""}>${esc(s.stage_code)}
+        <small>${s.state === "valmis" ? "✓ " + esc(s.done_by || "valmis") : s.state === "käsil" ? "töös" : s.state === "paus" ? "pausil" : s === j.current ? "järgmine" : ""}</small></button>`).join("")}</div>
+    ${j.current ? "" : `<div class="mkmsg ok">Kõik etapid on valmis.</div>`}</div>`;
+}
+function renderMkLog() {
+  const t0 = today0(), groups = new Map();
+  for (const s of S.stages) {
+    if (s.state !== "valmis" || !s.updated_at || new Date(s.updated_at) < t0) continue;
+    const k = s.job_id + "|" + String(s.updated_at).slice(0, 19);
+    let g = groups.get(k); if (!g) groups.set(k, g = { at: new Date(s.updated_at), job: s.job, list: [] });
+    g.list.push(s);
+  }
+  const arr = [...groups.values()].sort((a, b) => b.at - a.at).slice(0, 60);
+  const can = isDisp();
+  $("mkLog").innerHTML = arr.length ? `<div class="mklog">${arr.map(g => {
+    g.list.sort((a, b) => a.seq - b.seq);
+    const fin = g.list[0].finished_at ? new Date(g.list[0].finished_at) : null;
+    const back = fin && fin < t0 ? ` <span class="vchip risk">valmis ${fmtDate(fin)}</span>` : "";
+    return `<div><span class="tm">${String(g.at.getHours()).padStart(2, "0")}:${String(g.at.getMinutes()).padStart(2, "0")}</span>
+      <span><span class="cd">${g.list.map(s => esc(s.stage_code)).join(" → ")}</span> · WO ${esc(g.job.wono)} · ${esc(g.job.toote_id || "")} <span class="muted">${esc(g.job.klient_nimi || "")} · ${esc(g.list[g.list.length - 1].done_by || "")}</span>${back}</span>
+      ${can ? `<button class="btn" data-mku="${g.list.slice().reverse().map(s => s.id).join(",")}">Võta tagasi</button>` : "<span></span>"}</div>`;
+  }).join("")}</div>` : `<div class="empty">Täna pole veel midagi valmis märgitud.</div>`;
+}
+async function markStage(s) {
+  const d = $("mkDate").value, today = isoDay(today0());
+  const { data, error } = await sb.rpc("dispatch_done", { p_stage: s.id, p_done_on: d && d !== today ? d : null });
+  if (error) return { ok: false, html: `WO ${esc(s.job.wono)}: ${esc(error.message)}` };
+  const codes = data?.codes || [s.stage_code];
+  return { ok: true, html: `✓ WO <b>${esc(s.job.wono)}</b> ${esc(s.job.toote_id || "")} — <b class="mono">${codes.map(esc).join(" → ")}</b> valmis${codes.length > 1 ? ` <span class="muted">(eelmised märgiti kaasa)</span>` : ""}${d && d !== today ? ` · kuupäev ${fmtDate(parseDate(d))}` : ""}` };
+}
+async function mkSubmit() {
+  if (!isDisp()) return toast("Märkida saab planeerija või dispetšer", true);
+  const toks = $("mkWo").value.split(/[\s,;]+/).filter(Boolean);
+  if (!toks.length) return;
+  mkMsgs = [];
+  if (!mkStation) {
+    if (toks.length > 1) { mkMsgs.push({ ok: false, html: "Mitme numbri korraga märkimiseks vali enne pink." }); return renderMark(); }
+    const j = findJob(toks[0]);
+    mkJob = j?.id || null;
+    if (!j) mkMsgs.push({ ok: false, html: `WO ${esc(toks[0])} ei leitud pooleliolevate tööde hulgast.` });
+    $("mkWo").value = ""; return renderMark();
+  }
+  $("mkGo").disabled = true;
+  for (const t of toks) {
+    const j = findJob(t);
+    if (!j) { mkMsgs.push({ ok: false, html: `WO ${esc(t)} ei leitud pooleliolevate tööde hulgast.` }); continue; }
+    const s = j.stages.find(x => x.stage_code === mkStation && x.state !== "valmis");
+    if (!s) {
+      const was = j.stages.some(x => x.stage_code === mkStation);
+      mkMsgs.push({ ok: false, html: was ? `WO ${esc(j.wono)}: ${esc(mkStation)} on juba valmis.` : `WO ${esc(j.wono)} marsruudis pole pinki ${esc(mkStation)} (marsruut: <span class="mono">${esc(j.stages.map(x => x.stage_code).join("-"))}</span>).` });
+      continue;
+    }
+    mkMsgs.push(await markStage(s));
+  }
+  $("mkGo").disabled = false; $("mkWo").value = "";
+  await loadAll(); renderMark(); $("mkWo").focus();
+}
+$("mkGo").onclick = mkSubmit;
+$("mkWo").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); mkSubmit(); } });
+$("mkDate").onchange = () => renderMark();
+$("mkSt").onclick = e => { const b = e.target.closest("button[data-mks]"); if (!b) return; mkStation = b.dataset.mks; store.set("mkSt", mkStation); mkMsgs = []; renderMark(); $("mkWo").focus(); };
+$("mkCard").onclick = async e => {
+  const b = e.target.closest("button[data-mkstage]"); if (!b || b.disabled) return;
+  const s = S.stages.find(x => x.id === b.dataset.mkstage); if (!s) return;
+  b.disabled = true; mkMsgs = [await markStage(s)];
+  await loadAll(); renderMark(); $("mkWo").focus();
+};
+$("mkLog").onclick = async e => {
+  const b = e.target.closest("button[data-mku]"); if (!b) return;
+  b.disabled = true;
+  const { error } = await sb.rpc("dispatch_undo", { p_stages: b.dataset.mku.split(",") });
+  if (error) { b.disabled = false; return toast(error.message, true); }
+  toast("Tagasi võetud"); await loadAll();
+};
 
 // ---------- KOORMUS ----------
 const fmtH = min => min == null || isNaN(min) ? "–" : (Math.round(min / 6) / 10).toLocaleString("et-EE", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " h";
@@ -1685,8 +2269,15 @@ function renderJrk() {
   if (!jrkStation) { $("jrkList").innerHTML = `<div class="empty">Pinke pole.</div>`; return; }
   const list = S.stages.filter(s => s.stage_code === jrkStation && s.state !== "valmis").sort(queueSort);
   const manual = list.some(s => s.queue_pos != null);
+  $("jrkCrumb").innerHTML = jrkFrom ? `<a data-crumb="list">Tellimused</a> › <a data-crumb="order">${esc(jrkFrom.label)}</a> › <b>Pink ${esc(jrkStation)}</b>
+      <span class="muted">— selle tellimuse tööd on kollasega</span><button class="x" data-crumb="clear">Peida märgistus ✕</button>` : "";
+  const W = weeksN(5), SW = stationWeeks(jrkStation, W);
+  $("jrkLoad").innerHTML = stationOf(jrkStation).is_external ? "" : `<div class="wload">` + W.map((w, i) => {
+    const r = SW.cap[i] ? SW.due[i] / SW.cap[i] : 0, c = r > 1 ? "over" : r > .85 ? "warn" : "";
+    return `<div title="Tähtajaga sel nädalal ${fmtH1(SW.due[i])} h, maht ${fmtH1(SW.cap[i])} h"><b>N${isoWeek(w.s)}</b> ${SW.cap[i] ? Math.round(r * 100) + "%" : "–"}<div class="pbar ${c}"><i style="width:${Math.min(100, r * 100)}%"></i></div></div>`;
+  }).join("") + `<div style="border:none;align-self:center">nädala koormus tähtaegade järgi</div></div>`;
   const x = S.sim.stations[jrkStation];
-  $("jrkTools").innerHTML = `<span class="muted">${isPlanner() ? "Lohista ⠿ või kasuta nooli · " : ""}${list.length} etappi · ${fmtH1(x?.hours || 0)} h · vaba ${x?.queue ? fmtDate(x.freeDate) : "kohe"} · ${manual ? "<b>käsitsi järjekord</b>" : "järjestatud prioriteedi ja tähtaja järgi"}</span>` +
+  $("jrkTools").innerHTML = `<span class="muted">${isPlanner() ? "Lohista ⠿ või kasuta nooli (⚡ kiired on alati eespool) · " : ""}${list.length} etappi · ${fmtH1(x?.hours || 0)} h · vaba ${x?.queue ? fmtDate(x.freeDate) : "kohe"} · ${manual ? "<b>käsitsi järjekord</b>" : "järjestatud prioriteedi ja tähtaja järgi"}</span>` +
     (isPlanner() && manual ? `<button class="btn" id="jrkReset">Järjesta tähtaja järgi</button>` : "") +
     `<button class="btn" data-kst-go="${esc(jrkStation)}">Vaata ajakava</button><button class="btn" data-print-st="${esc(jrkStation)}">Prindi pingi nimekiri</button><button class="btn" data-print-dw="${esc(jrkStation)}">Prindi joonised</button>`;
   const canMove = isPlanner();
@@ -1695,8 +2286,8 @@ function renderJrk() {
       const j = s.job; const pinned = isRunning(s);
       const prog = s.pStart != null ? `${fmtDate(addWorkdays(today0(), s.pStart))} – ${fmtDate(addWorkdays(today0(), s.pEnd))}` : "–";
       const stateTxt = s.state === "lukus" ? `ootab <span class="mono">${esc(s.blockedBy.stage_code)}</span>` : s.state === "avatud" ? "saab alustada" : s.state;
-      return `<tr class="r-${riskCls(j)}${pinned ? " pinned" : ""}" data-sid="${s.id}"><td class="num mono">${canMove && !pinned ? `<span class="grip" title="Lohista">⠿</span>` : ""}${i + 1}</td>
-        <td><b>${esc(jobLabel(j))}</b>${j.prioriteet ? ` <span class="prio">PRIO</span>` : ""}<br><span class="muted">WO ${esc(j.wono)} · ${esc(j.nimetus || "")} · ${esc(j.kogus ?? "")} tk</span></td>
+      return `<tr class="r-${riskCls(j)}${pinned ? " pinned" : ""}${jrkFrom && orderKey(j) === jrkFrom.key ? " hl" : ""}" data-sid="${s.id}"><td class="num mono">${canMove && !pinned ? `<span class="grip" title="Lohista">⠿</span>` : ""}${i + 1}</td>
+        <td>${j.kiire ? "⚡ " : ""}<b>${esc(jobLabel(j))}</b>${j.prioriteet ? ` <span class="prio">PRIO</span>` : ""}<br><span class="muted">WO ${esc(j.wono)} · ${esc(j.tellimus || "")} · ${esc(j.nimetus || "")} · ${esc(j.kogus ?? "")} tk</span></td>
         <td class="num">${s.unknown ? `<span class="risk">puudub</span>` : fmtH(plannedMin(s))}</td>
         <td class="${j.overdue ? "late" : ""}">${fmtDate(parseDate(j.tahtaeg))}</td>
         <td class="${riskCls(j) === "ok" ? "" : riskCls(j)}">${prog}${j.slack != null && j.slack < 0 ? ` (+${-j.slack} p)` : ""}</td>
@@ -1705,6 +2296,12 @@ function renderJrk() {
     }).join("") + `</tbody></table></div>` : `<div class="empty">Sellel pingil pole pooleli töid.</div>`;
 }
 $("jrkPicker").onclick = e => { const b = e.target.closest("button[data-jst]"); if (!b) return; jrkStation = b.dataset.jst; store.set("jrkSt", jrkStation); renderJrk(); };
+$("jrkCrumb").onclick = e => {
+  const a = e.target.closest("[data-crumb]"); if (!a) return;
+  if (a.dataset.crumb === "list") { tellOrder = null; showTab("tell"); }
+  else if (a.dataset.crumb === "order") { tellOrder = jrkFrom.key; showTab("tell"); }
+  else { jrkFrom = null; renderJrk(); }
+};
 $("jrkTools").addEventListener("click", async e => {
   const pr = e.target.closest("[data-print-st]"); if (pr) return printStation(pr.dataset.printSt);
   const pd = e.target.closest("[data-print-dw]"); if (pd) return printDrawings(S.stages.filter(s => s.stage_code === pd.dataset.printDw && s.state !== "valmis").sort(queueSort).map(s => s.job));
@@ -1751,7 +2348,9 @@ async function saveQueue(code, ids) {
   if (error) return toast(error.message, true);
   S.stages.forEach(s => { if (s.stage_code === code) s.queue_pos = null; });
   ids.forEach((id, k) => { const s = S.stages.find(x => x.id === id); if (s) s.queue_pos = k + 1; });
+  const before = orderSnap();
   S.sim = simulate(); renderJrk(); toast(ids.length ? "Järjekord salvestatud" : "Järjestatud tähtaja järgi");
+  showImpact(before, `Pingi ${code} järjekorra muutmise mõju`);
 }
 
 $("copyReport").onclick = async () => {

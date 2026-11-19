@@ -424,7 +424,7 @@ const isMine = s => !!myLog(s) || myPaused(s);
 const othersOn = s => S.openLogs.filter(l => l.stage_id === s.id && l.worker_id !== S.worker?.id).map(l => l.worker_name);
 function queueSort(a, b) {
   const r = s => (s.state === "käsil" || s.state === "paus") ? 0 : s.state === "avatud" ? 1 : 2;
-  return (r(a) - r(b)) || ((a.queue_pos ?? 1e9) - (b.queue_pos ?? 1e9)) || (+!!b.job.kiire - +!!a.job.kiire) || (+!!b.job.prioriteet - +!!a.job.prioriteet) ||
+  return (r(a) - r(b)) || (+!!b.job.kiire - +!!a.job.kiire) || ((a.queue_pos ?? 1e9) - (b.queue_pos ?? 1e9)) || (+!!b.job.prioriteet - +!!a.job.prioriteet) ||
     cmpStr(a.job.tahtaeg || "9999", b.job.tahtaeg || "9999") || a.job.wono.localeCompare(b.job.wono);
 }
 
