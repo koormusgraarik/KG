@@ -183,6 +183,10 @@
   .impact a { cursor:pointer; text-decoration:underline; text-decoration-color: var(--line); }
   .impact .up { color:var(--done); font-weight:600; } .impact .dn { color:var(--late); font-weight:600; }
   /* pinkide plaan */
+  #jrkPicker { gap:6px 14px; align-items:flex-end; }
+  .pgrp { display:flex; flex-wrap:wrap; gap:4px; align-items:flex-end; padding-left:8px; border-left:2px solid var(--line); position:relative; padding-top:16px; }
+  .pgrp .pgl { position:absolute; top:0; left:8px; font-size:.72rem; color:var(--muted); white-space:nowrap; }
+  #jrkPicker .pgset { font-family:var(--sans); font-weight:500; font-size:.85rem; min-width:0; }
   table.jrk tr.hl td { background: color-mix(in srgb, #e9c46a 22%, var(--paper)); }
   .wload { display:flex; flex-wrap:wrap; gap:8px; margin:-6px 0 12px; }
   .wload > div { border:1px solid var(--line); border-radius:6px; padding:5px 10px; min-width:96px; font-size:.78rem; color:var(--muted); }
@@ -195,6 +199,19 @@
   .mk-in { display:flex; gap:8px; flex:1; min-width:260px; }
   .mk-in input { font-size:1.35rem; font-family:var(--mono); padding:12px 14px; flex:1; }
   .mk-in .btn { font-size:1rem; padding:0 18px; }
+  .mk-in textarea { flex:1; font-family:var(--mono); font-size:1.15rem; line-height:1.5; padding:10px 14px; border:1px solid var(--line); border-radius:6px; background:var(--paper); resize:vertical; min-height:150px; }
+  .mk-in.list { flex-direction:column; } .mk-in.list .btn { padding:12px 18px; align-self:flex-start; }
+  .mkprev { border:1px solid var(--line); border-radius:8px; margin-top:12px; overflow:hidden; }
+  .mkprev .hd { padding:10px 12px; background:var(--panel); display:flex; flex-wrap:wrap; gap:8px 16px; align-items:center; font-size:.92rem; }
+  .mkprev .hd .btn { margin-left:auto; }
+  .mkprev label.r { display:grid; grid-template-columns: 26px 92px 1fr; gap:10px; padding:8px 12px; border-top:1px solid var(--line); align-items:start; font-size:.9rem; box-shadow: inset 4px 0 var(--done); cursor:pointer; }
+  .mkprev label.r.warn { box-shadow: inset 4px 0 var(--pause); background: color-mix(in srgb, var(--pause) 8%, var(--paper)); }
+  .mkprev label.r.err { box-shadow: inset 4px 0 var(--late); background: color-mix(in srgb, var(--late) 7%, var(--paper)); cursor:default; }
+  .mkprev label.r.skip { box-shadow: inset 4px 0 var(--lock); color: var(--muted); cursor:default; }
+  .mkprev .wo { font-family:var(--mono); font-weight:700; }
+  .mkprev .st { font-weight:600; } .mkprev .r.warn .st { color: var(--ink); } .mkprev .r.err .st { color: var(--late); }
+  .mkprev small { display:block; color:var(--muted); }
+  .mkprev .sug { border:1px solid var(--line); background:var(--paper); border-radius:5px; padding:1px 8px; font-family:var(--mono); font-size:.85rem; margin-left:4px; }
   .mk-date { width:170px; margin-bottom:0; } .mk-date input { padding:12px; width:100%; border:1px solid var(--line); border-radius:6px; background:var(--paper); }
   .mk-date.past input { border-color: var(--pause); background: color-mix(in srgb, var(--pause) 15%, var(--paper)); }
   .mkmsg { padding:8px 12px; border-radius:6px; margin-top:8px; font-size:.92rem; border:1px solid var(--line); }
@@ -518,13 +535,14 @@
     <!-- MÄRGI TEHTUKS -->
     <section id="tab-mark" class="hidden">
       <div class="mk">
-        <p class="note" style="margin-top:0">Paberilt valmis tööde märkimine. Vali pink, kirjuta töönumber (WO) ja vajuta Enter — töö märgitakse selles pingis valmis.
-          Kui eelmised etapid on veel märkimata, märgitakse ka need. Mitu numbrit korraga: eralda tühikuga.</p>
+        <p class="note" style="margin-top:0" id="mkHelp"></p>
         <div class="field"><label>Pink</label><div class="stations mkst" id="mkSt"></div></div>
         <div class="mk-row">
-          <div class="mk-in"><input id="mkWo" type="search" placeholder="Töönumber (WO)…" autocomplete="off" enterkeyhint="go" spellcheck="false"><button class="btn primary" id="mkGo">Märgi valmis</button></div>
+          <div class="mk-in"><input id="mkWo" type="search" placeholder="Töönumber (WO)…" autocomplete="off" enterkeyhint="go" spellcheck="false">
+            <textarea id="mkList" rows="8" spellcheck="false" placeholder="52340&#10;52341&#10;52355&#10;…"></textarea><button class="btn primary" id="mkGo">Märgi valmis</button></div>
           <div class="field mk-date"><label for="mkDate">Valmis kuupäev</label><input type="date" id="mkDate"></div>
         </div>
+        <div id="mkPrev"></div>
         <div id="mkMsg"></div>
         <div id="mkCard"></div>
         <h2>Täna märgitud</h2>
@@ -997,7 +1015,7 @@ function showTab(tab) {
   $("moreBtn").classList.toggle("on", inMore);
   document.querySelectorAll("main > section").forEach(s => s.classList.toggle("hidden", s.id !== "tab-" + tab));
   render();
-  if (tab === "mark") setTimeout(() => $("mkWo").focus(), 50);
+  if (tab === "mark") setTimeout(() => (mkStation ? $("mkList") : $("mkWo")).focus(), 50);
   if (!["tell", "jrk"].includes(tab)) $("impact").classList.add("hidden");
 }
 $("tabs").onclick = e => { const b = e.target.closest("button[data-tab]"); if (b) { moreOpen = false; showTab(b.dataset.tab); } };
@@ -1411,8 +1429,16 @@ function renderMark() {
     sts.map(s => `<button data-mks="${esc(s.code)}" class="${s.code === mkStation ? "on" : ""}">${esc(s.code)}</button>`).join("");
   if (!$("mkDate").value) $("mkDate").value = isoDay(today0());
   $("mkDate").closest(".mk-date").classList.toggle("past", $("mkDate").value !== isoDay(today0()));
-  $("mkWo").placeholder = mkStation ? `WO number — märgitakse valmis pingis ${mkStation}` : "WO number — seejärel vali etapp";
-  $("mkGo").textContent = mkStation ? `Märgi ${mkStation} valmis` : "Otsi";
+  const list = !!mkStation;
+  $("mkWo").classList.toggle("hidden", list); $("mkList").classList.toggle("hidden", !list);
+  $("mkWo").closest(".mk-in").classList.toggle("list", list);
+  $("mkWo").placeholder = "WO number — seejärel vali etapp";
+  $("mkGo").textContent = list ? `Kontrolli ja märgi ${mkStation} valmis` : "Otsi";
+  $("mkHelp").innerHTML = list
+    ? `Kirjuta paberilt töönumbrid <b>üksteise alla</b> (võib ka tühiku või komaga) ja vajuta nuppu (või Ctrl+Enter). Kõik märgitakse valmis pingis <b class="mono">${esc(mkStation)}</b>.
+       Kui midagi ei klapi — numbrit pole, pink pole marsruudis, juba valmis, korduv või eelmised etapid märkimata — näitan nimekirja enne märkimist.`
+    : `Vali paberi järgi pink, siis saad töönumbrid sisestada nimekirjana. Ilma pingita: kirjuta üks töönumber ja vali etapp, mis valmis sai (eelmised märgitakse kaasa).`;
+  renderMkPrev();
   $("mkMsg").innerHTML = mkMsgs.map(m => `<div class="mkmsg ${m.ok ? "ok" : "err"}">${m.html}</div>`).join("");
   renderMkCard(); renderMkLog();
 }
@@ -1457,8 +1483,96 @@ async function markStage(s) {
   const codes = data?.codes || [s.stage_code];
   return { ok: true, html: `✓ WO <b>${esc(s.job.wono)}</b> ${esc(s.job.toote_id || "")} — <b class="mono">${codes.map(esc).join(" → ")}</b> valmis${codes.length > 1 ? ` <span class="muted">(eelmised märgiti kaasa)</span>` : ""}${d && d !== today ? ` · kuupäev ${fmtDate(parseDate(d))}` : ""}` };
 }
+// ---- nimekirja kontroll (pink valitud) ----
+let mkPlan = null;
+const lev1 = (a, b) => {   // üks number vale või kaks kõrvuti vahetuses
+  if (a.length !== b.length) return false;
+  const d = [...a].map((c, i) => c !== b[i] ? i : -1).filter(i => i >= 0);
+  return d.length === 1 || (d.length === 2 && d[1] === d[0] + 1 && a[d[0]] === b[d[1]] && a[d[1]] === b[d[0]]);
+};
+function planList(text, code) {
+  const toks = text.split(/[\s,;]+/).map(t => t.replace(/^wo[:#-]*/i, "").replace(/[^0-9A-Za-z\/-]/g, "")).filter(t => /\d/.test(t));
+  const seen = new Set(), rows = [];
+  for (const t of toks) {
+    const r = { tok: t, cls: "ok", st: "", sub: "", s: null };
+    const j = findJob(t);
+    if (!j) {
+      const sug = S.jobs.filter(x => lev1(String(x.wono), t) && x.stages.some(y => y.stage_code === code && y.state !== "valmis")).slice(0, 3);
+      Object.assign(r, { cls: "err", st: "Sellist tööd ei leitud", sub: sug.length ? `Kas mõtlesid: ${sug.map(x => `<button type="button" class="sug" data-sug="${esc(x.wono)}" data-tok="${esc(t)}">${esc(x.wono)}</button>`).join("")}` : "kontrolli numbrit (või töö on juba lõpetatud / importimata)" });
+    } else if (seen.has(j.id)) {
+      Object.assign(r, { cls: "skip", st: "Korduv — juba nimekirjas", sub: "" });
+    } else {
+      seen.add(j.id);
+      const s = j.stages.find(x => x.stage_code === code && x.state !== "valmis");
+      const info = `${esc(j.toote_id || j.drawing || "")} ${esc(j.nimetus || "")} · ${esc(j.klient_nimi || "")} · marsruut <span class="mono">${esc(j.stages.map(x => x.state === "valmis" ? "✓" + x.stage_code : x.stage_code).join("-"))}</span>`;
+      if (!s) {
+        const was = j.stages.some(x => x.stage_code === code);
+        Object.assign(r, { cls: was ? "skip" : "err", st: was ? `${code} on juba valmis` : `Marsruudis pole pinki ${code}`, sub: info });
+      } else {
+        const before = j.stages.filter(x => x.seq < s.seq && x.state !== "valmis");
+        const run = S.stages.filter(x => x === s && isRunning(x));
+        const warns = [];
+        if (before.length) warns.push(`märgitakse kaasa ka eelmised: ${before.map(x => x.stage_code).join(", ")}`);
+        if (s.state === "käsil") warns.push(`praegu töös${s.workers ? " (" + s.workers + ")" : ""} — kell suletakse`);
+        if (s.state === "paus") warns.push("on pausil" + (s.wait_reason ? ": " + s.wait_reason : ""));
+        if (j.stages.filter(x => x.stage_code === code && x.state !== "valmis").length > 1) warns.push(`marsruudis on ${code} mitu korda — märgitakse esimene`);
+        Object.assign(r, { s, cls: warns.length ? "warn" : "ok", st: warns.length ? warns.map(esc).join(" · ") : "korras", sub: info });
+      }
+    }
+    rows.push(r);
+  }
+  return { code, rows };
+}
+function renderMkPrev() {
+  if (!mkPlan || mkPlan.code !== mkStation) { $("mkPrev").innerHTML = ""; return; }
+  const R = mkPlan.rows, n = k => R.filter(r => r.cls === k).length;
+  $("mkPrev").innerHTML = `<div class="mkprev"><div class="hd"><b>Kontroll: ${R.length} numbrit</b>
+      <span>${n("ok")} korras</span>${n("warn") ? `<span class="risk">${n("warn")} vajab tähelepanu</span>` : ""}${n("err") ? `<span class="late">${n("err")} viga</span>` : ""}${n("skip") ? `<span class="muted">${n("skip")} vahele</span>` : ""}
+      <button class="btn" data-mkp="cancel">Tühista</button><button class="btn primary" data-mkp="go">Märgi valitud valmis (<span id="mkCnt"></span>)</button></div>
+    ${R.map((r, i) => `<label class="r ${r.cls}"><input type="checkbox" data-mki="${i}" ${r.s ? "checked" : "disabled"}><span class="wo">${esc(r.tok)}</span>
+      <span><span class="st">${r.st}</span>${r.sub ? `<small>${r.sub}</small>` : ""}</span></label>`).join("")}</div>`;
+  mkCount();
+}
+const mkCount = () => { const c = $("mkCnt"); if (c) c.textContent = $("mkPrev").querySelectorAll("input[data-mki]:checked").length; };
+async function mkRun(rows) {
+  $("mkGo").disabled = true; mkMsgs = [];
+  for (const r of rows) mkMsgs.push(await markStage(r.s));
+  // jäta kasti alles ainult read, mis jäid märkimata (vead), et saaks parandada
+  const left = mkPlan.rows.filter(r => !rows.includes(r) && r.cls === "err").map(r => r.tok);
+  $("mkList").value = left.join("\n"); mkPlan = null;
+  $("mkGo").disabled = false;
+  await loadAll(); renderMark(); $("mkList").focus();
+}
+async function mkSubmitList() {
+  const text = $("mkList").value; if (!text.trim()) return;
+  mkMsgs = []; mkPlan = planList(text, mkStation);
+  if (!mkPlan.rows.length) { mkPlan = null; mkMsgs.push({ ok: false, html: "Ühtegi töönumbrit ei leitud tekstist." }); return renderMark(); }
+  if (mkPlan.rows.every(r => r.cls === "ok")) return mkRun(mkPlan.rows);   // kõik klapib -> märgi kohe
+  renderMark();
+  $("mkPrev").scrollIntoView({ block: "nearest" });
+}
+$("mkPrev").addEventListener("change", mkCount);
+$("mkPrev").addEventListener("click", e => {
+  const sg = e.target.closest("[data-sug]");
+  if (sg) {   // asenda vale number soovitatuga ja kontrolli uuesti
+    e.preventDefault();
+    const lines = $("mkList").value.split("\n");
+    const i = lines.findIndex(l => l.includes(sg.dataset.tok));
+    if (i >= 0) lines[i] = lines[i].replace(sg.dataset.tok, sg.dataset.sug);
+    $("mkList").value = lines.join("\n"); mkPlan = planList($("mkList").value, mkStation); return renderMark();
+  }
+  const b = e.target.closest("[data-mkp]"); if (!b) return;
+  if (b.dataset.mkp === "cancel") { mkPlan = null; return renderMark(); }
+  const pick = [...$("mkPrev").querySelectorAll("input[data-mki]:checked")].map(c => mkPlan.rows[+c.dataset.mki]);
+  if (!pick.length) return toast("Midagi pole valitud", true);
+  mkRun(pick);
+});
+$("mkList").addEventListener("keydown", e => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); mkSubmitList(); } });
+$("mkList").addEventListener("input", () => { if (mkPlan) { mkPlan = null; renderMkPrev(); } });
+
 async function mkSubmit() {
   if (!isDisp()) return toast("Märkida saab planeerija või dispetšer", true);
+  if (mkStation) return mkSubmitList();
   const toks = $("mkWo").value.split(/[\s,;]+/).filter(Boolean);
   if (!toks.length) return;
   mkMsgs = [];
@@ -1487,7 +1601,7 @@ async function mkSubmit() {
 $("mkGo").onclick = mkSubmit;
 $("mkWo").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); mkSubmit(); } });
 $("mkDate").onchange = () => renderMark();
-$("mkSt").onclick = e => { const b = e.target.closest("button[data-mks]"); if (!b) return; mkStation = b.dataset.mks; store.set("mkSt", mkStation); mkMsgs = []; renderMark(); $("mkWo").focus(); };
+$("mkSt").onclick = e => { const b = e.target.closest("button[data-mks]"); if (!b) return; mkStation = b.dataset.mks; store.set("mkSt", mkStation); mkMsgs = []; mkPlan = null; renderMark(); (mkStation ? $("mkList") : $("mkWo")).focus(); };
 $("mkCard").onclick = async e => {
   const b = e.target.closest("button[data-mkstage]"); if (!b || b.disabled) return;
   const s = S.stages.find(x => x.id === b.dataset.mkstage); if (!s) return;
@@ -2264,8 +2378,10 @@ let jrkStation = store.get("jrkSt") || null;
 function renderJrk() {
   const own = ownStations();
   if (!jrkStation || !S.stations[jrkStation]) jrkStation = S.profile?.default_station || own[0]?.code || null;
-  $("jrkPicker").innerHTML = own.map(s => { const n = S.sim.stations[s.code]?.queue || 0;
-    return `<button data-jst="${esc(s.code)}" class="${s.code === jrkStation ? "on" : ""}">${esc(s.code)}${n ? `<small>${n}</small>` : ""}</button>`; }).join("");
+  const stBtn = s => { const n = S.sim.stations[s.code]?.queue || 0;
+    return `<button data-jst="${esc(s.code)}" class="${s.code === jrkStation ? "on" : ""}">${esc(s.code)}${n ? `<small>${n}</small>` : ""}</button>`; };
+  $("jrkPicker").innerHTML = groupList().map(g => `<div class="pgrp"><span class="pgl">${esc(g.name)}</span>${g.stations.map(stBtn).join("")}</div>`).join("") +
+    (isPlanner() ? `<button class="btn pgset" data-gosettings>⚙ Muuda pinkide gruppe</button>` : "");
   if (!jrkStation) { $("jrkList").innerHTML = `<div class="empty">Pinke pole.</div>`; return; }
   const list = S.stages.filter(s => s.stage_code === jrkStation && s.state !== "valmis").sort(queueSort);
   const manual = list.some(s => s.queue_pos != null);
@@ -2295,7 +2411,7 @@ function renderJrk() {
         ${canMove ? `<td class="mv">${pinned ? `<span class="muted">töös</span>` : `<button data-jmv="top" data-id="${s.id}" title="Esimeseks">⤒</button><button data-jmv="up" data-id="${s.id}" title="Üles">↑</button><button data-jmv="down" data-id="${s.id}" title="Alla">↓</button>`}</td>` : ""}</tr>`;
     }).join("") + `</tbody></table></div>` : `<div class="empty">Sellel pingil pole pooleli töid.</div>`;
 }
-$("jrkPicker").onclick = e => { const b = e.target.closest("button[data-jst]"); if (!b) return; jrkStation = b.dataset.jst; store.set("jrkSt", jrkStation); renderJrk(); };
+$("jrkPicker").onclick = e => { if (e.target.closest("[data-gosettings]")) { showTab("seaded"); return; } const b = e.target.closest("button[data-jst]"); if (!b) return; jrkStation = b.dataset.jst; store.set("jrkSt", jrkStation); renderJrk(); };
 $("jrkCrumb").onclick = e => {
   const a = e.target.closest("[data-crumb]"); if (!a) return;
   if (a.dataset.crumb === "list") { tellOrder = null; showTab("tell"); }
